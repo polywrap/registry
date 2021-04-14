@@ -16,7 +16,7 @@ export interface DeploymentOutput {
   basicController?: DeployedContract;
 }
 
-const root = "zns";
+const root = "w3api";
 
 export const getLogger = (title: string): logdown.Logger => {
   const logger = logdown(`${root}::${title}`);
