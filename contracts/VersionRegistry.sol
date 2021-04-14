@@ -19,6 +19,7 @@ contract VersionRegistry is IVersionRegistry, OwnableUpgradeable {
     bool leaf;
     uint256 latestVersion;
     bool created;
+    string location; // empty on non-leaf nodes
   }
 
   mapping(uint256 => Web3APIVersion) public nodes;
@@ -69,6 +70,7 @@ contract VersionRegistry is IVersionRegistry, OwnableUpgradeable {
     Web3APIVersion storage patchNode = nodes[patchNodeId];
     patchNode.leaf = true;
     patchNode.created = true;
+    patchNode.location = location;
 
     emit NewVersion(
       apiId,
@@ -94,5 +96,13 @@ contract VersionRegistry is IVersionRegistry, OwnableUpgradeable {
     uint256 leafNodeId = resolveToLeaf(latestNodeId);
 
     return leafNodeId;
+  }
+
+  function getPackage(uint256 nodeId) public view returns (string memory) {
+    uint256 concreteVersionId = resolveToLeaf(nodeId);
+    Web3APIVersion storage node = nodes[concreteVersionId];
+
+    string memory versionLocation = node.location;
+    return versionLocation;
   }
 }
