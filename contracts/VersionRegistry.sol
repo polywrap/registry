@@ -98,11 +98,74 @@ contract VersionRegistry is IVersionRegistry, OwnableUpgradeable {
     return leafNodeId;
   }
 
-  function getPackage(uint256 nodeId) public view returns (string memory) {
+  function getPackageLocation(uint256 nodeId)
+    public
+    view
+    returns (string memory)
+  {
     uint256 concreteVersionId = resolveToLeaf(nodeId);
     Web3APIVersion storage node = nodes[concreteVersionId];
 
     string memory versionLocation = node.location;
     return versionLocation;
+  }
+
+  function resolveLatestMajorVersion(uint256 apiId)
+    public
+    view
+    returns (string memory)
+  {
+    uint256 apiNodeId = uint256(keccak256(abi.encodePacked(apiId)));
+
+    return getPackageLocation(apiNodeId);
+  }
+
+  function resolveLatestMinorVersion(uint256 apiId, uint256 major)
+    public
+    view
+    returns (string memory)
+  {
+    uint256 apiNodeId = uint256(keccak256(abi.encodePacked(apiId)));
+
+    uint256 majorNodeId =
+      uint256(keccak256(abi.encodePacked(apiNodeId, major)));
+
+    return getPackageLocation(majorNodeId);
+  }
+
+  function resolveLatestPatchVersion(
+    uint256 apiId,
+    uint256 major,
+    uint256 minor
+  ) public view returns (string memory) {
+    uint256 apiNodeId = uint256(keccak256(abi.encodePacked(apiId)));
+
+    uint256 majorNodeId =
+      uint256(keccak256(abi.encodePacked(apiNodeId, major)));
+
+    uint256 minorNodeId =
+      uint256(keccak256(abi.encodePacked(majorNodeId, minor)));
+
+    return getPackageLocation(minorNodeId);
+  }
+
+  function resolveVersion(
+    uint256 apiId,
+    uint256 major,
+    uint256 minor,
+    uint256 patch
+  ) public view returns (string memory) {
+    uint256 apiNodeId = uint256(keccak256(abi.encodePacked(apiId)));
+
+    uint256 majorNodeId =
+      uint256(keccak256(abi.encodePacked(apiNodeId, major)));
+
+    uint256 minorNodeId =
+      uint256(keccak256(abi.encodePacked(majorNodeId, minor)));
+
+    uint256 patchNodeId =
+      uint256(keccak256(abi.encodePacked(minorNodeId, patch)));
+
+    return getPackageLocation(patchNodeId);
   }
 }
