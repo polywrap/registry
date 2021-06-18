@@ -14,7 +14,7 @@ describe("API registration", () => {
     versionRegistry = await contractFactory.deploy();
   });
 
-  it("register new API", async () => {
+  it("can register a new API", async () => {
     const apiName = "test-api";
 
     const tx = await versionRegistry.registerNewWeb3API(apiName);
@@ -24,7 +24,7 @@ describe("API registration", () => {
     });
   });
 
-  it("register multiple APIs", async () => {
+  it("can register multiple APIs", async () => {
     const apiName1 = "test-api1";
     const apiName2 = "test-api2";
 
@@ -41,7 +41,7 @@ describe("API registration", () => {
     });
   });
 
-  it("can't register same API more than once", async () => {
+  it("forbids registering the same API more than once", async () => {
     const apiName = "test-api";
 
     const tx = await versionRegistry.registerNewWeb3API(apiName);
@@ -73,7 +73,7 @@ describe("Version registation", function () {
     apiId = (await getEventArgs(tx, "NewWeb3API"))["apiId"];
   });
 
-  it("publish new version", async function () {
+  it("can publish a new version", async function () {
     const apiLocation = "dhasjhds";
 
     const newVersionTx = await versionRegistry.publishNewVersion(apiId, 1, 0, 0, apiLocation);
@@ -87,7 +87,7 @@ describe("Version registation", function () {
     });
   });
 
-  it("publish multiple versions", async function () {
+  it("can publish multiple versions", async function () {
     const apiLocation1 = "location1";
     const apiLocation2 = "location2";
 
@@ -103,7 +103,7 @@ describe("Version registation", function () {
     });
   });
 
-  it("resolve api versions", async function () {
+  it("can resolve api versions", async function () {
     const apiLocation_1_0_0 = "location_1_0_0";
     const apiLocation_1_0_1 = "location_1_0_1";
     const apiLocation_1_1_0 = "location_1_1_0";
@@ -130,7 +130,7 @@ describe("Version registation", function () {
     expect(await versionRegistry.resolveVersion(apiId, 1, 0, 0)).to.equal(apiLocation_1_0_0);
   });
 
-  it("publish specific versions", async function () {
+  it("can publish specific versions", async function () {
     const apiLocation1 = "location1";
     const apiLocation2 = "location2";
 
@@ -161,7 +161,7 @@ describe("Version registation", function () {
     expect(await versionRegistry.resolveLatestMinorVersion(apiId, 2)).to.equal(apiLocation2);
   });
 
-  it("can't publish same version more than once", async function () {
+  it("forbids publishing same version more than once", async function () {
     const apiLocation1 = "location1";
     const apiLocation2 = "location2";
 
