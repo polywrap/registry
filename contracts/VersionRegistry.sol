@@ -17,7 +17,7 @@ contract VersionRegistry is IVersionRegistry, OwnableUpgradeable {
 
   struct Web3APIVersion {
     bool leaf;
-    uint256 latestVersion;
+    uint256 latestSubVersion;
     bool created;
     string location; // empty on non-leaf nodes
   }
@@ -35,38 +35,40 @@ contract VersionRegistry is IVersionRegistry, OwnableUpgradeable {
 
   function pushNewVersion(
     uint256 apiId,
-    uint256 major,
-    uint256 minor,
+    uint256 majorVersion,
+    uint256 minorVersion,
+    uint256 patchVersion,
     string memory location
   ) public {
-    uint256 apiNodeId = uint256(keccak256(abi.encodePacked(apiId)));
+    uint256 apiNodeId = getApiNodeId(apiId);
     Web3APIVersion storage latestNode = nodes[apiNodeId];
 
-    if (latestNode.latestVersion < major) {
-      latestNode.latestVersion = major;
+    if (latestNode.latestSubVersion < majorVersion) {
+      latestNode.latestSubVersion = majorVersion;
     }
     latestNode.created = true;
 
-    uint256 majorNodeId =
-      uint256(keccak256(abi.encodePacked(apiNodeId, major)));
+    uint256 majorNodeId = getMajorNodeId(apiNodeId, majorVersion);
     Web3APIVersion storage majorNode = nodes[majorNodeId];
-    if (majorNode.latestVersion < minor) {
-      majorNode.latestVersion = minor;
+    if (majorNode.latestSubVersion < minorVersion) {
+      majorNode.latestSubVersion = minorVersion;
     }
     majorNode.created = true;
 
-    uint256 minorNodeId =
-      uint256(keccak256(abi.encodePacked(majorNodeId, minor)));
+    uint256 minorNodeId = getMinorNodeId(majorNodeId, minorVersion);
     Web3APIVersion storage minorNode = nodes[minorNodeId];
-    uint256 latestPatchVersion = 0;
-    if (minorNode.created) {
-      latestPatchVersion = ++minorNode.latestVersion;
-    } else {
-      minorNode.created = true;
-    }
 
-    uint256 patchNodeId =
-      uint256(keccak256(abi.encodePacked(minorNodeId, latestPatchVersion)));
+    if (majorNode.latestSubVersion < minorVersion) {
+      majorNode.latestSubVersion = minorVersion;
+    }
+    majorNode.created = true;
+
+    if (minorNode.latestSubVersion < patchVersion) {
+      minorNode.latestSubVersion = patchVersion;
+    }
+    minorNode.created = true;
+
+    uint256 patchNodeId = getPatchNodeId(minorNodeId, patchVersion);
     Web3APIVersion storage patchNode = nodes[patchNodeId];
     patchNode.leaf = true;
     patchNode.created = true;
@@ -75,9 +77,9 @@ contract VersionRegistry is IVersionRegistry, OwnableUpgradeable {
     emit NewVersion(
       apiId,
       patchNodeId,
-      major,
-      minor,
-      latestPatchVersion,
+      majorVersion,
+      minorVersion,
+      patchVersion,
       location
     );
   }
@@ -91,7 +93,7 @@ contract VersionRegistry is IVersionRegistry, OwnableUpgradeable {
     }
 
     uint256 latestNodeId =
-      uint256(keccak256(abi.encodePacked(nodeId, node.latestVersion)));
+      uint256(keccak256(abi.encodePacked(nodeId, node.latestSubVersion)));
 
     uint256 leafNodeId = resolveToLeaf(latestNodeId);
 
@@ -135,37 +137,57 @@ contract VersionRegistry is IVersionRegistry, OwnableUpgradeable {
 
   function resolveLatestPatchVersion(
     uint256 apiId,
-    uint256 major,
-    uint256 minor
+    uint256 majorVersion,
+    uint256 minorVersion
   ) public view returns (string memory) {
     uint256 apiNodeId = uint256(keccak256(abi.encodePacked(apiId)));
 
-    uint256 majorNodeId =
-      uint256(keccak256(abi.encodePacked(apiNodeId, major)));
-
-    uint256 minorNodeId =
-      uint256(keccak256(abi.encodePacked(majorNodeId, minor)));
+    uint256 majorNodeId = getMajorNodeId(apiNodeId, majorVersion);
+    uint256 minorNodeId = getMinorNodeId(majorNodeId, minorVersion);
 
     return getPackageLocation(minorNodeId);
   }
 
   function resolveVersion(
     uint256 apiId,
-    uint256 major,
-    uint256 minor,
-    uint256 patch
+    uint256 majorVersion,
+    uint256 minorVersion,
+    uint256 patchVersion
   ) public view returns (string memory) {
     uint256 apiNodeId = uint256(keccak256(abi.encodePacked(apiId)));
 
-    uint256 majorNodeId =
-      uint256(keccak256(abi.encodePacked(apiNodeId, major)));
-
-    uint256 minorNodeId =
-      uint256(keccak256(abi.encodePacked(majorNodeId, minor)));
-
-    uint256 patchNodeId =
-      uint256(keccak256(abi.encodePacked(minorNodeId, patch)));
+    uint256 majorNodeId = getMajorNodeId(apiNodeId, majorVersion);
+    uint256 minorNodeId = getMinorNodeId(majorNodeId, minorVersion);
+    uint256 patchNodeId = getPatchNodeId(minorNodeId, patchVersion);
 
     return getPackageLocation(patchNodeId);
+  }
+
+  function getApiNodeId(uint256 apiId) private pure returns (uint256) {
+    return uint256(keccak256(abi.encodePacked(apiId)));
+  }
+
+  function getMajorNodeId(uint256 apiNodeId, uint256 majorVersion)
+    private
+    pure
+    returns (uint256)
+  {
+    return uint256(keccak256(abi.encodePacked(apiNodeId, majorVersion)));
+  }
+
+  function getMinorNodeId(uint256 majorNodeId, uint256 minorVersion)
+    private
+    pure
+    returns (uint256)
+  {
+    return uint256(keccak256(abi.encodePacked(majorNodeId, minorVersion)));
+  }
+
+  function getPatchNodeId(uint256 minorNodeId, uint256 patchVersion)
+    private
+    pure
+    returns (uint256)
+  {
+    return uint256(keccak256(abi.encodePacked(minorNodeId, patchVersion)));
   }
 }

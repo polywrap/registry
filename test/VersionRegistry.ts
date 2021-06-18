@@ -20,7 +20,7 @@ describe("API registration", () => {
     });
   });
 
-  it("register 2 new APIs", async () => {
+  it("register multiple APIs", async () => {
     const apiName1 = "test-api1";
     const apiName2 = "test-api2";
 
@@ -62,7 +62,7 @@ describe("Version registation", function () {
   it("push new version", async function () {
     const apiLocation = "dhasjhds";
 
-    const newVersionTx = await versionRegistry.pushNewVersion(apiId, 1, 0, apiLocation);
+    const newVersionTx = await versionRegistry.pushNewVersion(apiId, 1, 0, 0, apiLocation);
 
     await expectEvent(newVersionTx, "NewVersion", {
       apiId: apiId,
@@ -73,13 +73,12 @@ describe("Version registation", function () {
     });
   });
 
-
   it("push multiple versions", async function () {
     const apiLocation1 = "location1";
     const apiLocation2 = "location2";
 
-    await versionRegistry.pushNewVersion(apiId, 1, 0, apiLocation1);
-    const newVersionTx = await versionRegistry.pushNewVersion(apiId, 1, 0, apiLocation2);
+    await versionRegistry.pushNewVersion(apiId, 1, 0, 0, apiLocation1);
+    const newVersionTx = await versionRegistry.pushNewVersion(apiId, 1, 0, 1, apiLocation2);
 
     await expectEvent(newVersionTx, "NewVersion", {
       apiId: apiId,
@@ -98,12 +97,12 @@ describe("Version registation", function () {
     const apiLocation_2_0_0 = "location_2_0_0";
     const apiLocation_2_0_1 = "location_2_0_1";
 
-    await versionRegistry.pushNewVersion(apiId, 1, 0, apiLocation_1_0_0);
-    await versionRegistry.pushNewVersion(apiId, 1, 0, apiLocation_1_0_1);
-    await versionRegistry.pushNewVersion(apiId, 1, 1, apiLocation_1_1_0);
-    await versionRegistry.pushNewVersion(apiId, 1, 1, apiLocation_1_1_1);
-    await versionRegistry.pushNewVersion(apiId, 2, 0, apiLocation_2_0_0);
-    await versionRegistry.pushNewVersion(apiId, 2, 0, apiLocation_2_0_1);
+    await versionRegistry.pushNewVersion(apiId, 1, 0, 0, apiLocation_1_0_0);
+    await versionRegistry.pushNewVersion(apiId, 1, 0, 1, apiLocation_1_0_1);
+    await versionRegistry.pushNewVersion(apiId, 1, 1, 0, apiLocation_1_1_0);
+    await versionRegistry.pushNewVersion(apiId, 1, 1, 1, apiLocation_1_1_1);
+    await versionRegistry.pushNewVersion(apiId, 2, 0, 0, apiLocation_2_0_0);
+    await versionRegistry.pushNewVersion(apiId, 2, 0, 1, apiLocation_2_0_1);
 
     expect(await versionRegistry.resolveLatestMajorVersion(apiId)).to.equal(apiLocation_2_0_1);
 
@@ -115,5 +114,36 @@ describe("Version registation", function () {
     expect(await versionRegistry.resolveLatestPatchVersion(apiId, 2, 0)).to.equal(apiLocation_2_0_1);
 
     expect(await versionRegistry.resolveVersion(apiId, 1, 0, 0)).to.equal(apiLocation_1_0_0);
+  });
+
+  it("push specific versions", async function () {
+    const apiLocation1 = "location1";
+    const apiLocation2 = "location2";
+
+    await expectEvent(
+      await versionRegistry.pushNewVersion(apiId, 1, 2, 3, apiLocation1),
+      "NewVersion",
+      {
+        apiId: apiId,
+        major: 1,
+        minor: 2,
+        patch: 3,
+        location: apiLocation1
+      });
+
+    await expectEvent(
+      await versionRegistry.pushNewVersion(apiId, 2, 2, 3, apiLocation2),
+      "NewVersion",
+      {
+        apiId: apiId,
+        major: 2,
+        minor: 2,
+        patch: 3,
+        location: apiLocation2
+      });
+
+    expect(await versionRegistry.resolveLatestMajorVersion(apiId)).to.equal(apiLocation2);
+    expect(await versionRegistry.resolveLatestMinorVersion(apiId, 1)).to.equal(apiLocation1);
+    expect(await versionRegistry.resolveLatestMinorVersion(apiId, 2)).to.equal(apiLocation2);
   });
 });
