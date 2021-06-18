@@ -23,6 +23,7 @@ contract VersionRegistry is IVersionRegistry, OwnableUpgradeable {
   }
 
   mapping(uint256 => Web3APIVersion) public nodes;
+  mapping(uint256 => bool) public registeredAPI;
 
   function initialize() public initializer {
     __Ownable_init();
@@ -30,10 +31,15 @@ contract VersionRegistry is IVersionRegistry, OwnableUpgradeable {
 
   function registerNewWeb3API(string memory name) public {
     uint256 id = uint256(keccak256(bytes(name)));
+
+    require(!registeredAPI[id], "API is already registered");
+
+    registeredAPI[id] = true;
+
     emit NewWeb3API(id, name);
   }
 
-  function pushNewVersion(
+  function publishNewVersion(
     uint256 apiId,
     uint256 majorVersion,
     uint256 minorVersion,
@@ -70,6 +76,9 @@ contract VersionRegistry is IVersionRegistry, OwnableUpgradeable {
 
     uint256 patchNodeId = getPatchNodeId(minorNodeId, patchVersion);
     Web3APIVersion storage patchNode = nodes[patchNodeId];
+
+    require(!patchNode.created, "Version is already published");
+
     patchNode.leaf = true;
     patchNode.created = true;
     patchNode.location = location;
