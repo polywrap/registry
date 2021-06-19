@@ -1,49 +1,51 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { ethers } from "hardhat";
+import { labelhash } from "../labelhash";
 import { ENSApi } from "./ENSApi";
 
 const polywrapControllerRecordName = "polywrap-controller";
 
-export const deployENS = async (): Promise<ENSApi> => {
+//ethController can set resolvers
+export const deployENS = async (ethController: SignerWithAddress): Promise<ENSApi> => {
+  const rootNode = ethers.utils.zeroPad([0], 32);
+
   const ensRegistryFactory = await ethers.getContractFactory("TestENSRegistry");
 
   const ensRegistry = await ensRegistryFactory.deploy();
 
+  const ethRegistrarFactory = await ethers.getContractFactory("TestEthRegistrar");
+
+  let ethRegistrar = await ethRegistrarFactory.deploy(ensRegistry.address, ethers.utils.namehash("eth"));
+
+  await ensRegistry.setSubnodeOwner(rootNode, labelhash("eth"), ethRegistrar.address);
+  await ethRegistrar.addController(ethController.address);
+
   const publicResolverFactory = await ethers.getContractFactory("TestPublicResolver");
   const publicResolver = await publicResolverFactory.deploy(ensRegistry.address);
 
-  const rootNode = ethers.utils.zeroPad([0], 32);
+  ethRegistrar = ethRegistrar.connect(ethController);
 
-  const getSubNode = (domainName: string): string => {
-    const domainHash = ethers.utils.id(domainName);
-
-    const subNode = ethers.utils.solidityKeccak256(["bytes32", "bytes32"], [rootNode, domainHash]);
-
-    return subNode;
-  };
+  await ethRegistrar.setResolver(publicResolver.address);
 
   return {
     ensRegistry,
+    ethRegistrar,
     ensPublicResolver: publicResolver,
-    registerDomainName: async (domainOwner: string, domainName: string): Promise<void> => {
-      const domainHash = ethers.utils.id(domainName);
+    registerDomainName: async (domainOwner: SignerWithAddress, domainLabel: string): Promise<void> => {
+      await ethRegistrar.register(labelhash(domainLabel), domainOwner.address, 10 * 60);
+      const ownedRegistry = ensRegistry.connect(domainOwner);
 
-      await ensRegistry.setSubnodeOwner(rootNode, domainHash, domainOwner);
+      await ownedRegistry.setResolver(ethers.utils.namehash(domainLabel + ".eth"), publicResolver.address);
     },
-    setPolywrapController: async (domainOwner: SignerWithAddress, domainName: string, controllerAddress: string): Promise<void> => {
+    setPolywrapController: async (domainOwner: SignerWithAddress, domainLabel: string, controllerAddress: string): Promise<void> => {
 
       const ownedPublicResolver = publicResolver.connect(domainOwner);
 
-      const subNode = getSubNode(domainName);
-
-      const tx = await ownedPublicResolver.setText(subNode, polywrapControllerRecordName, controllerAddress);
-
+      const tx = await ownedPublicResolver.setText(ethers.utils.namehash(domainLabel + ".eth"), polywrapControllerRecordName, controllerAddress);
       await tx.wait();
     },
-    getPolywrapController: async (domainName: string): Promise<string> => {
-      const subNode = getSubNode(domainName);
-
-      return await publicResolver.text(subNode, polywrapControllerRecordName);
+    getPolywrapController: async (domainLabel: string): Promise<string> => {
+      return await publicResolver.text(ethers.utils.namehash(domainLabel + ".eth"), polywrapControllerRecordName);
     }
   } as ENSApi;
 };

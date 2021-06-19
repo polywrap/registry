@@ -3,7 +3,6 @@ pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@ensdomains/ens-contracts/contracts/registry/ENS.sol";
-import "@ensdomains/ens-contracts/contracts/resolvers/profiles/TextResolver.sol";
 import "./interfaces/IVersionRegistry.sol";
 import "./VersionManager.sol";
 
@@ -12,10 +11,7 @@ abstract contract VersionResolver is
   OwnableUpgradeable,
   VersionManager
 {
-  constructor(ENS _ens, TextResolver _ensTextResolver)
-    internal
-    VersionManager(_ens, _ensTextResolver)
-  {}
+  constructor(ENS _ens) internal VersionManager(_ens) {}
 
   function resolveToLeaf(bytes32 nodeId) public view returns (bytes32) {
     Web3APIVersion storage node = nodes[nodeId];
@@ -50,9 +46,7 @@ abstract contract VersionResolver is
     view
     returns (string memory)
   {
-    bytes32 apiNodeId = keccak256(abi.encodePacked(apiId));
-
-    return getPackageLocation(apiNodeId);
+    return getPackageLocation(apiId);
   }
 
   function resolveLatestMinorVersion(bytes32 apiId, uint256 major)
@@ -60,9 +54,7 @@ abstract contract VersionResolver is
     view
     returns (string memory)
   {
-    bytes32 apiNodeId = keccak256(abi.encodePacked(apiId));
-
-    bytes32 majorNodeId = keccak256(abi.encodePacked(apiNodeId, major));
+    bytes32 majorNodeId = keccak256(abi.encodePacked(apiId, major));
 
     return getPackageLocation(majorNodeId);
   }
@@ -72,9 +64,7 @@ abstract contract VersionResolver is
     uint256 majorVersion,
     uint256 minorVersion
   ) public view returns (string memory) {
-    bytes32 apiNodeId = keccak256(abi.encodePacked(apiId));
-
-    bytes32 majorNodeId = getMajorNodeId(apiNodeId, majorVersion);
+    bytes32 majorNodeId = getMajorNodeId(apiId, majorVersion);
     bytes32 minorNodeId = getMinorNodeId(majorNodeId, minorVersion);
 
     return getPackageLocation(minorNodeId);
@@ -86,9 +76,7 @@ abstract contract VersionResolver is
     uint256 minorVersion,
     uint256 patchVersion
   ) public view returns (string memory) {
-    bytes32 apiNodeId = keccak256(abi.encodePacked(apiId));
-
-    bytes32 majorNodeId = getMajorNodeId(apiNodeId, majorVersion);
+    bytes32 majorNodeId = getMajorNodeId(apiId, majorVersion);
     bytes32 minorNodeId = getMinorNodeId(majorNodeId, minorVersion);
     bytes32 patchNodeId = getPatchNodeId(minorNodeId, patchVersion);
 
