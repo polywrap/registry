@@ -4,14 +4,51 @@ import chai, { expect } from "chai";
 import { VersionRegistry } from "../typechain";
 import { expectEvent, getEventArgs } from "./helpers";
 import { BigNumberish } from "ethers";
+import { deployENS } from "./helpers/ens/deployENS";
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import { ENSApi } from "./helpers/ens/ENSApi";
+
+
+describe("ENS registration", () => {
+  let domainOwner: SignerWithAddress;
+  let polywrapController: SignerWithAddress;
+
+  let versionRegistry: VersionRegistry;
+  let ens: ENSApi;
+  const domainName = "test-domain";
+
+  beforeEach(async () => {
+    const signers = await ethers.getSigners();
+    domainOwner = signers[1];
+    polywrapController = signers[2];
+
+    ens = await deployENS();
+  });
+
+  it("can register a domain", async () => {
+    await ens.registerDomainName(domainOwner.address, domainName);
+  });
+
+  it("can set polywrap controller", async () => {
+    await ens.registerDomainName(domainOwner.address, domainName);
+
+    await ens.setPolywrapController(domainOwner, domainName, polywrapController.address);
+
+    const actualController = await ens.getPolywrapController(domainName);
+
+    expect(actualController).to.equal(polywrapController.address);
+  });
+});
 
 describe("API registration", () => {
   let versionRegistry: VersionRegistry;
 
   beforeEach(async () => {
-    const contractFactory = await ethers.getContractFactory("VersionRegistry");
+    const [owner, domainOwner, polywrapController] = await ethers.getSigners();
 
-    versionRegistry = await contractFactory.deploy();
+    const versionRegistryFactory = await ethers.getContractFactory("VersionRegistry");
+
+    versionRegistry = await versionRegistryFactory.deploy();
   });
 
   it("can register a new API", async () => {
