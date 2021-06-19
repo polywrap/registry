@@ -2,7 +2,7 @@
 pragma solidity ^0.8.4;
 
 abstract contract StringToAddressParser {
-  function bytesToAddress(string memory _a)
+  function stringToAddress(string memory _a)
     internal
     pure
     returns (address _parsedAddress)
@@ -32,9 +32,5 @@ abstract contract StringToAddressParser {
       iaddr += (b1 * 16 + b2);
     }
     return address(iaddr);
-  }
-
-  function test(string calldata str) external pure returns (address addr) {
-    return bytesToAddress(str);
   }
 }

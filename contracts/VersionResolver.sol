@@ -37,12 +37,11 @@ abstract contract VersionResolver is
     bytes32 concreteVersionId = resolveToLeaf(nodeId);
     Web3APIVersion storage node = nodes[concreteVersionId];
 
-    string memory versionLocation = node.location;
-    return versionLocation;
+    return node.location;
   }
 
   function resolveLatestMajorVersion(bytes32 apiId)
-    public
+    external
     view
     returns (string memory)
   {
@@ -63,9 +62,10 @@ abstract contract VersionResolver is
     bytes32 apiId,
     uint256 majorVersion,
     uint256 minorVersion
-  ) public view returns (string memory) {
-    bytes32 majorNodeId = getMajorNodeId(apiId, majorVersion);
-    bytes32 minorNodeId = getMinorNodeId(majorNodeId, minorVersion);
+  ) external view returns (string memory) {
+    bytes32 majorNodeId = keccak256(abi.encodePacked(apiId, majorVersion));
+    bytes32 minorNodeId =
+      keccak256(abi.encodePacked(majorNodeId, minorVersion));
 
     return getPackageLocation(minorNodeId);
   }
@@ -76,9 +76,11 @@ abstract contract VersionResolver is
     uint256 minorVersion,
     uint256 patchVersion
   ) public view returns (string memory) {
-    bytes32 majorNodeId = getMajorNodeId(apiId, majorVersion);
-    bytes32 minorNodeId = getMinorNodeId(majorNodeId, minorVersion);
-    bytes32 patchNodeId = getPatchNodeId(minorNodeId, patchVersion);
+    bytes32 majorNodeId = keccak256(abi.encodePacked(apiId, majorVersion));
+    bytes32 minorNodeId =
+      keccak256(abi.encodePacked(majorNodeId, minorVersion));
+    bytes32 patchNodeId =
+      keccak256(abi.encodePacked(minorNodeId, patchVersion));
 
     return getPackageLocation(patchNodeId);
   }

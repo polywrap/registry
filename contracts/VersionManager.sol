@@ -3,7 +3,6 @@ pragma solidity ^0.8.4;
 
 import "@ensdomains/ens-contracts/contracts/registry/ENS.sol";
 import "@ensdomains/ens-contracts/contracts/resolvers/profiles/TextResolver.sol";
-import "./NodeIdResolver.sol";
 import "./StringToAddressParser.sol";
 
 interface TextResolverInterface {
@@ -19,12 +18,12 @@ interface TextResolverInterface {
     returns (string memory);
 }
 
-abstract contract VersionManager is NodeIdResolver, StringToAddressParser {
+abstract contract VersionManager is StringToAddressParser {
   string polywrapControllerRecordName = "polywrap-controller";
 
-  event NewWeb3API(bytes32 indexed ensNode);
+  event NewWeb3API(bytes32 indexed ensNode, bytes32 indexed apiId);
   event NewVersion(
-    bytes32 indexed ensNode,
+    bytes32 indexed apiId,
     bytes32 versionId,
     uint256 major,
     uint256 minor,
@@ -40,7 +39,7 @@ abstract contract VersionManager is NodeIdResolver, StringToAddressParser {
   }
 
   mapping(bytes32 => Web3APIVersion) public nodes;
-  mapping(bytes32 => bool) public registeredAPI;
+  mapping(bytes32 => uint256) public registeredAPI;
 
   ENS ens;
 
@@ -48,56 +47,56 @@ abstract contract VersionManager is NodeIdResolver, StringToAddressParser {
     ens = _ens;
   }
 
-  function registerNewWeb3API(bytes32 ensNode) public authorised(ensNode) {
-    require(!registeredAPI[ensNode], "API is already registered");
+  function registerNewWeb3API(bytes32 ensNode) public ensOwner(ensNode) {
+    //Create a different hash from ens node to not conflict with subdomains
+    bytes32 apiId = keccak256(abi.encodePacked(ensNode));
 
-    registeredAPI[ensNode] = true;
+    require(registeredAPI[apiId] == 0, "API is already registered");
 
-    emit NewWeb3API(ensNode);
+    registeredAPI[apiId] = uint256(ensNode);
+
+    emit NewWeb3API(ensNode, apiId);
   }
 
   function publishNewVersion(
-    bytes32 ensNode,
+    bytes32 apiId,
     uint256 majorVersion,
     uint256 minorVersion,
     uint256 patchVersion,
     string memory location
-  ) public authorised(ensNode) {
-    Web3APIVersion storage latestNode = nodes[ensNode];
+  ) public apiOwner(apiId) {
+    Web3APIVersion storage apiNode = nodes[apiId];
 
-    if (latestNode.latestSubVersion < majorVersion) {
-      latestNode.latestSubVersion = majorVersion;
+    if (apiNode.latestSubVersion < majorVersion) {
+      apiNode.latestSubVersion = majorVersion;
     }
-    latestNode.created = true;
+    apiNode.created = true;
 
-    bytes32 majorNodeId = getMajorNodeId(ensNode, majorVersion);
+    bytes32 majorNodeId = keccak256(abi.encodePacked(apiId, majorVersion));
     Web3APIVersion storage majorNode = nodes[majorNodeId];
     if (majorNode.latestSubVersion < minorVersion) {
       majorNode.latestSubVersion = minorVersion;
     }
     majorNode.created = true;
 
-    bytes32 minorNodeId = getMinorNodeId(majorNodeId, minorVersion);
+    bytes32 minorNodeId =
+      keccak256(abi.encodePacked(majorNodeId, minorVersion));
     Web3APIVersion storage minorNode = nodes[minorNodeId];
-
-    if (majorNode.latestSubVersion < minorVersion) {
-      majorNode.latestSubVersion = minorVersion;
-    }
-    majorNode.created = true;
 
     if (minorNode.latestSubVersion < patchVersion) {
       minorNode.latestSubVersion = patchVersion;
     }
     minorNode.created = true;
 
-    bytes32 patchNodeId = getPatchNodeId(minorNodeId, patchVersion);
+    bytes32 patchNodeId =
+      keccak256(abi.encodePacked(minorNodeId, patchVersion));
 
     require(!nodes[patchNodeId].created, "Version is already published");
 
     nodes[patchNodeId] = Web3APIVersion(true, 0, true, location);
 
     emit NewVersion(
-      ensNode,
+      apiId,
       patchNodeId,
       majorVersion,
       minorVersion,
@@ -106,7 +105,27 @@ abstract contract VersionManager is NodeIdResolver, StringToAddressParser {
     );
   }
 
-  modifier authorised(bytes32 ensNode) {
+  modifier ensOwner(bytes32 ensNode) {
+    require(
+      getPolywrapController(ensNode) == msg.sender,
+      "You do not have access to the specified ENS domain"
+    );
+    _;
+  }
+
+  modifier apiOwner(bytes32 apiId) {
+    uint256 ensNode = registeredAPI[apiId];
+
+    require(ensNode != 0, "API is not registered");
+
+    require(
+      getPolywrapController(bytes32(ensNode)) == msg.sender,
+      "You do not have access to the specified ENS domain"
+    );
+    _;
+  }
+
+  function getPolywrapController(bytes32 ensNode) internal returns (address) {
     address textResolverAddr = ens.resolver(ensNode);
 
     require(textResolverAddr != address(0), "Resolver not set");
@@ -114,12 +133,9 @@ abstract contract VersionManager is NodeIdResolver, StringToAddressParser {
     TextResolverInterface ensTextResolver =
       TextResolverInterface(textResolverAddr);
 
-    require(
-      bytesToAddress(
+    return
+      stringToAddress(
         ensTextResolver.text(ensNode, polywrapControllerRecordName)
-      ) == msg.sender,
-      "You do not have access to the specified ENS domain"
-    );
-    _;
+      );
   }
 }
