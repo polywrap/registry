@@ -3,24 +3,28 @@ import { ethers } from "hardhat";
 import chai, { expect } from "chai";
 import { PolywrapRegistry } from "../typechain";
 import { expectEvent, getEventArgs } from "./helpers";
-import { BigNumberish } from "ethers";
+import { BigNumberish, BytesLike } from "ethers";
 import { deployENS } from "./helpers/ens/deployENS";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { ENSApi } from "./helpers/ens/ENSApi";
 
 
 describe("ENS registration", () => {
+  let owner: SignerWithAddress;
   let domainOwner: SignerWithAddress;
   let polywrapController: SignerWithAddress;
+  let randomAcc: SignerWithAddress;
 
   let polywrapRegistry: PolywrapRegistry;
   let ens: ENSApi;
   const domainName = "test-domain";
 
   beforeEach(async () => {
-    const signers = await ethers.getSigners();
-    domainOwner = signers[1];
-    polywrapController = signers[2];
+    const [_owner, _domainOwner, _polywrapController, _randomAcc] = await ethers.getSigners();
+    owner = _owner;
+    domainOwner = _domainOwner;
+    polywrapController = _polywrapController;
+    randomAcc = _randomAcc;
 
     ens = await deployENS();
   });
@@ -38,58 +42,106 @@ describe("ENS registration", () => {
 
     expect(actualController).to.equal(polywrapController.address);
   });
+
+  it("can change polywrap controller", async () => {
+    await ens.registerDomainName(domainOwner.address, domainName);
+
+    await ens.setPolywrapController(domainOwner, domainName, polywrapController.address);
+
+    const actualController1 = await ens.getPolywrapController(domainName);
+
+    expect(actualController1).to.equal(polywrapController.address);
+
+    await ens.setPolywrapController(domainOwner, domainName, randomAcc.address);
+
+    const actualController2 = await ens.getPolywrapController(domainName);
+
+    expect(actualController2).to.equal(randomAcc.address);
+  });
 });
 
 describe("API registration", () => {
+  const apiName = "test-api";
   let polywrapRegistry: PolywrapRegistry;
+  let ens: ENSApi;
+  let owner: SignerWithAddress;
+  let domainOwner: SignerWithAddress;
+  let polywrapController: SignerWithAddress;
+  let randomAcc: SignerWithAddress;
 
   beforeEach(async () => {
-    const [owner, domainOwner, polywrapController] = await ethers.getSigners();
+    const [_owner, _domainOwner, _polywrapController, _randomAcc] = await ethers.getSigners();
+    owner = _owner;
+    domainOwner = _domainOwner;
+    polywrapController = _polywrapController;
+    randomAcc = _randomAcc;
+
+    ens = await deployENS();
 
     const versionRegistryFactory = await ethers.getContractFactory("PolywrapRegistry");
 
-    polywrapRegistry = await versionRegistryFactory.deploy();
+    polywrapRegistry = await versionRegistryFactory.deploy(ens.ensRegistry.address, ens.ensPublicResolver.address);
+
+    await ens.registerDomainName(domainOwner.address, apiName);
+    await ens.setPolywrapController(domainOwner, apiName, polywrapController.address);
+
+    polywrapRegistry = polywrapRegistry.connect(polywrapController);
   });
 
   it("can register a new API", async () => {
-    const apiName = "test-api";
+    const res = await polywrapRegistry.aa(ethers.utils.id(apiName));
+    console.log(polywrapController.address);
+    console.log(res);
 
-    const tx = await polywrapRegistry.registerNewWeb3API(apiName);
+    const tx = await polywrapRegistry.registerNewWeb3API(ethers.utils.id(apiName));
 
     await expectEvent(tx, "NewWeb3API", {
-      name: apiName
+      name: ethers.utils.id(apiName)
     });
   });
 
   it("can register multiple APIs", async () => {
-    const apiName1 = "test-api1";
+    const apiName = "test-api";
     const apiName2 = "test-api2";
 
-    const tx1 = await polywrapRegistry.registerNewWeb3API(apiName1);
+    const tx1 = await polywrapRegistry.registerNewWeb3API(ethers.utils.id(apiName));
 
     await expectEvent(tx1, "NewWeb3API", {
-      name: apiName1
+      name: ethers.utils.id(apiName)
     });
 
-    const tx2 = await polywrapRegistry.registerNewWeb3API(apiName2);
+    await ens.registerDomainName(domainOwner.address, apiName2);
+    await ens.setPolywrapController(domainOwner, apiName2, polywrapController.address);
+
+    const tx2 = await polywrapRegistry.registerNewWeb3API(ethers.utils.id(apiName2));
 
     await expectEvent(tx2, "NewWeb3API", {
-      name: apiName2
+      name: ethers.utils.id(apiName2)
     });
   });
 
   it("forbids registering the same API more than once", async () => {
     const apiName = "test-api";
 
-    const tx = await polywrapRegistry.registerNewWeb3API(apiName);
+    const tx = await polywrapRegistry.registerNewWeb3API(ethers.utils.id(apiName));
 
     await expectEvent(tx, "NewWeb3API", {
-      name: apiName
+      name: ethers.utils.id(apiName)
     });
 
     await expect(
-      polywrapRegistry.registerNewWeb3API(apiName)
+      polywrapRegistry.registerNewWeb3API(ethers.utils.id(apiName))
     ).to.revertedWith("API is already registered");
+  });
+
+  it("forbids registering an API to non controllers", async () => {
+    const apiName = "test-api";
+
+    polywrapRegistry = polywrapRegistry.connect(randomAcc);
+
+    await expect(
+      polywrapRegistry.registerNewWeb3API(ethers.utils.id(apiName))
+    ).to.revertedWith("You do not have access to the specified ENS domain");
   });
 });
 
@@ -97,21 +149,33 @@ describe("Version registation", function () {
   const apiName = "test-api";
 
   let polywrapRegistry: PolywrapRegistry;
-  let apiId: BigNumberish;
+  let domainOwner: SignerWithAddress;
+  let polywrapController: SignerWithAddress;
+  let ens: ENSApi;
+  let apiId: BytesLike;
 
   beforeEach(async () => {
-    const [owner] = await ethers.getSigners();
+    const [owner, _domainOwner, _polywrapController] = await ethers.getSigners();
+    domainOwner = _domainOwner;
+    polywrapController = _polywrapController;
 
-    const contractFactory = await ethers.getContractFactory("PolywrapRegistry");
+    ens = await deployENS();
 
-    polywrapRegistry = await contractFactory.deploy();
+    const versionRegistryFactory = await ethers.getContractFactory("PolywrapRegistry");
 
-    const tx = await polywrapRegistry.registerNewWeb3API(apiName);
+    polywrapRegistry = await versionRegistryFactory.deploy(ens.ensRegistry.address, ens.ensPublicResolver.address);
+
+    await ens.registerDomainName(domainOwner.address, apiName);
+    await ens.setPolywrapController(domainOwner, apiName, polywrapController.address);
+
+    polywrapRegistry = polywrapRegistry.connect(polywrapController);
+
+    const tx = await polywrapRegistry.registerNewWeb3API(ethers.utils.id(apiName));
     apiId = (await getEventArgs(tx, "NewWeb3API"))["apiId"];
   });
 
   it("can publish a new version", async function () {
-    const apiLocation = "dhasjhds";
+    const apiLocation = "location";
 
     const newVersionTx = await polywrapRegistry.publishNewVersion(apiId, 1, 0, 0, apiLocation);
 

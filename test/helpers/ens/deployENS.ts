@@ -2,9 +2,9 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { ethers } from "hardhat";
 import { ENSApi } from "./ENSApi";
 
-export const deployENS = async (): Promise<ENSApi> => {
-  const polywrapControllerRecordName = "polywrap-controller";
+const polywrapControllerRecordName = "polywrap-controller";
 
+export const deployENS = async (): Promise<ENSApi> => {
   const ensRegistryFactory = await ethers.getContractFactory("TestENSRegistry");
 
   const ensRegistry = await ensRegistryFactory.deploy();
@@ -23,6 +23,8 @@ export const deployENS = async (): Promise<ENSApi> => {
   };
 
   return {
+    ensRegistry,
+    ensPublicResolver: publicResolver,
     registerDomainName: async (domainOwner: string, domainName: string): Promise<void> => {
       const domainHash = ethers.utils.id(domainName);
 

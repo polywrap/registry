@@ -2,31 +2,31 @@
 pragma solidity ^0.8.4;
 
 abstract contract NodeIdResolver {
-  function getApiNodeId(uint256 apiId) internal pure returns (uint256) {
-    return uint256(keccak256(abi.encodePacked(apiId)));
+  function getApiNodeId(bytes32 apiId) internal pure returns (bytes32) {
+    return keccak256(abi.encodePacked(apiId));
   }
 
-  function getMajorNodeId(uint256 apiNodeId, uint256 majorVersion)
+  function getMajorNodeId(bytes32 apiNodeId, uint256 majorVersion)
     internal
     pure
-    returns (uint256)
+    returns (bytes32)
   {
-    return uint256(keccak256(abi.encodePacked(apiNodeId, majorVersion)));
+    return keccak256(abi.encodePacked(apiNodeId, majorVersion));
   }
 
-  function getMinorNodeId(uint256 majorNodeId, uint256 minorVersion)
+  function getMinorNodeId(bytes32 majorNodeId, uint256 minorVersion)
     internal
     pure
-    returns (uint256)
+    returns (bytes32)
   {
-    return uint256(keccak256(abi.encodePacked(majorNodeId, minorVersion)));
+    return keccak256(abi.encodePacked(majorNodeId, minorVersion));
   }
 
-  function getPatchNodeId(uint256 minorNodeId, uint256 patchVersion)
+  function getPatchNodeId(bytes32 minorNodeId, uint256 patchVersion)
     internal
     pure
-    returns (uint256)
+    returns (bytes32)
   {
-    return uint256(keccak256(abi.encodePacked(minorNodeId, patchVersion)));
+    return keccak256(abi.encodePacked(minorNodeId, patchVersion));
   }
 }
