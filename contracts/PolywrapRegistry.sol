@@ -3,7 +3,7 @@ pragma solidity ^0.8.4;
 
 import "./VersionRegistry.sol";
 
-contract PolywrapVersionRegistry is VersionRegistry {
+contract PolywrapRegistry is VersionRegistry {
   // function initialize() public initializer {
   //   __Ownable_init();
   // }

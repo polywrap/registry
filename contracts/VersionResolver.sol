@@ -5,7 +5,7 @@ import "./interfaces/IVersionRegistry.sol";
 import "./VersionManager.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-contract VersionResolver is
+abstract contract VersionResolver is
   IVersionRegistry,
   OwnableUpgradeable,
   VersionManager
