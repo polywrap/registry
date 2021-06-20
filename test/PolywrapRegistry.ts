@@ -19,13 +19,15 @@ describe("ENS registration", () => {
   let ens: EnsApi;
   const testDomain = new EnsDomain("test-domain");
 
-  beforeEach(async () => {
+  before(async () => {
     const [_owner, _domainOwner, _polywrapController, _randomAcc] = await ethers.getSigners();
     owner = _owner;
     domainOwner = _domainOwner;
     polywrapController = _polywrapController;
     randomAcc = _randomAcc;
+  });
 
+  beforeEach(async () => {
     ens = new EnsApi();
     await ens.deploy(owner);
   });
@@ -66,28 +68,29 @@ describe("API registration", () => {
 
   let polywrapRegistry: PolywrapRegistry;
   let ens: EnsApi;
+
   let owner: SignerWithAddress;
   let domainOwner: SignerWithAddress;
   let polywrapController: SignerWithAddress;
   let randomAcc: SignerWithAddress;
 
-  beforeEach(async () => {
+  before(async () => {
     const [_owner, _domainOwner, _polywrapController, _randomAcc] = await ethers.getSigners();
     owner = _owner;
     domainOwner = _domainOwner;
     polywrapController = _polywrapController;
     randomAcc = _randomAcc;
+  });
 
+  beforeEach(async () => {
     ens = new EnsApi();
     await ens.deploy(owner);
-
-    const versionRegistryFactory = await ethers.getContractFactory("PolywrapRegistry");
-
-    polywrapRegistry = await versionRegistryFactory.deploy(ens.ensRegistry!.address);
 
     await ens.registerDomainName(domainOwner, testDomain);
     await ens.setPolywrapController(domainOwner, testDomain, polywrapController.address);
 
+    const versionRegistryFactory = await ethers.getContractFactory("PolywrapRegistry");
+    polywrapRegistry = await versionRegistryFactory.deploy(ens.ensRegistry!.address);
     polywrapRegistry = polywrapRegistry.connect(polywrapController);
   });
 
@@ -151,28 +154,33 @@ describe("Version registation", function () {
   const testDomain = new EnsDomain("test-domain");
 
   let polywrapRegistry: PolywrapRegistry;
-  let domainOwner: SignerWithAddress;
-  let polywrapController: SignerWithAddress;
   let ens: EnsApi;
 
-  beforeEach(async () => {
-    const [owner, _domainOwner, _polywrapController] = await ethers.getSigners();
+  let owner: SignerWithAddress;
+  let domainOwner: SignerWithAddress;
+  let polywrapController: SignerWithAddress;
+  let randomAcc: SignerWithAddress;
+
+  before(async () => {
+    const [_owner, _domainOwner, _polywrapController, _randomAcc] = await ethers.getSigners();
+    owner = _owner;
     domainOwner = _domainOwner;
     polywrapController = _polywrapController;
+    randomAcc = _randomAcc;
 
     ens = new EnsApi();
     await ens.deploy(owner);
 
-    const versionRegistryFactory = await ethers.getContractFactory("PolywrapRegistry");
-
-    polywrapRegistry = await versionRegistryFactory.deploy(ens.ensRegistry!.address);
-
     await ens.registerDomainName(domainOwner, testDomain);
     await ens.setPolywrapController(domainOwner, testDomain, polywrapController.address);
+  });
 
+  beforeEach(async () => {
+    const versionRegistryFactory = await ethers.getContractFactory("PolywrapRegistry");
+    polywrapRegistry = await versionRegistryFactory.deploy(ens.ensRegistry!.address);
     polywrapRegistry = polywrapRegistry.connect(polywrapController);
 
-    const tx = await polywrapRegistry.registerNewWeb3API(testDomain.node);
+    await polywrapRegistry.registerNewWeb3API(testDomain.node);
   });
 
   it("can publish a new version", async function () {
@@ -278,5 +286,13 @@ describe("Version registation", function () {
       polywrapRegistry.publishNewVersion(testDomain.apiId, 1, 0, 0, apiLocation2)
     )
       .to.revertedWith("Version is already published");
+  });
+
+  it("forbids publish a version of an API you don't control", async () => {
+    polywrapRegistry = polywrapRegistry.connect(randomAcc);
+
+    await expect(
+      polywrapRegistry.publishNewVersion(testDomain.apiId, 1, 0, 0, "random location")
+    ).to.revertedWith("You do not have access to the ENS domain of the API");
   });
 });
