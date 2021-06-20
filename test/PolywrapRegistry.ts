@@ -271,7 +271,7 @@ describe("Version registation", function () {
     expect(await getPackageLocation(polywrapRegistry, testDomain, 2)).to.equal(apiLocation2);
   });
 
-  it("forbids publishing same version more than once", async function () {
+  it("forbids publishing the same version more than once", async function () {
     const apiLocation1 = "location1";
     const apiLocation2 = "location2";
 
@@ -288,11 +288,146 @@ describe("Version registation", function () {
       .to.revertedWith("Version is already published");
   });
 
-  it("forbids publish a version of an API you don't control", async () => {
+  it("forbids publishing a version of an API you don't own", async () => {
     polywrapRegistry = polywrapRegistry.connect(randomAcc);
 
     await expect(
-      polywrapRegistry.publishNewVersion(testDomain.apiId, 1, 0, 0, "random location")
-    ).to.revertedWith("You do not have access to the ENS domain of the API");
+      polywrapRegistry.publishNewVersion(testDomain.apiId, 1, 0, 0, "test location")
+    ).to.revertedWith("You do not have access to this API");
+  });
+});
+
+
+describe("API managers", function () {
+  const testDomain = new EnsDomain("test-domain");
+
+  let polywrapRegistry: PolywrapRegistry;
+  let ens: EnsApi;
+
+  let owner: SignerWithAddress;
+  let domainOwner: SignerWithAddress;
+  let polywrapController: SignerWithAddress;
+  let managerAcc1: SignerWithAddress;
+  let managerAcc2: SignerWithAddress;
+  let randomAcc: SignerWithAddress;
+
+  before(async () => {
+    const [_owner, _domainOwner, _polywrapController, _managerAcc1, _managerAcc2, _randomAcc] = await ethers.getSigners();
+    owner = _owner;
+    domainOwner = _domainOwner;
+    polywrapController = _polywrapController;
+    managerAcc1 = _managerAcc1;
+    managerAcc2 = _managerAcc2;
+    randomAcc = _randomAcc;
+
+    ens = new EnsApi();
+    await ens.deploy(owner);
+
+    await ens.registerDomainName(domainOwner, testDomain);
+    await ens.setPolywrapController(domainOwner, testDomain, polywrapController.address);
+  });
+
+  beforeEach(async () => {
+    const versionRegistryFactory = await ethers.getContractFactory("PolywrapRegistry");
+    polywrapRegistry = await versionRegistryFactory.deploy(ens.ensRegistry!.address);
+    polywrapRegistry = polywrapRegistry.connect(polywrapController);
+
+    await polywrapRegistry.registerNewWeb3API(testDomain.node);
+  });
+
+  it("can add an API manager", async function () {
+    await expectEvent(
+      await polywrapRegistry.addApiManager(testDomain.apiId, managerAcc1.address),
+      "AddApiManager", {
+      apiId: testDomain.apiId,
+      manager: managerAcc1.address
+    });
+
+    // const isAuthorized = await polywrapRegistry.isAuthorized(testDomain.apiId, managerAcc1.address);
+    // expect(isAuthorized).to.be.true;
+  });
+
+  it("can add multiple API managers", async function () {
+    await expectEvent(
+      await polywrapRegistry.addApiManager(testDomain.apiId, managerAcc1.address),
+      "AddApiManager", {
+      apiId: testDomain.apiId,
+      manager: managerAcc1.address
+    });
+
+    await expectEvent(
+      await polywrapRegistry.addApiManager(testDomain.apiId, managerAcc2.address),
+      "AddApiManager", {
+      apiId: testDomain.apiId,
+      manager: managerAcc2.address
+    });
+
+    const isAuthorized1 = await polywrapRegistry.isAuthorized(testDomain.apiId, managerAcc1.address);
+    expect(isAuthorized1).to.be.true;
+
+    const isAuthorized2 = await polywrapRegistry.isAuthorized(testDomain.apiId, managerAcc2.address);
+    expect(isAuthorized2).to.be.true;
+  });
+
+  it("can remove API managers", async function () {
+    await polywrapRegistry.addApiManager(testDomain.apiId, managerAcc1.address);
+    await polywrapRegistry.addApiManager(testDomain.apiId, managerAcc2.address);
+
+    await expectEvent(
+      await polywrapRegistry.removeApiManager(testDomain.apiId, managerAcc2.address),
+      "RemoveApiManager", {
+      apiId: testDomain.apiId,
+      manager: managerAcc2.address
+    });
+
+    const isAuthorized1 = await polywrapRegistry.isAuthorized(testDomain.apiId, managerAcc1.address);
+    expect(isAuthorized1).to.be.true;
+
+    const isAuthorized2 = await polywrapRegistry.isAuthorized(testDomain.apiId, managerAcc2.address);
+    expect(isAuthorized2).to.be.false;
+  });
+
+  it("can publish new versions as a manager", async () => {
+    const testLocation = "test location";
+
+    await polywrapRegistry.addApiManager(testDomain.apiId, managerAcc1.address);
+
+    polywrapRegistry = polywrapRegistry.connect(managerAcc1);
+
+    await expectEvent(
+      await polywrapRegistry.publishNewVersion(testDomain.apiId, 1, 0, 0, testLocation),
+      "NewVersion",
+      {
+        apiId: testDomain.apiId,
+        major: 1,
+        minor: 0,
+        patch: 0,
+        location: testLocation
+      });
+  });
+
+  it("forbids publishing a version of an API after being removed as a manager", async () => {
+    await polywrapRegistry.addApiManager(testDomain.apiId, managerAcc1.address);
+    await polywrapRegistry.removeApiManager(testDomain.apiId, managerAcc1.address);
+
+    polywrapRegistry = polywrapRegistry.connect(managerAcc1);
+
+    await expect(
+      polywrapRegistry.publishNewVersion(testDomain.apiId, 1, 0, 0, "test location")
+    ).to.revertedWith("You do not have access to this API");
+  });
+
+  it("forbids non owners to add and remove API managers", async function () {
+    await polywrapRegistry.addApiManager(testDomain.apiId, managerAcc1.address);
+
+    polywrapRegistry = polywrapRegistry.connect(managerAcc1);
+
+    await expect(
+      polywrapRegistry.addApiManager(testDomain.apiId, managerAcc2.address)
+    ).to.revertedWith("You do not have access to the ENS domain");
+
+    await expect(
+      polywrapRegistry.removeApiManager(testDomain.apiId, managerAcc1.address)
+    ).to.revertedWith("You do not have access to the ENS domain");
   });
 });

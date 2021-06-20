@@ -21,6 +21,8 @@ abstract contract VersionManager is StringToAddressParser {
   string polywrapControllerRecordName = "polywrap-controller";
 
   event NewWeb3API(bytes32 indexed ensNode, bytes32 indexed apiId);
+  event AddApiManager(bytes32 indexed apiId, address indexed manager);
+  event RemoveApiManager(bytes32 indexed apiId, address indexed manager);
   event NewVersion(
     bytes32 indexed apiId,
     bytes32 versionId,
@@ -39,6 +41,7 @@ abstract contract VersionManager is StringToAddressParser {
 
   mapping(bytes32 => Web3APIVersion) public nodes;
   mapping(bytes32 => uint256) public registeredAPI;
+  mapping(bytes32 => bool) public apiManagers;
 
   ENS ens;
 
@@ -63,7 +66,7 @@ abstract contract VersionManager is StringToAddressParser {
     uint256 minorVersion,
     uint256 patchVersion,
     string memory location
-  ) public apiOwner(apiId) {
+  ) public authorized(apiId) {
     Web3APIVersion storage apiNode = nodes[apiId];
 
     if (apiNode.latestSubVersion < majorVersion) {
@@ -104,6 +107,46 @@ abstract contract VersionManager is StringToAddressParser {
     );
   }
 
+  function addApiManager(bytes32 apiId, address manager)
+    public
+    apiOwner(apiId)
+  {
+    bytes32 key = keccak256(abi.encodePacked(apiId, manager));
+
+    apiManagers[key] = true;
+
+    emit AddApiManager(apiId, manager);
+  }
+
+  function removeApiManager(bytes32 apiId, address manager)
+    public
+    apiOwner(apiId)
+  {
+    bytes32 key = keccak256(abi.encodePacked(apiId, manager));
+
+    apiManagers[key] = false;
+
+    emit RemoveApiManager(apiId, manager);
+  }
+
+  function isAuthorized(bytes32 apiId, address ownerOrManager)
+    public
+    view
+    returns (bool)
+  {
+    uint256 ensNode = registeredAPI[apiId];
+
+    require(ensNode != 0, "API is not registered");
+
+    if (getPolywrapController(bytes32(ensNode)) == ownerOrManager) {
+      return true;
+    }
+
+    bytes32 key = keccak256(abi.encodePacked(apiId, ownerOrManager));
+
+    return apiManagers[key];
+  }
+
   modifier ensOwner(bytes32 ensNode) {
     require(
       getPolywrapController(ensNode) == msg.sender,
@@ -119,12 +162,24 @@ abstract contract VersionManager is StringToAddressParser {
 
     require(
       getPolywrapController(bytes32(ensNode)) == msg.sender,
-      "You do not have access to the ENS domain of the API"
+      "You do not have access to the ENS domain of this API"
     );
     _;
   }
 
-  function getPolywrapController(bytes32 ensNode) internal returns (address) {
+  modifier authorized(bytes32 apiId) {
+    require(
+      isAuthorized(apiId, msg.sender),
+      "You do not have access to this API"
+    );
+    _;
+  }
+
+  function getPolywrapController(bytes32 ensNode)
+    internal
+    view
+    returns (address)
+  {
     address textResolverAddr = ens.resolver(ensNode);
 
     require(textResolverAddr != address(0), "Resolver not set");
