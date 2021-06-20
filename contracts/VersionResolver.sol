@@ -2,10 +2,10 @@
 pragma solidity ^0.8.4;
 
 import "@ensdomains/ens-contracts/contracts/registry/ENS.sol";
-import "./VersionManager.sol";
+import "./VersionRegistry.sol";
 
-abstract contract VersionResolver is VersionManager {
-  constructor(ENS _ens) internal VersionManager(_ens) {}
+abstract contract VersionResolver is VersionRegistry {
+  constructor(ENS _ens) internal VersionRegistry(_ens) {}
 
   function resolveToLeaf(bytes32 nodeId) public view returns (bytes32) {
     Web3APIVersion storage node = nodes[nodeId];

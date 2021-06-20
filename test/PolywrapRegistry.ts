@@ -297,7 +297,6 @@ describe("Version registation", function () {
   });
 });
 
-
 describe("API managers", function () {
   const testDomain = new EnsDomain("test-domain");
 
