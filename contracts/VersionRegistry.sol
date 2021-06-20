@@ -20,8 +20,8 @@ interface TextResolverInterface {
 abstract contract VersionRegistry is StringToAddressParser {
   string polywrapControllerRecordName = "polywrap-controller";
 
-  event NewWeb3API(bytes32 indexed ensNode, bytes32 indexed apiId);
-  event NewVersion(
+  event ApiRegistered(bytes32 indexed ensNode, bytes32 indexed apiId);
+  event VersionPublished(
     bytes32 indexed apiId,
     bytes32 versionId,
     uint256 major,
@@ -54,7 +54,7 @@ abstract contract VersionRegistry is StringToAddressParser {
 
     registeredAPI[apiId] = uint256(ensNode);
 
-    emit NewWeb3API(ensNode, apiId);
+    emit ApiRegistered(ensNode, apiId);
   }
 
   function publishNewVersion(
@@ -94,7 +94,7 @@ abstract contract VersionRegistry is StringToAddressParser {
 
     nodes[patchNodeId] = Web3APIVersion(true, 0, true, location);
 
-    emit NewVersion(
+    emit VersionPublished(
       apiId,
       patchNodeId,
       majorVersion,

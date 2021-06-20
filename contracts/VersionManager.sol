@@ -5,8 +5,8 @@ import "@ensdomains/ens-contracts/contracts/registry/ENS.sol";
 import "./VersionResolver.sol";
 
 abstract contract VersionManager is VersionResolver {
-  event AddApiManager(bytes32 indexed apiId, address indexed manager);
-  event RemoveApiManager(bytes32 indexed apiId, address indexed manager);
+  event ManagerAdded(bytes32 indexed apiId, address indexed manager);
+  event ManagerRemoved(bytes32 indexed apiId, address indexed manager);
 
   mapping(bytes32 => bool) public apiManagers;
 
@@ -20,7 +20,7 @@ abstract contract VersionManager is VersionResolver {
 
     apiManagers[key] = true;
 
-    emit AddApiManager(apiId, manager);
+    emit ManagerAdded(apiId, manager);
   }
 
   function removeApiManager(bytes32 apiId, address manager)
@@ -31,7 +31,7 @@ abstract contract VersionManager is VersionResolver {
 
     apiManagers[key] = false;
 
-    emit RemoveApiManager(apiId, manager);
+    emit ManagerRemoved(apiId, manager);
   }
 
   function isAuthorized(bytes32 apiId, address ownerOrManager)

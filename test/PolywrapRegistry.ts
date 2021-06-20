@@ -97,7 +97,7 @@ describe("API registration", () => {
   it("can register a new API", async () => {
     const tx = await polywrapRegistry.registerNewWeb3API(testDomain.node);
 
-    await expectEvent(tx, "NewWeb3API", {
+    await expectEvent(tx, "ApiRegistered", {
       ensNode: testDomain.node,
       apiId: testDomain.apiId
     });
@@ -112,7 +112,7 @@ describe("API registration", () => {
 
     const tx1 = await polywrapRegistry.registerNewWeb3API(api1.node);
 
-    await expectEvent(tx1, "NewWeb3API", {
+    await expectEvent(tx1, "ApiRegistered", {
       ensNode: api1.node,
       apiId: api1.apiId
     });
@@ -122,7 +122,7 @@ describe("API registration", () => {
 
     const tx2 = await polywrapRegistry.registerNewWeb3API(api2.node);
 
-    await expectEvent(tx2, "NewWeb3API", {
+    await expectEvent(tx2, "ApiRegistered", {
       ensNode: api2.node,
       apiId: api2.apiId
     });
@@ -131,7 +131,7 @@ describe("API registration", () => {
   it("forbids registering the same API more than once", async () => {
     const tx = await polywrapRegistry.registerNewWeb3API(testDomain.node);
 
-    await expectEvent(tx, "NewWeb3API", {
+    await expectEvent(tx, "ApiRegistered", {
       ensNode: testDomain.node,
       apiId: testDomain.apiId
     });
@@ -188,7 +188,7 @@ describe("Version registation", function () {
 
     const newVersionTx = await polywrapRegistry.publishNewVersion(testDomain.apiId, 1, 0, 0, apiLocation);
 
-    await expectEvent(newVersionTx, "NewVersion", {
+    await expectEvent(newVersionTx, "VersionPublished", {
       apiId: testDomain.apiId,
       major: 1,
       minor: 0,
@@ -204,7 +204,7 @@ describe("Version registation", function () {
     await polywrapRegistry.publishNewVersion(testDomain.apiId, 1, 0, 0, apiLocation1);
     const newVersionTx = await polywrapRegistry.publishNewVersion(testDomain.apiId, 1, 0, 1, apiLocation2);
 
-    await expectEvent(newVersionTx, "NewVersion", {
+    await expectEvent(newVersionTx, "VersionPublished", {
       apiId: testDomain.apiId,
       major: 1,
       minor: 0,
@@ -246,7 +246,7 @@ describe("Version registation", function () {
 
     await expectEvent(
       await polywrapRegistry.publishNewVersion(testDomain.apiId, 1, 2, 3, apiLocation1),
-      "NewVersion",
+      "VersionPublished",
       {
         apiId: testDomain.apiId,
         major: 1,
@@ -257,7 +257,7 @@ describe("Version registation", function () {
 
     await expectEvent(
       await polywrapRegistry.publishNewVersion(testDomain.apiId, 2, 2, 3, apiLocation2),
-      "NewVersion",
+      "VersionPublished",
       {
         apiId: testDomain.apiId,
         major: 2,
@@ -337,7 +337,7 @@ describe("API managers", function () {
   it("can add an API manager", async function () {
     await expectEvent(
       await polywrapRegistry.addApiManager(testDomain.apiId, managerAcc1.address),
-      "AddApiManager", {
+      "ManagerAdded", {
       apiId: testDomain.apiId,
       manager: managerAcc1.address
     });
@@ -349,14 +349,14 @@ describe("API managers", function () {
   it("can add multiple API managers", async function () {
     await expectEvent(
       await polywrapRegistry.addApiManager(testDomain.apiId, managerAcc1.address),
-      "AddApiManager", {
+      "ManagerAdded", {
       apiId: testDomain.apiId,
       manager: managerAcc1.address
     });
 
     await expectEvent(
       await polywrapRegistry.addApiManager(testDomain.apiId, managerAcc2.address),
-      "AddApiManager", {
+      "ManagerAdded", {
       apiId: testDomain.apiId,
       manager: managerAcc2.address
     });
@@ -374,7 +374,7 @@ describe("API managers", function () {
 
     await expectEvent(
       await polywrapRegistry.removeApiManager(testDomain.apiId, managerAcc2.address),
-      "RemoveApiManager", {
+      "ManagerRemoved", {
       apiId: testDomain.apiId,
       manager: managerAcc2.address
     });
@@ -395,7 +395,7 @@ describe("API managers", function () {
 
     await expectEvent(
       await polywrapRegistry.publishNewVersion(testDomain.apiId, 1, 0, 0, testLocation),
-      "NewVersion",
+      "VersionPublished",
       {
         apiId: testDomain.apiId,
         major: 1,
