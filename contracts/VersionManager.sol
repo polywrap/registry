@@ -107,7 +107,7 @@ abstract contract VersionManager is StringToAddressParser {
   modifier ensOwner(bytes32 ensNode) {
     require(
       getPolywrapController(ensNode) == msg.sender,
-      "You do not have access to the specified ENS domain"
+      "You do not have access to the ENS domain"
     );
     _;
   }
@@ -119,7 +119,7 @@ abstract contract VersionManager is StringToAddressParser {
 
     require(
       getPolywrapController(bytes32(ensNode)) == msg.sender,
-      "You do not have access to the specified ENS domain"
+      "You do not have access to the ENS domain of the API"
     );
     _;
   }
@@ -136,5 +136,9 @@ abstract contract VersionManager is StringToAddressParser {
       stringToAddress(
         ensTextResolver.text(ensNode, polywrapControllerRecordName)
       );
+  }
+
+  function test(bytes32 ensNode, uint256 x) external view returns (bytes32) {
+    return keccak256(abi.encodePacked(ensNode, x));
   }
 }

@@ -8,45 +8,6 @@ import "./VersionManager.sol";
 abstract contract VersionResolver is OwnableUpgradeable, VersionManager {
   constructor(ENS _ens) internal VersionManager(_ens) {}
 
-  function resolveLatestMajorVersion(bytes32 apiId)
-    external
-    view
-    returns (string memory)
-  {
-    return getPackageLocation(apiId);
-  }
-
-  function resolveLatestMinorVersion(bytes32 apiId, uint256 major)
-    external
-    view
-    returns (string memory)
-  {
-    bytes32 majorNodeId = keccak256(abi.encodePacked(apiId, major));
-
-    return getPackageLocation(majorNodeId);
-  }
-
-  function resolveLatestPatchVersion(
-    bytes32 apiId,
-    uint256 majorVersion,
-    uint256 minorVersion
-  ) external view returns (string memory) {
-    bytes32 majorNodeId = keccak256(abi.encodePacked(apiId, majorVersion));
-    bytes32 minorNodeId =
-      keccak256(abi.encodePacked(majorNodeId, minorVersion));
-
-    return getPackageLocation(minorNodeId);
-  }
-
-  function resolveVersion(
-    bytes32 apiId,
-    uint256 majorVersion,
-    uint256 minorVersion,
-    uint256 patchVersion
-  ) external view returns (string memory) {
-    return _resolveVersion(apiId, majorVersion, minorVersion, patchVersion);
-  }
-
   function resolveToLeaf(bytes32 nodeId) public view returns (bytes32) {
     Web3APIVersion storage node = nodes[nodeId];
     require(node.created, "Invalid Node");
@@ -58,9 +19,7 @@ abstract contract VersionResolver is OwnableUpgradeable, VersionManager {
     bytes32 latestNodeId =
       keccak256(abi.encodePacked(nodeId, node.latestSubVersion));
 
-    bytes32 leafNodeId = resolveToLeaf(latestNodeId);
-
-    return leafNodeId;
+    return resolveToLeaf(latestNodeId);
   }
 
   function getPackageLocation(bytes32 nodeId)
@@ -69,23 +28,6 @@ abstract contract VersionResolver is OwnableUpgradeable, VersionManager {
     returns (string memory)
   {
     bytes32 concreteVersionId = resolveToLeaf(nodeId);
-    Web3APIVersion storage node = nodes[concreteVersionId];
-
-    return node.location;
-  }
-
-  function _resolveVersion(
-    bytes32 apiId,
-    uint256 majorVersion,
-    uint256 minorVersion,
-    uint256 patchVersion
-  ) internal view returns (string memory) {
-    bytes32 majorNodeId = keccak256(abi.encodePacked(apiId, majorVersion));
-    bytes32 minorNodeId =
-      keccak256(abi.encodePacked(majorNodeId, minorVersion));
-    bytes32 patchNodeId =
-      keccak256(abi.encodePacked(minorNodeId, patchVersion));
-
-    return getPackageLocation(patchNodeId);
+    return nodes[concreteVersionId].location;
   }
 }

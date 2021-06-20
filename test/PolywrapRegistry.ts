@@ -3,10 +3,11 @@ import { ethers } from "hardhat";
 import chai, { expect } from "chai";
 import { PolywrapRegistry } from "../typechain";
 import { expectEvent, getEventArgs } from "./helpers";
-import { BigNumberish, BytesLike } from "ethers";
+import { BigNumber, BigNumberish, BytesLike } from "ethers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { EnsDomain } from "./helpers/EnsDomain";
 import { EnsApi } from "./helpers/ens/EnsApi";
+import { getPackageLocation } from "./helpers/getPackageLocation";
 
 
 describe("ENS registration", () => {
@@ -142,7 +143,7 @@ describe("API registration", () => {
 
     await expect(
       polywrapRegistry.registerNewWeb3API(testDomain.node)
-    ).to.revertedWith("You do not have access to the specified ENS domain");
+    ).to.revertedWith("You do not have access to the ENS domain");
   });
 });
 
@@ -219,16 +220,16 @@ describe("Version registation", function () {
     await polywrapRegistry.publishNewVersion(testDomain.apiId, 2, 0, 0, apiLocation_2_0_0);
     await polywrapRegistry.publishNewVersion(testDomain.apiId, 2, 0, 1, apiLocation_2_0_1);
 
-    expect(await polywrapRegistry.resolveLatestMajorVersion(testDomain.apiId)).to.equal(apiLocation_2_0_1);
+    expect(await getPackageLocation(polywrapRegistry, testDomain)).to.equal(apiLocation_2_0_1);
 
-    expect(await polywrapRegistry.resolveLatestMinorVersion(testDomain.apiId, 1)).to.equal(apiLocation_1_1_1);
-    expect(await polywrapRegistry.resolveLatestMinorVersion(testDomain.apiId, 2)).to.equal(apiLocation_2_0_1);
+    expect(await getPackageLocation(polywrapRegistry, testDomain, 1)).to.equal(apiLocation_1_1_1);
+    expect(await getPackageLocation(polywrapRegistry, testDomain, 2)).to.equal(apiLocation_2_0_1);
 
-    expect(await polywrapRegistry.resolveLatestPatchVersion(testDomain.apiId, 1, 0)).to.equal(apiLocation_1_0_1);
-    expect(await polywrapRegistry.resolveLatestPatchVersion(testDomain.apiId, 1, 1)).to.equal(apiLocation_1_1_1);
-    expect(await polywrapRegistry.resolveLatestPatchVersion(testDomain.apiId, 2, 0)).to.equal(apiLocation_2_0_1);
+    expect(await getPackageLocation(polywrapRegistry, testDomain, 1, 0)).to.equal(apiLocation_1_0_1);
+    expect(await getPackageLocation(polywrapRegistry, testDomain, 1, 1)).to.equal(apiLocation_1_1_1);
+    expect(await getPackageLocation(polywrapRegistry, testDomain, 2, 0)).to.equal(apiLocation_2_0_1);
 
-    expect(await polywrapRegistry.resolveVersion(testDomain.apiId, 1, 0, 0)).to.equal(apiLocation_1_0_0);
+    expect(await getPackageLocation(polywrapRegistry, testDomain, 1, 0, 0)).to.equal(apiLocation_1_0_0);
   });
 
   it("can publish specific versions", async function () {
@@ -257,9 +258,9 @@ describe("Version registation", function () {
         location: apiLocation2
       });
 
-    expect(await polywrapRegistry.resolveLatestMajorVersion(testDomain.apiId)).to.equal(apiLocation2);
-    expect(await polywrapRegistry.resolveLatestMinorVersion(testDomain.apiId, 1)).to.equal(apiLocation1);
-    expect(await polywrapRegistry.resolveLatestMinorVersion(testDomain.apiId, 2)).to.equal(apiLocation2);
+    expect(await getPackageLocation(polywrapRegistry, testDomain)).to.equal(apiLocation2);
+    expect(await getPackageLocation(polywrapRegistry, testDomain, 1)).to.equal(apiLocation1);
+    expect(await getPackageLocation(polywrapRegistry, testDomain, 2)).to.equal(apiLocation2);
   });
 
   it("forbids publishing same version more than once", async function () {
