@@ -137,8 +137,4 @@ abstract contract VersionManager is StringToAddressParser {
         ensTextResolver.text(ensNode, polywrapControllerRecordName)
       );
   }
-
-  function test(bytes32 ensNode, uint256 x) external view returns (bytes32) {
-    return keccak256(abi.encodePacked(ensNode, x));
-  }
 }
