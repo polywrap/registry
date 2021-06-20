@@ -1,9 +1,12 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { ethers } from "hardhat";
 import { TestENSRegistry, TestEthRegistrar, TestPublicResolver } from "../../../typechain";
-import { EnsDomain } from "../EnsDomain";
 import { labelhash } from "../labelhash";
 import { polywrapControllerRecordName } from "../polywrapControllerRecordName";
+import { EnsDomain } from "./EnsDomain";
+import { ensTLD } from "./ensTLD";
+
+const rootNode = ethers.utils.zeroPad([0], 32);
 
 export class EnsApi {
   ensRegistry: TestENSRegistry | undefined;
@@ -12,7 +15,6 @@ export class EnsApi {
 
   //ethController can set resolvers
   async deploy(ethController: SignerWithAddress): Promise<void> {
-    const rootNode = ethers.utils.zeroPad([0], 32);
 
     const ensRegistryFactory = await ethers.getContractFactory("TestENSRegistry");
 
@@ -20,9 +22,9 @@ export class EnsApi {
 
     const ethRegistrarFactory = await ethers.getContractFactory("TestEthRegistrar");
 
-    this.ethRegistrar = await ethRegistrarFactory.deploy(this.ensRegistry.address, ethers.utils.namehash("eth"));
+    this.ethRegistrar = await ethRegistrarFactory.deploy(this.ensRegistry.address, ethers.utils.namehash(ensTLD));
 
-    await this.ensRegistry.setSubnodeOwner(rootNode, labelhash("eth"), this.ethRegistrar.address);
+    await this.ensRegistry.setSubnodeOwner(rootNode, labelhash(ensTLD), this.ethRegistrar.address);
     await this.ethRegistrar.addController(ethController.address);
 
     const publicResolverFactory = await ethers.getContractFactory("TestPublicResolver");

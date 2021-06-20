@@ -5,7 +5,7 @@ import { PolywrapRegistry } from "../typechain";
 import { expectEvent, getEventArgs } from "./helpers";
 import { BigNumber, BigNumberish, BytesLike } from "ethers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { EnsDomain } from "./helpers/EnsDomain";
+import { EnsDomain } from "./helpers/ens/EnsDomain";
 import { EnsApi } from "./helpers/ens/EnsApi";
 import { getPackageLocation } from "./helpers/getPackageLocation";
 

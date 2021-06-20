@@ -1,11 +1,12 @@
 import { ethers } from "hardhat";
-import { labelhash } from "./labelhash";
+import { ensTLD } from "./ensTLD";
+import { labelhash } from "../labelhash";
 
 export class EnsDomain {
   constructor(label: string) {
     this.label = label;
     this.labelHash = labelhash(label);
-    this.name = `${label}.eth`;
+    this.name = `${label}.${ensTLD}`;
     this.node = ethers.utils.namehash(this.name);
     this.apiId = ethers.utils.keccak256(this.node);
   }
