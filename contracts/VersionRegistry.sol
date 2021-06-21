@@ -46,7 +46,7 @@ abstract contract VersionRegistry is StringToAddressParser {
     ens = _ens;
   }
 
-  function registerNewWeb3API(bytes32 ensNode) public ensOwner(ensNode) {
+  function registerAPI(bytes32 ensNode) public ensOwner(ensNode) {
     //Create a different hash from ens node to not conflict with subdomains
     bytes32 apiId = keccak256(abi.encodePacked(ensNode));
 

@@ -95,7 +95,7 @@ describe("API registration", () => {
   });
 
   it("can register a new API", async () => {
-    const tx = await polywrapRegistry.registerNewWeb3API(testDomain.node);
+    const tx = await polywrapRegistry.registerAPI(testDomain.node);
 
     await expectEvent(tx, "ApiRegistered", {
       ensNode: testDomain.node,
@@ -110,7 +110,7 @@ describe("API registration", () => {
     await ens.registerDomainName(domainOwner, api1);
     await ens.setPolywrapController(domainOwner, api1, polywrapController.address);
 
-    const tx1 = await polywrapRegistry.registerNewWeb3API(api1.node);
+    const tx1 = await polywrapRegistry.registerAPI(api1.node);
 
     await expectEvent(tx1, "ApiRegistered", {
       ensNode: api1.node,
@@ -120,7 +120,7 @@ describe("API registration", () => {
     await ens.registerDomainName(domainOwner, api2);
     await ens.setPolywrapController(domainOwner, api2, polywrapController.address);
 
-    const tx2 = await polywrapRegistry.registerNewWeb3API(api2.node);
+    const tx2 = await polywrapRegistry.registerAPI(api2.node);
 
     await expectEvent(tx2, "ApiRegistered", {
       ensNode: api2.node,
@@ -129,7 +129,7 @@ describe("API registration", () => {
   });
 
   it("forbids registering the same API more than once", async () => {
-    const tx = await polywrapRegistry.registerNewWeb3API(testDomain.node);
+    const tx = await polywrapRegistry.registerAPI(testDomain.node);
 
     await expectEvent(tx, "ApiRegistered", {
       ensNode: testDomain.node,
@@ -137,7 +137,7 @@ describe("API registration", () => {
     });
 
     await expect(
-      polywrapRegistry.registerNewWeb3API(testDomain.node)
+      polywrapRegistry.registerAPI(testDomain.node)
     ).to.revertedWith("API is already registered");
   });
 
@@ -145,7 +145,7 @@ describe("API registration", () => {
     polywrapRegistry = polywrapRegistry.connect(randomAcc);
 
     await expect(
-      polywrapRegistry.registerNewWeb3API(testDomain.node)
+      polywrapRegistry.registerAPI(testDomain.node)
     ).to.revertedWith("You do not have access to the ENS domain");
   });
 });
@@ -180,7 +180,7 @@ describe("Version registation", function () {
     polywrapRegistry = await versionRegistryFactory.deploy(ens.ensRegistry!.address);
     polywrapRegistry = polywrapRegistry.connect(polywrapController);
 
-    await polywrapRegistry.registerNewWeb3API(testDomain.node);
+    await polywrapRegistry.registerAPI(testDomain.node);
   });
 
   it("can publish a new version", async function () {
@@ -331,7 +331,7 @@ describe("API managers", function () {
     polywrapRegistry = await versionRegistryFactory.deploy(ens.ensRegistry!.address);
     polywrapRegistry = polywrapRegistry.connect(polywrapController);
 
-    await polywrapRegistry.registerNewWeb3API(testDomain.node);
+    await polywrapRegistry.registerAPI(testDomain.node);
   });
 
   it("can add an API manager", async function () {
