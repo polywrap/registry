@@ -4,7 +4,6 @@ import { TestENSRegistry, TestEthRegistrar, TestPublicResolver } from "../../../
 import { labelhash } from "../labelhash";
 import { polywrapControllerRecordName } from "../polywrapControllerRecordName";
 import { EnsDomain } from "./EnsDomain";
-import { ensTLD } from "./ensTLD";
 
 const rootNode = ethers.utils.zeroPad([0], 32);
 
@@ -22,9 +21,9 @@ export class EnsApi {
 
     const ethRegistrarFactory = await ethers.getContractFactory("TestEthRegistrar");
 
-    this.ethRegistrar = await ethRegistrarFactory.deploy(this.ensRegistry.address, ethers.utils.namehash(ensTLD));
+    this.ethRegistrar = await ethRegistrarFactory.deploy(this.ensRegistry.address, ethers.utils.namehash(EnsDomain.TLD));
 
-    await this.ensRegistry.setSubnodeOwner(rootNode, labelhash(ensTLD), this.ethRegistrar.address);
+    await this.ensRegistry.setSubnodeOwner(rootNode, labelhash(EnsDomain.TLD), this.ethRegistrar.address);
     await this.ethRegistrar.addController(ethController.address);
 
     const publicResolverFactory = await ethers.getContractFactory("TestPublicResolver");
