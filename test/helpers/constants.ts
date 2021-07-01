@@ -1,0 +1,1 @@
+export const POLYWRAP_CONTROLLER_RECORD_NAME = "polywrap-controller";

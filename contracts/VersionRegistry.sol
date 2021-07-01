@@ -18,7 +18,8 @@ interface TextResolverInterface {
 }
 
 abstract contract VersionRegistry is StringToAddressParser {
-  string polywrapControllerRecordName = "polywrap-controller";
+  string internal constant POLYWRAP_CONTROLLER_RECORD_NAME =
+    "polywrap-controller";
 
   event ApiRegistered(bytes32 indexed ensNode, bytes32 indexed apiId);
   event VersionPublished(
@@ -38,9 +39,9 @@ abstract contract VersionRegistry is StringToAddressParser {
   }
 
   mapping(bytes32 => Web3APIVersion) public nodes;
-  mapping(bytes32 => uint256) public registeredAPI;
+  mapping(bytes32 => uint256) public apiToEns;
 
-  ENS ens;
+  ENS internal ens;
 
   constructor(ENS _ens) internal {
     ens = _ens;
@@ -50,9 +51,9 @@ abstract contract VersionRegistry is StringToAddressParser {
     //Create a different hash from ens node to not conflict with subdomains
     bytes32 apiId = keccak256(abi.encodePacked(ensNode));
 
-    require(registeredAPI[apiId] == 0, "API is already registered");
+    require(apiToEns[apiId] == 0, "API is already registered");
 
-    registeredAPI[apiId] = uint256(ensNode);
+    apiToEns[apiId] = uint256(ensNode);
 
     emit ApiRegistered(ensNode, apiId);
   }
@@ -78,8 +79,9 @@ abstract contract VersionRegistry is StringToAddressParser {
     }
     majorNode.created = true;
 
-    bytes32 minorNodeId =
-      keccak256(abi.encodePacked(majorNodeId, minorVersion));
+    bytes32 minorNodeId = keccak256(
+      abi.encodePacked(majorNodeId, minorVersion)
+    );
     Web3APIVersion storage minorNode = nodes[minorNodeId];
 
     if (minorNode.latestSubVersion < patchVersion) {
@@ -87,8 +89,9 @@ abstract contract VersionRegistry is StringToAddressParser {
     }
     minorNode.created = true;
 
-    bytes32 patchNodeId =
-      keccak256(abi.encodePacked(minorNodeId, patchVersion));
+    bytes32 patchNodeId = keccak256(
+      abi.encodePacked(minorNodeId, patchVersion)
+    );
 
     require(!nodes[patchNodeId].created, "Version is already published");
 
@@ -119,7 +122,7 @@ abstract contract VersionRegistry is StringToAddressParser {
   }
 
   modifier apiOwner(bytes32 apiId) {
-    uint256 ensNode = registeredAPI[apiId];
+    uint256 ensNode = apiToEns[apiId];
 
     require(ensNode != 0, "API is not registered");
 
@@ -147,12 +150,13 @@ abstract contract VersionRegistry is StringToAddressParser {
 
     require(textResolverAddr != address(0), "Resolver not set");
 
-    TextResolverInterface ensTextResolver =
-      TextResolverInterface(textResolverAddr);
+    TextResolverInterface ensTextResolver = TextResolverInterface(
+      textResolverAddr
+    );
 
     return
       stringToAddress(
-        ensTextResolver.text(ensNode, polywrapControllerRecordName)
+        ensTextResolver.text(ensNode, POLYWRAP_CONTROLLER_RECORD_NAME)
       );
   }
 }

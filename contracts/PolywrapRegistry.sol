@@ -5,5 +5,5 @@ import "@ensdomains/ens-contracts/contracts/registry/ENS.sol";
 import "./OwnableVersionRegistry.sol";
 
 contract PolywrapRegistry is OwnableVersionRegistry {
-  constructor(ENS _ens) public OwnableVersionRegistry(_ens) {}
+  constructor(ENS _ens) public VersionRegistry(_ens) {}
 }

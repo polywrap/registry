@@ -2,7 +2,7 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { ethers } from "hardhat";
 import { TestENSRegistry, TestEthRegistrar, TestPublicResolver } from "../../../typechain";
 import { labelhash } from "../labelhash";
-import { polywrapControllerRecordName } from "../polywrapControllerRecordName";
+import { POLYWRAP_CONTROLLER_RECORD_NAME } from "../constants";
 import { EnsDomain } from "./EnsDomain";
 
 const rootNode = ethers.utils.zeroPad([0], 32);
@@ -45,11 +45,11 @@ export class EnsApi {
 
     const ownedPublicResolver = this.ensPublicResolver!.connect(domainOwner);
 
-    const tx = await ownedPublicResolver.setText(domain.node, polywrapControllerRecordName, controllerAddress);
+    const tx = await ownedPublicResolver.setText(domain.node, POLYWRAP_CONTROLLER_RECORD_NAME, controllerAddress);
     await tx.wait();
   }
 
   async getPolywrapController(domain: EnsDomain): Promise<string> {
-    return await this.ensPublicResolver!.text(domain.node, polywrapControllerRecordName);
+    return await this.ensPublicResolver!.text(domain.node, POLYWRAP_CONTROLLER_RECORD_NAME);
   }
 }

@@ -1,12 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import "@ensdomains/ens-contracts/contracts/registry/ENS.sol";
 import "./VersionRegistry.sol";
 
 abstract contract VersionResolver is VersionRegistry {
-  constructor(ENS _ens) internal VersionRegistry(_ens) {}
-
   function resolveToLeaf(bytes32 nodeId) public view returns (bytes32) {
     Web3APIVersion storage node = nodes[nodeId];
     require(node.created, "Invalid Node");
@@ -15,8 +12,9 @@ abstract contract VersionResolver is VersionRegistry {
       return nodeId;
     }
 
-    bytes32 latestNodeId =
-      keccak256(abi.encodePacked(nodeId, node.latestSubVersion));
+    bytes32 latestNodeId = keccak256(
+      abi.encodePacked(nodeId, node.latestSubVersion)
+    );
 
     return resolveToLeaf(latestNodeId);
   }

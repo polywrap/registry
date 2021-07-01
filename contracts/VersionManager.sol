@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import "@ensdomains/ens-contracts/contracts/registry/ENS.sol";
 import "./VersionResolver.sol";
 
 abstract contract VersionManager is VersionResolver {
@@ -9,8 +8,6 @@ abstract contract VersionManager is VersionResolver {
   event ManagerRemoved(bytes32 indexed apiId, address indexed manager);
 
   mapping(bytes32 => bool) public apiManagers;
-
-  constructor(ENS _ens) internal VersionResolver(_ens) {}
 
   function addApiManager(bytes32 apiId, address manager)
     public
@@ -40,7 +37,7 @@ abstract contract VersionManager is VersionResolver {
     override
     returns (bool)
   {
-    uint256 ensNode = registeredAPI[apiId];
+    uint256 ensNode = apiToEns[apiId];
 
     require(ensNode != 0, "API is not registered");
 
