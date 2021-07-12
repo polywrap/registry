@@ -2,7 +2,7 @@
 pragma solidity ^0.8.4;
 
 import "@ensdomains/ens-contracts/contracts/registry/ENS.sol";
-import "./helpers/StringToAddressParser.sol";
+import "../helpers/StringToAddressParser.sol";
 
 interface TextResolverInterface {
   function setText(
