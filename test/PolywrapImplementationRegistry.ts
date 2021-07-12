@@ -1,7 +1,7 @@
 
 import { ethers } from "hardhat";
 import chai, { expect } from "chai";
-import { PolywrapImplementationRegistry, PolywrapRegistry } from "../typechain";
+import { PolywrapImplementationRegistry, PolywrapVersionRegistry } from "../typechain";
 import { EnsApi } from "./helpers/ens/EnsApi";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { expectEvent } from "./helpers";
@@ -11,7 +11,7 @@ describe("Implementation registration", () => {
   const interfaceDomain = new EnsDomain("interface-domain");
   const implementationDomain = new EnsDomain("implementation-domain");
 
-  let polywrapRegistry: PolywrapRegistry;
+  let versionRegistry: PolywrapVersionRegistry;
   let implementationRegistry: PolywrapImplementationRegistry;
   let ens: EnsApi;
 
@@ -49,17 +49,17 @@ describe("Implementation registration", () => {
   });
 
   beforeEach(async () => {
-    const versionRegistryFactory = await ethers.getContractFactory("PolywrapRegistry");
-    polywrapRegistry = await versionRegistryFactory.deploy(ens.ensRegistry!.address);
+    const versionRegistryFactory = await ethers.getContractFactory("PolywrapVersionRegistry");
+    versionRegistry = await versionRegistryFactory.deploy(ens.ensRegistry!.address);
 
-    polywrapRegistry = polywrapRegistry.connect(interfacePolywrapController);
-    await polywrapRegistry.registerAPI(interfaceDomain.node);
+    versionRegistry = versionRegistry.connect(interfacePolywrapController);
+    await versionRegistry.registerAPI(interfaceDomain.node);
 
-    polywrapRegistry = polywrapRegistry.connect(implementationPolywrapController);
-    await polywrapRegistry.registerAPI(implementationDomain.node);
+    versionRegistry = versionRegistry.connect(implementationPolywrapController);
+    await versionRegistry.registerAPI(implementationDomain.node);
 
     const implementationRegistryFactory = await ethers.getContractFactory("PolywrapImplementationRegistry");
-    implementationRegistry = await implementationRegistryFactory.deploy(polywrapRegistry.address);
+    implementationRegistry = await implementationRegistryFactory.deploy(versionRegistry.address);
 
     implementationRegistry = implementationRegistry.connect(interfacePolywrapController);
   });
