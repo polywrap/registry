@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import "../PolywrapVersionRegistry.sol";
+import "../versioning/PolywrapVersionRegistry.sol";
 import "./interfaces/IImplementationRegistry.sol";
 
 abstract contract ImplementationRegistry is IImplementationRegistry {
