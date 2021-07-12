@@ -342,8 +342,8 @@ describe("API managers", function () {
       manager: managerAcc1.address
     });
 
-    // const isAuthorized = await versionRegistry.isAuthorized(testDomain.apiId, managerAcc1.address);
-    // expect(isAuthorized).to.be.true;
+    const isAuthorized = await versionRegistry.isAuthorized(testDomain.apiId, managerAcc1.address);
+    expect(isAuthorized).to.be.true;
   });
 
   it("can add multiple API managers", async function () {
