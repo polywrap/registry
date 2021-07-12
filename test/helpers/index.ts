@@ -62,7 +62,7 @@ export async function getEvent(
 
 export const expectEvent = async (tx: ContractTransaction, eventName: string, args: Record<string, any>) => {
   const receivedArgs = await getEventArgs(tx, eventName);
-  console.log(receivedArgs);
+
   for (const arg of Object.keys(args)) {
     expect(receivedArgs[arg]).to.equal(args[arg]);
   }
