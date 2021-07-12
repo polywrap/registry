@@ -5,9 +5,9 @@ import "./PolywrapRegistry.sol";
 import "./interfaces/IImplementationRegistry.sol";
 
 abstract contract ImplementationRegistry is IImplementationRegistry {
-  mapping(bytes32 => bytes32[]) public interfaceToImplementations;
+  mapping(bytes32 => string[]) public interfaceToImplementations;
 
-  PolywrapRegistry internal versionRegistry;
+  PolywrapRegistry public versionRegistry;
 
   constructor(PolywrapRegistry _versionRegistry) internal {
     versionRegistry = _versionRegistry;
@@ -15,37 +15,44 @@ abstract contract ImplementationRegistry is IImplementationRegistry {
 
   function registerImplementation(
     bytes32 interfaceApiId,
-    bytes32 implementationApiId
+    string calldata implementationUri
   ) public override authorized(interfaceApiId) {
-    interfaceToImplementations[interfaceApiId].push(implementationApiId);
+    interfaceToImplementations[interfaceApiId].push(implementationUri);
 
-    emit ImplementationRegistered(interfaceApiId, implementationApiId);
+    emit ImplementationRegistered(interfaceApiId, implementationUri);
   }
 
   function registerImplementations(
     bytes32 interfaceApiId,
-    bytes32[] calldata implementationApiIds
+    string[] calldata implementationUris
   ) public override authorized(interfaceApiId) {
-    for (uint256 i = 0; i < implementationApiIds.length; i++) {
-      bytes32 implementationApiId = implementationApiIds[i];
+    for (uint256 i = 0; i < implementationUris.length; i++) {
+      string memory implementationUri = implementationUris[i];
 
-      interfaceToImplementations[interfaceApiId].push(implementationApiId);
-      emit ImplementationRegistered(interfaceApiId, implementationApiId);
+      interfaceToImplementations[interfaceApiId].push(implementationUri);
+      emit ImplementationRegistered(interfaceApiId, implementationUri);
     }
   }
 
   function overwriteImplementations(
     bytes32 interfaceApiId,
-    bytes32[] calldata implementationApiIds
+    string[] calldata implementationUris
   ) public override authorized(interfaceApiId) {
-    interfaceToImplementations[interfaceApiId] = implementationApiIds;
+    delete interfaceToImplementations[interfaceApiId];
+
+    for (uint256 i = 0; i < implementationUris.length; i++) {
+      string memory implementationUri = implementationUris[i];
+
+      interfaceToImplementations[interfaceApiId].push(implementationUri);
+      emit ImplementationRegistered(interfaceApiId, implementationUri);
+    }
   }
 
   function getImplementations(bytes32 interfaceApiId)
     public
     view
     override
-    returns (bytes32[] memory)
+    returns (string[] memory)
   {
     return interfaceToImplementations[interfaceApiId];
   }

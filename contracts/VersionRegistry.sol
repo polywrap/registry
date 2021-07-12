@@ -41,7 +41,7 @@ abstract contract VersionRegistry is StringToAddressParser {
   mapping(bytes32 => Web3APIVersion) public nodes;
   mapping(bytes32 => uint256) public apiToEns;
 
-  ENS internal ens;
+  ENS public ens;
 
   constructor(ENS _ens) internal {
     ens = _ens;

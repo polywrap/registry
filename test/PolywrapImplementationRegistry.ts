@@ -65,29 +65,28 @@ describe("Implementation registration", () => {
   });
 
   it("can register a new implementation", async function () {
-    const tx = await implementationRegistry.registerImplementation(interfaceDomain.apiId, implementationDomain.apiId);
+    const tx = await implementationRegistry.registerImplementation(interfaceDomain.apiId, implementationDomain.name);
 
     await expectEvent(tx, "ImplementationRegistered", {
-      interfaceApiId: interfaceDomain.apiId,
-      implementationApiId: implementationDomain.apiId
+      implementationUri: implementationDomain.name
     });
   });
 
   it("can register multiple implementations", async function () {
     const implementationDomain2 = new EnsDomain("implementation-domain2");
 
-    const tx1 = await implementationRegistry.registerImplementation(interfaceDomain.apiId, implementationDomain.apiId);
+    const tx1 = await implementationRegistry.registerImplementation(interfaceDomain.apiId, implementationDomain.name);
 
     await expectEvent(tx1, "ImplementationRegistered", {
       interfaceApiId: interfaceDomain.apiId,
-      implementationApiId: implementationDomain.apiId
+      implementationUri: implementationDomain.name
     });
 
-    const tx2 = await implementationRegistry.registerImplementation(interfaceDomain.apiId, implementationDomain2.apiId);
+    const tx2 = await implementationRegistry.registerImplementation(interfaceDomain.apiId, implementationDomain2.name);
 
     await expectEvent(tx2, "ImplementationRegistered", {
       interfaceApiId: interfaceDomain.apiId,
-      implementationApiId: implementationDomain2.apiId
+      implementationUri: implementationDomain2.name
     });
   });
 
@@ -95,13 +94,13 @@ describe("Implementation registration", () => {
     implementationRegistry = implementationRegistry.connect(randomAcc);
 
     await expect(
-      implementationRegistry.registerImplementation(interfaceDomain.apiId, implementationDomain.apiId)
+      implementationRegistry.registerImplementation(interfaceDomain.apiId, implementationDomain.name)
     ).to.revertedWith("You do not have access to this interface API");
 
     implementationRegistry = implementationRegistry.connect(implementationPolywrapController);
 
     await expect(
-      implementationRegistry.registerImplementation(interfaceDomain.apiId, implementationDomain.apiId)
+      implementationRegistry.registerImplementation(interfaceDomain.apiId, implementationDomain.name)
     ).to.revertedWith("You do not have access to this interface API");
   });
 
@@ -111,13 +110,13 @@ describe("Implementation registration", () => {
     implementationRegistry = implementationRegistry.connect(randomAcc);
 
     await expect(
-      implementationRegistry.registerImplementations(interfaceDomain.apiId, [implementationDomain.apiId, implementationDomain2.apiId])
+      implementationRegistry.registerImplementations(interfaceDomain.apiId, [implementationDomain.apiId, implementationDomain2.name])
     ).to.revertedWith("You do not have access to this interface API");
 
     implementationRegistry = implementationRegistry.connect(implementationPolywrapController);
 
     await expect(
-      implementationRegistry.registerImplementations(interfaceDomain.apiId, [implementationDomain.apiId, implementationDomain2.apiId])
+      implementationRegistry.registerImplementations(interfaceDomain.apiId, [implementationDomain.name, implementationDomain2.name])
     ).to.revertedWith("You do not have access to this interface API");
   });
 
@@ -138,16 +137,16 @@ describe("Implementation registration", () => {
   it("anyone can get implementations", async function () {
     const implementationDomain2 = new EnsDomain("implementation-domain2");
 
-    await implementationRegistry.registerImplementation(interfaceDomain.apiId, implementationDomain.apiId);
-    await implementationRegistry.registerImplementation(interfaceDomain.apiId, implementationDomain2.apiId);
+    await implementationRegistry.registerImplementation(interfaceDomain.apiId, implementationDomain.name);
+    await implementationRegistry.registerImplementation(interfaceDomain.apiId, implementationDomain2.name);
 
     implementationRegistry = implementationRegistry.connect(randomAcc);
 
     const implementations = await implementationRegistry.getImplementations(interfaceDomain.apiId);
 
     expect(implementations).to.eql([
-      implementationDomain.apiId,
-      implementationDomain2.apiId
+      implementationDomain.name,
+      implementationDomain2.name
     ]);
   });
 
@@ -155,16 +154,16 @@ describe("Implementation registration", () => {
     const implementationDomain2 = new EnsDomain("implementation-domain2");
     const implementationDomain3 = new EnsDomain("implementation-domain3");
 
-    await implementationRegistry.registerImplementation(interfaceDomain.apiId, implementationDomain.apiId);
-    await implementationRegistry.registerImplementation(interfaceDomain.apiId, implementationDomain2.apiId);
-    await implementationRegistry.overwriteImplementations(interfaceDomain.apiId, [implementationDomain3.apiId]);
+    await implementationRegistry.registerImplementation(interfaceDomain.apiId, implementationDomain.name);
+    await implementationRegistry.registerImplementation(interfaceDomain.apiId, implementationDomain2.name);
+    await implementationRegistry.overwriteImplementations(interfaceDomain.apiId, [implementationDomain3.name]);
 
     implementationRegistry = implementationRegistry.connect(randomAcc);
 
     const implementations = await implementationRegistry.getImplementations(interfaceDomain.apiId);
 
     expect(implementations).to.eql([
-      implementationDomain3.apiId
+      implementationDomain3.name
     ]);
   });
 
@@ -172,7 +171,7 @@ describe("Implementation registration", () => {
     const implementationDomain2 = new EnsDomain("implementation-domain2");
 
     await implementationRegistry.registerImplementation(interfaceDomain.apiId, implementationDomain.apiId);
-    await implementationRegistry.registerImplementation(interfaceDomain.apiId, implementationDomain2.apiId);
+    await implementationRegistry.registerImplementation(interfaceDomain.apiId, implementationDomain2.name);
     await implementationRegistry.overwriteImplementations(interfaceDomain.apiId, []);
 
     implementationRegistry = implementationRegistry.connect(randomAcc);
@@ -186,7 +185,7 @@ describe("Implementation registration", () => {
     const nonRegisteredInterfaceDomain = new EnsDomain("non-registered-interface-domain");
 
     await expect(
-      implementationRegistry.registerImplementation(nonRegisteredInterfaceDomain.apiId, implementationDomain.apiId)
+      implementationRegistry.registerImplementation(nonRegisteredInterfaceDomain.apiId, implementationDomain.name)
     ).to.revertedWith("API is not registered");
   });
 });
