@@ -1,10 +1,10 @@
 import { BigNumber, BigNumberish } from "ethers";
 import { concat, hexZeroPad, keccak256 } from "ethers/lib/utils";
-import { PolywrapRegistry } from "../../typechain";
+import { PolywrapVersionRegistry } from "../../typechain";
 import { EnsDomain } from "./ens/EnsDomain";
 
 export const getPackageLocation = async (
-  registryContract: PolywrapRegistry,
+  registryContract: PolywrapVersionRegistry,
   domain: EnsDomain, majorVersion: BigNumberish | undefined = undefined,
   minorVersion: BigNumberish | undefined = undefined,
   patchVersion: BigNumberish | undefined = undefined
