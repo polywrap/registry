@@ -75,7 +75,7 @@ abstract contract VersionRegistry is StringToAddressParser {
     emit PackageRegistered(ensNode, packageId, controller);
   }
 
-  function claimOwnership(bytes32 packageId) public {
+  function updateOwnership(bytes32 packageId) public {
     PackageInfo memory packageInfo = packages[packageId];
 
     require(packageInfo.ensNode != 0, "Pacakage is not registered");

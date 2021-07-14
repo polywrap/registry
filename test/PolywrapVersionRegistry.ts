@@ -144,14 +144,6 @@ describe("Package registration", () => {
       versionRegistry.registerPackage(testDomain.node)
     ).to.revertedWith("Package is already registered");
   });
-
-  // it("forbids registering an API to non controllers", async () => {
-  //   versionRegistry = versionRegistry.connect(randomAcc);
-
-  //   await expect(
-  //     versionRegistry.registerAPI(testDomain.node)
-  //   ).to.revertedWith("You do not have access to the ENS domain");
-  // });
 });
 
 describe("Version publish", function () {
@@ -481,7 +473,7 @@ describe("Changing ownership", function () {
     await ens.setPolywrapController(domainOwner, testDomain, polywrapController2.address);
 
     versionRegistry = versionRegistry.connect(polywrapController2);
-    await versionRegistry.claimOwnership(testDomain.packageId);
+    await versionRegistry.updateOwnership(testDomain.packageId);
 
     isAuthorized = await versionRegistry.isAuthorized(testDomain.packageId, polywrapController2.address);
     expect(isAuthorized).to.be.true;
@@ -500,7 +492,7 @@ describe("Changing ownership", function () {
     await ens.setPolywrapController(domainOwner, testDomain, polywrapController2.address);
 
     versionRegistry = versionRegistry.connect(randomAcc);
-    await versionRegistry.claimOwnership(testDomain.packageId);
+    await versionRegistry.updateOwnership(testDomain.packageId);
 
     isAuthorized = await versionRegistry.isAuthorized(testDomain.packageId, polywrapController2.address);
     expect(isAuthorized).to.be.true;
