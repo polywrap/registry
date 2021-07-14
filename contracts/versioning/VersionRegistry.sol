@@ -75,7 +75,7 @@ abstract contract VersionRegistry is StringToAddressParser {
     emit ApiRegistered(ensNode, apiId, controller);
   }
 
-  function claimOwnership(bytes32 apiId) public {
+  function updateOwnership(bytes32 apiId) public {
     ApiInfo memory apiInfo = registeredAPI[apiId];
 
     require(apiInfo.ensNode != 0, "API is not registered");
