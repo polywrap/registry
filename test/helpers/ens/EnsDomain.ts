@@ -7,14 +7,14 @@ export class EnsDomain {
     this.labelHash = labelhash(label);
     this.name = `${label}.${EnsDomain.TLD}`;
     this.node = ethers.utils.namehash(this.name);
-    this.apiId = ethers.utils.keccak256(this.node);
+    this.packageId = ethers.utils.keccak256(this.node);
   }
 
   label: string;
   labelHash: string;
   name: string;
   node: string;
-  apiId: string;
+  packageId: string;
 
   static TLD: string = "eth";
 }

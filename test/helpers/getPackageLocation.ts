@@ -9,7 +9,7 @@ export const getPackageLocation = async (
   minorVersion: BigNumberish | undefined = undefined,
   patchVersion: BigNumberish | undefined = undefined
 ): Promise<string> => {
-  let nodeId = domain.apiId;
+  let nodeId = domain.packageId;
 
   if (majorVersion != undefined) {
     nodeId = keccak256(concat([nodeId, hexZeroPad(BigNumber.from(majorVersion).toHexString(), 32)]));
