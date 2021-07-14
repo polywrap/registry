@@ -81,7 +81,7 @@ abstract contract VersionRegistry is StringToAddressParser {
     require(apiInfo.ensNode != 0, "API is not registered");
 
     address controller = getPolywrapController(bytes32(apiInfo.ensNode));
-    registeredAPI[apiId] = ApiInfo(controller, uint256(apiInfo.ensNode));
+    registeredAPI[apiId].controller = controller;
   }
 
   function publishNewVersion(
