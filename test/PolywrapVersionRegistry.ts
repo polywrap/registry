@@ -100,7 +100,7 @@ describe("API registration", () => {
     await expectEvent(tx, "ApiRegistered", {
       ensNode: testDomain.node,
       apiId: testDomain.apiId,
-      controller: polywrapController
+      controller: polywrapController.address
     });
   });
 
@@ -116,7 +116,7 @@ describe("API registration", () => {
     await expectEvent(tx1, "ApiRegistered", {
       ensNode: api1.node,
       apiId: api1.apiId,
-      controller: polywrapController
+      controller: polywrapController.address
     });
 
     await ens.registerDomainName(domainOwner, api2);
@@ -127,7 +127,7 @@ describe("API registration", () => {
     await expectEvent(tx2, "ApiRegistered", {
       ensNode: api2.node,
       apiId: api2.apiId,
-      controller: polywrapController
+      controller: polywrapController.address
     });
   });
 
@@ -137,7 +137,7 @@ describe("API registration", () => {
     await expectEvent(tx, "ApiRegistered", {
       ensNode: testDomain.node,
       apiId: testDomain.apiId,
-      controller: polywrapController
+      controller: polywrapController.address
     });
 
     await expect(
@@ -459,10 +459,11 @@ describe("Changing ownership", function () {
     await ens.deploy(owner);
 
     await ens.registerDomainName(domainOwner, testDomain);
-    await ens.setPolywrapController(domainOwner, testDomain, polywrapController.address);
   });
 
   beforeEach(async () => {
+    await ens.setPolywrapController(domainOwner, testDomain, polywrapController.address);
+
     const versionRegistryFactory = await ethers.getContractFactory("PolywrapVersionRegistry");
     versionRegistry = await versionRegistryFactory.deploy(ens.ensRegistry!.address);
     versionRegistry = versionRegistry.connect(polywrapController);
@@ -480,9 +481,9 @@ describe("Changing ownership", function () {
     await ens.setPolywrapController(domainOwner, testDomain, polywrapController2.address);
 
     versionRegistry = versionRegistry.connect(polywrapController2);
-    await versionRegistry.claimOwnership(testDomain.apiId, polywrapController2.address);
+    await versionRegistry.claimOwnership(testDomain.apiId);
 
-    isAuthorized = await versionRegistry.isAuthorized(testDomain.apiId);
+    isAuthorized = await versionRegistry.isAuthorized(testDomain.apiId, polywrapController2.address);
     expect(isAuthorized).to.be.true;
 
     isAuthorized = await versionRegistry.isAuthorized(testDomain.apiId, polywrapController.address);
