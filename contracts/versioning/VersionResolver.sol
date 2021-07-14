@@ -5,7 +5,7 @@ import "./VersionRegistry.sol";
 
 abstract contract VersionResolver is VersionRegistry {
   function resolveToLeaf(bytes32 nodeId) public view returns (bytes32) {
-    Web3APIVersion storage node = nodes[nodeId];
+    PackageVersion storage node = nodes[nodeId];
     require(node.created, "Invalid Node");
 
     if (node.leaf) {

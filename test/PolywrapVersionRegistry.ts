@@ -63,7 +63,7 @@ describe("ENS registration", () => {
   });
 });
 
-describe("API registration", () => {
+describe("Package registration", () => {
   const testDomain = new EnsDomain("test-domain");
 
   let versionRegistry: PolywrapVersionRegistry;
@@ -94,55 +94,55 @@ describe("API registration", () => {
     versionRegistry = versionRegistry.connect(polywrapController);
   });
 
-  it("can register a new API", async () => {
-    const tx = await versionRegistry.registerAPI(testDomain.node);
+  it("can register a new package", async () => {
+    const tx = await versionRegistry.registerPackage(testDomain.node);
 
-    await expectEvent(tx, "ApiRegistered", {
+    await expectEvent(tx, "PackageRegistered", {
       ensNode: testDomain.node,
-      apiId: testDomain.apiId,
+      packageId: testDomain.packageId,
       controller: polywrapController.address
     });
   });
 
-  it("can register multiple APIs", async () => {
-    const api1 = new EnsDomain("test-api");
-    const api2 = new EnsDomain("test-api2");
+  it("can register multiple packages", async () => {
+    const package1 = new EnsDomain("test-package");
+    const package2 = new EnsDomain("test-package2");
 
-    await ens.registerDomainName(domainOwner, api1);
-    await ens.setPolywrapController(domainOwner, api1, polywrapController.address);
+    await ens.registerDomainName(domainOwner, package1);
+    await ens.setPolywrapController(domainOwner, package1, polywrapController.address);
 
-    const tx1 = await versionRegistry.registerAPI(api1.node);
+    const tx1 = await versionRegistry.registerPackage(package1.node);
 
-    await expectEvent(tx1, "ApiRegistered", {
-      ensNode: api1.node,
-      apiId: api1.apiId,
+    await expectEvent(tx1, "PackageRegistered", {
+      ensNode: package1.node,
+      packageId: package1.packageId,
       controller: polywrapController.address
     });
 
-    await ens.registerDomainName(domainOwner, api2);
-    await ens.setPolywrapController(domainOwner, api2, polywrapController.address);
+    await ens.registerDomainName(domainOwner, package2);
+    await ens.setPolywrapController(domainOwner, package2, polywrapController.address);
 
-    const tx2 = await versionRegistry.registerAPI(api2.node);
+    const tx2 = await versionRegistry.registerPackage(package2.node);
 
-    await expectEvent(tx2, "ApiRegistered", {
-      ensNode: api2.node,
-      apiId: api2.apiId,
+    await expectEvent(tx2, "PackageRegistered", {
+      ensNode: package2.node,
+      packageId: package2.packageId,
       controller: polywrapController.address
     });
   });
 
-  it("forbids registering the same API more than once", async () => {
-    const tx = await versionRegistry.registerAPI(testDomain.node);
+  it("forbids registering the same package more than once", async () => {
+    const tx = await versionRegistry.registerPackage(testDomain.node);
 
-    await expectEvent(tx, "ApiRegistered", {
+    await expectEvent(tx, "PackageRegistered", {
       ensNode: testDomain.node,
-      apiId: testDomain.apiId,
+      packageId: testDomain.packageId,
       controller: polywrapController.address
     });
 
     await expect(
-      versionRegistry.registerAPI(testDomain.node)
-    ).to.revertedWith("API is already registered");
+      versionRegistry.registerPackage(testDomain.node)
+    ).to.revertedWith("Package is already registered");
   });
 });
 
@@ -176,124 +176,124 @@ describe("Version publish", function () {
     versionRegistry = await versionRegistryFactory.deploy(ens.ensRegistry!.address);
     versionRegistry = versionRegistry.connect(polywrapController);
 
-    await versionRegistry.registerAPI(testDomain.node);
+    await versionRegistry.registerPackage(testDomain.node);
   });
 
   it("can publish a new version", async function () {
-    const apiLocation = "location";
+    const packageLocation = "location";
 
-    const newVersionTx = await versionRegistry.publishNewVersion(testDomain.apiId, 1, 0, 0, apiLocation);
+    const newVersionTx = await versionRegistry.publishNewVersion(testDomain.packageId, 1, 0, 0, packageLocation);
 
     await expectEvent(newVersionTx, "VersionPublished", {
-      apiId: testDomain.apiId,
+      packageId: testDomain.packageId,
       major: 1,
       minor: 0,
       patch: 0,
-      location: apiLocation
+      location: packageLocation
     });
   });
 
   it("can publish multiple versions", async function () {
-    const apiLocation1 = "location1";
-    const apiLocation2 = "location2";
+    const packageLocation1 = "location1";
+    const packageLocation2 = "location2";
 
-    await versionRegistry.publishNewVersion(testDomain.apiId, 1, 0, 0, apiLocation1);
-    const newVersionTx = await versionRegistry.publishNewVersion(testDomain.apiId, 1, 0, 1, apiLocation2);
+    await versionRegistry.publishNewVersion(testDomain.packageId, 1, 0, 0, packageLocation1);
+    const newVersionTx = await versionRegistry.publishNewVersion(testDomain.packageId, 1, 0, 1, packageLocation2);
 
     await expectEvent(newVersionTx, "VersionPublished", {
-      apiId: testDomain.apiId,
+      packageId: testDomain.packageId,
       major: 1,
       minor: 0,
       patch: 1,
-      location: apiLocation2
+      location: packageLocation2
     });
   });
 
-  it("can resolve api versions", async function () {
-    const apiLocation_1_0_0 = "location_1_0_0";
-    const apiLocation_1_0_1 = "location_1_0_1";
-    const apiLocation_1_1_0 = "location_1_1_0";
-    const apiLocation_1_1_1 = "location_1_1_1";
-    const apiLocation_2_0_0 = "location_2_0_0";
-    const apiLocation_2_0_1 = "location_2_0_1";
+  it("can resolve package versions", async function () {
+    const packageLocation_1_0_0 = "location_1_0_0";
+    const packageLocation_1_0_1 = "location_1_0_1";
+    const packageLocation_1_1_0 = "location_1_1_0";
+    const packageLocation_1_1_1 = "location_1_1_1";
+    const packageLocation_2_0_0 = "location_2_0_0";
+    const packageLocation_2_0_1 = "location_2_0_1";
 
-    await versionRegistry.publishNewVersion(testDomain.apiId, 1, 0, 0, apiLocation_1_0_0);
-    await versionRegistry.publishNewVersion(testDomain.apiId, 1, 0, 1, apiLocation_1_0_1);
-    await versionRegistry.publishNewVersion(testDomain.apiId, 1, 1, 0, apiLocation_1_1_0);
-    await versionRegistry.publishNewVersion(testDomain.apiId, 1, 1, 1, apiLocation_1_1_1);
-    await versionRegistry.publishNewVersion(testDomain.apiId, 2, 0, 0, apiLocation_2_0_0);
-    await versionRegistry.publishNewVersion(testDomain.apiId, 2, 0, 1, apiLocation_2_0_1);
+    await versionRegistry.publishNewVersion(testDomain.packageId, 1, 0, 0, packageLocation_1_0_0);
+    await versionRegistry.publishNewVersion(testDomain.packageId, 1, 0, 1, packageLocation_1_0_1);
+    await versionRegistry.publishNewVersion(testDomain.packageId, 1, 1, 0, packageLocation_1_1_0);
+    await versionRegistry.publishNewVersion(testDomain.packageId, 1, 1, 1, packageLocation_1_1_1);
+    await versionRegistry.publishNewVersion(testDomain.packageId, 2, 0, 0, packageLocation_2_0_0);
+    await versionRegistry.publishNewVersion(testDomain.packageId, 2, 0, 1, packageLocation_2_0_1);
 
-    expect(await getPackageLocation(versionRegistry, testDomain)).to.equal(apiLocation_2_0_1);
+    expect(await getPackageLocation(versionRegistry, testDomain)).to.equal(packageLocation_2_0_1);
 
-    expect(await getPackageLocation(versionRegistry, testDomain, 1)).to.equal(apiLocation_1_1_1);
-    expect(await getPackageLocation(versionRegistry, testDomain, 2)).to.equal(apiLocation_2_0_1);
+    expect(await getPackageLocation(versionRegistry, testDomain, 1)).to.equal(packageLocation_1_1_1);
+    expect(await getPackageLocation(versionRegistry, testDomain, 2)).to.equal(packageLocation_2_0_1);
 
-    expect(await getPackageLocation(versionRegistry, testDomain, 1, 0)).to.equal(apiLocation_1_0_1);
-    expect(await getPackageLocation(versionRegistry, testDomain, 1, 1)).to.equal(apiLocation_1_1_1);
-    expect(await getPackageLocation(versionRegistry, testDomain, 2, 0)).to.equal(apiLocation_2_0_1);
+    expect(await getPackageLocation(versionRegistry, testDomain, 1, 0)).to.equal(packageLocation_1_0_1);
+    expect(await getPackageLocation(versionRegistry, testDomain, 1, 1)).to.equal(packageLocation_1_1_1);
+    expect(await getPackageLocation(versionRegistry, testDomain, 2, 0)).to.equal(packageLocation_2_0_1);
 
-    expect(await getPackageLocation(versionRegistry, testDomain, 1, 0, 0)).to.equal(apiLocation_1_0_0);
+    expect(await getPackageLocation(versionRegistry, testDomain, 1, 0, 0)).to.equal(packageLocation_1_0_0);
   });
 
   it("can publish specific versions", async function () {
-    const apiLocation1 = "location1";
-    const apiLocation2 = "location2";
+    const packageLocation1 = "location1";
+    const packageLocation2 = "location2";
 
     await expectEvent(
-      await versionRegistry.publishNewVersion(testDomain.apiId, 1, 2, 3, apiLocation1),
+      await versionRegistry.publishNewVersion(testDomain.packageId, 1, 2, 3, packageLocation1),
       "VersionPublished",
       {
-        apiId: testDomain.apiId,
+        packageId: testDomain.packageId,
         major: 1,
         minor: 2,
         patch: 3,
-        location: apiLocation1
+        location: packageLocation1
       });
 
     await expectEvent(
-      await versionRegistry.publishNewVersion(testDomain.apiId, 2, 2, 3, apiLocation2),
+      await versionRegistry.publishNewVersion(testDomain.packageId, 2, 2, 3, packageLocation2),
       "VersionPublished",
       {
-        apiId: testDomain.apiId,
+        packageId: testDomain.packageId,
         major: 2,
         minor: 2,
         patch: 3,
-        location: apiLocation2
+        location: packageLocation2
       });
 
-    expect(await getPackageLocation(versionRegistry, testDomain)).to.equal(apiLocation2);
-    expect(await getPackageLocation(versionRegistry, testDomain, 1)).to.equal(apiLocation1);
-    expect(await getPackageLocation(versionRegistry, testDomain, 2)).to.equal(apiLocation2);
+    expect(await getPackageLocation(versionRegistry, testDomain)).to.equal(packageLocation2);
+    expect(await getPackageLocation(versionRegistry, testDomain, 1)).to.equal(packageLocation1);
+    expect(await getPackageLocation(versionRegistry, testDomain, 2)).to.equal(packageLocation2);
   });
 
   it("forbids publishing the same version more than once", async function () {
-    const apiLocation1 = "location1";
-    const apiLocation2 = "location2";
+    const packageLocation1 = "location1";
+    const packageLocation2 = "location2";
 
-    await versionRegistry.publishNewVersion(testDomain.apiId, 1, 0, 0, apiLocation1);
+    await versionRegistry.publishNewVersion(testDomain.packageId, 1, 0, 0, packageLocation1);
 
     await expect(
-      versionRegistry.publishNewVersion(testDomain.apiId, 1, 0, 0, apiLocation1)
+      versionRegistry.publishNewVersion(testDomain.packageId, 1, 0, 0, packageLocation1)
     )
       .to.revertedWith("Version is already published");
 
     await expect(
-      versionRegistry.publishNewVersion(testDomain.apiId, 1, 0, 0, apiLocation2)
+      versionRegistry.publishNewVersion(testDomain.packageId, 1, 0, 0, packageLocation2)
     )
       .to.revertedWith("Version is already published");
   });
 
-  it("forbids publishing a version of an API you don't own", async () => {
+  it("forbids publishing a version of an package you don't own", async () => {
     versionRegistry = versionRegistry.connect(randomAcc);
 
     await expect(
-      versionRegistry.publishNewVersion(testDomain.apiId, 1, 0, 0, "test location")
-    ).to.revertedWith("You do not have access to this API");
+      versionRegistry.publishNewVersion(testDomain.packageId, 1, 0, 0, "test location")
+    ).to.revertedWith("You do not have access to this package");
   });
 });
 
-describe("API managers", function () {
+describe("Package managers", function () {
   const testDomain = new EnsDomain("test-domain");
 
   let versionRegistry: PolywrapVersionRegistry;
@@ -327,73 +327,73 @@ describe("API managers", function () {
     versionRegistry = await versionRegistryFactory.deploy(ens.ensRegistry!.address);
     versionRegistry = versionRegistry.connect(polywrapController);
 
-    await versionRegistry.registerAPI(testDomain.node);
+    await versionRegistry.registerPackage(testDomain.node);
   });
 
-  it("can add an API manager", async function () {
+  it("can add an package manager", async function () {
     await expectEvent(
-      await versionRegistry.addApiManager(testDomain.apiId, managerAcc1.address),
+      await versionRegistry.addManager(testDomain.packageId, managerAcc1.address),
       "ManagerAdded", {
-      apiId: testDomain.apiId,
+      packageId: testDomain.packageId,
       manager: managerAcc1.address
     });
 
-    const isAuthorized = await versionRegistry.isAuthorized(testDomain.apiId, managerAcc1.address);
+    const isAuthorized = await versionRegistry.isAuthorized(testDomain.packageId, managerAcc1.address);
     expect(isAuthorized).to.be.true;
   });
 
-  it("can add multiple API managers", async function () {
+  it("can add multiple package managers", async function () {
     await expectEvent(
-      await versionRegistry.addApiManager(testDomain.apiId, managerAcc1.address),
+      await versionRegistry.addManager(testDomain.packageId, managerAcc1.address),
       "ManagerAdded", {
-      apiId: testDomain.apiId,
+      packageId: testDomain.packageId,
       manager: managerAcc1.address
     });
 
     await expectEvent(
-      await versionRegistry.addApiManager(testDomain.apiId, managerAcc2.address),
+      await versionRegistry.addManager(testDomain.packageId, managerAcc2.address),
       "ManagerAdded", {
-      apiId: testDomain.apiId,
+      packageId: testDomain.packageId,
       manager: managerAcc2.address
     });
 
-    const isAuthorized1 = await versionRegistry.isAuthorized(testDomain.apiId, managerAcc1.address);
+    const isAuthorized1 = await versionRegistry.isAuthorized(testDomain.packageId, managerAcc1.address);
     expect(isAuthorized1).to.be.true;
 
-    const isAuthorized2 = await versionRegistry.isAuthorized(testDomain.apiId, managerAcc2.address);
+    const isAuthorized2 = await versionRegistry.isAuthorized(testDomain.packageId, managerAcc2.address);
     expect(isAuthorized2).to.be.true;
   });
 
-  it("can remove API managers", async function () {
-    await versionRegistry.addApiManager(testDomain.apiId, managerAcc1.address);
-    await versionRegistry.addApiManager(testDomain.apiId, managerAcc2.address);
+  it("can remove package managers", async function () {
+    await versionRegistry.addManager(testDomain.packageId, managerAcc1.address);
+    await versionRegistry.addManager(testDomain.packageId, managerAcc2.address);
 
     await expectEvent(
-      await versionRegistry.removeApiManager(testDomain.apiId, managerAcc2.address),
+      await versionRegistry.removeManager(testDomain.packageId, managerAcc2.address),
       "ManagerRemoved", {
-      apiId: testDomain.apiId,
+      packageId: testDomain.packageId,
       manager: managerAcc2.address
     });
 
-    const isAuthorized1 = await versionRegistry.isAuthorized(testDomain.apiId, managerAcc1.address);
+    const isAuthorized1 = await versionRegistry.isAuthorized(testDomain.packageId, managerAcc1.address);
     expect(isAuthorized1).to.be.true;
 
-    const isAuthorized2 = await versionRegistry.isAuthorized(testDomain.apiId, managerAcc2.address);
+    const isAuthorized2 = await versionRegistry.isAuthorized(testDomain.packageId, managerAcc2.address);
     expect(isAuthorized2).to.be.false;
   });
 
   it("can publish new versions as a manager", async () => {
     const testLocation = "test location";
 
-    await versionRegistry.addApiManager(testDomain.apiId, managerAcc1.address);
+    await versionRegistry.addManager(testDomain.packageId, managerAcc1.address);
 
     versionRegistry = versionRegistry.connect(managerAcc1);
 
     await expectEvent(
-      await versionRegistry.publishNewVersion(testDomain.apiId, 1, 0, 0, testLocation),
+      await versionRegistry.publishNewVersion(testDomain.packageId, 1, 0, 0, testLocation),
       "VersionPublished",
       {
-        apiId: testDomain.apiId,
+        packageId: testDomain.packageId,
         major: 1,
         minor: 0,
         patch: 0,
@@ -401,28 +401,28 @@ describe("API managers", function () {
       });
   });
 
-  it("forbids publishing a version of an API after being removed as a manager", async () => {
-    await versionRegistry.addApiManager(testDomain.apiId, managerAcc1.address);
-    await versionRegistry.removeApiManager(testDomain.apiId, managerAcc1.address);
+  it("forbids publishing a version of a package after being removed as a manager", async () => {
+    await versionRegistry.addManager(testDomain.packageId, managerAcc1.address);
+    await versionRegistry.removeManager(testDomain.packageId, managerAcc1.address);
 
     versionRegistry = versionRegistry.connect(managerAcc1);
 
     await expect(
-      versionRegistry.publishNewVersion(testDomain.apiId, 1, 0, 0, "test location")
-    ).to.revertedWith("You do not have access to this API");
+      versionRegistry.publishNewVersion(testDomain.packageId, 1, 0, 0, "test location")
+    ).to.revertedWith("You do not have access to this package");
   });
 
-  it("forbids non owners to add and remove API managers", async function () {
-    await versionRegistry.addApiManager(testDomain.apiId, managerAcc1.address);
+  it("forbids non owners to add and remove package managers", async function () {
+    await versionRegistry.addManager(testDomain.packageId, managerAcc1.address);
 
     versionRegistry = versionRegistry.connect(managerAcc1);
 
     await expect(
-      versionRegistry.addApiManager(testDomain.apiId, managerAcc2.address)
+      versionRegistry.addManager(testDomain.packageId, managerAcc2.address)
     ).to.revertedWith("You do not have access to the ENS domain");
 
     await expect(
-      versionRegistry.removeApiManager(testDomain.apiId, managerAcc1.address)
+      versionRegistry.removeManager(testDomain.packageId, managerAcc1.address)
     ).to.revertedWith("You do not have access to the ENS domain");
   });
 });
@@ -460,60 +460,60 @@ describe("Changing ownership", function () {
     versionRegistry = await versionRegistryFactory.deploy(ens.ensRegistry!.address);
     versionRegistry = versionRegistry.connect(polywrapController);
 
-    await versionRegistry.registerAPI(testDomain.node);
+    await versionRegistry.registerPackage(testDomain.node);
   });
 
   it("can change ownership", async function () {
-    let isAuthorized = await versionRegistry.isAuthorized(testDomain.apiId, polywrapController.address);
+    let isAuthorized = await versionRegistry.isAuthorized(testDomain.packageId, polywrapController.address);
     expect(isAuthorized).to.be.true;
 
-    isAuthorized = await versionRegistry.isAuthorized(testDomain.apiId, polywrapController2.address);
+    isAuthorized = await versionRegistry.isAuthorized(testDomain.packageId, polywrapController2.address);
     expect(isAuthorized).to.be.false;
 
     await ens.setPolywrapController(domainOwner, testDomain, polywrapController2.address);
 
     versionRegistry = versionRegistry.connect(polywrapController2);
-    await versionRegistry.updateOwnership(testDomain.apiId);
+    await versionRegistry.updateOwnership(testDomain.packageId);
 
-    isAuthorized = await versionRegistry.isAuthorized(testDomain.apiId, polywrapController2.address);
+    isAuthorized = await versionRegistry.isAuthorized(testDomain.packageId, polywrapController2.address);
     expect(isAuthorized).to.be.true;
 
-    isAuthorized = await versionRegistry.isAuthorized(testDomain.apiId, polywrapController.address);
+    isAuthorized = await versionRegistry.isAuthorized(testDomain.packageId, polywrapController.address);
     expect(isAuthorized).to.be.false;
   });
 
   it("anyone can claim ownership for the controller", async function () {
-    let isAuthorized = await versionRegistry.isAuthorized(testDomain.apiId, polywrapController.address);
+    let isAuthorized = await versionRegistry.isAuthorized(testDomain.packageId, polywrapController.address);
     expect(isAuthorized).to.be.true;
 
-    isAuthorized = await versionRegistry.isAuthorized(testDomain.apiId, polywrapController2.address);
+    isAuthorized = await versionRegistry.isAuthorized(testDomain.packageId, polywrapController2.address);
     expect(isAuthorized).to.be.false;
 
     await ens.setPolywrapController(domainOwner, testDomain, polywrapController2.address);
 
     versionRegistry = versionRegistry.connect(randomAcc);
-    await versionRegistry.updateOwnership(testDomain.apiId);
+    await versionRegistry.updateOwnership(testDomain.packageId);
 
-    isAuthorized = await versionRegistry.isAuthorized(testDomain.apiId, polywrapController2.address);
+    isAuthorized = await versionRegistry.isAuthorized(testDomain.packageId, polywrapController2.address);
     expect(isAuthorized).to.be.true;
 
-    isAuthorized = await versionRegistry.isAuthorized(testDomain.apiId, polywrapController.address);
+    isAuthorized = await versionRegistry.isAuthorized(testDomain.packageId, polywrapController.address);
     expect(isAuthorized).to.be.false;
   });
 
   it("can change polywrap-controller without affecting ownership", async function () {
-    let isAuthorized = await versionRegistry.isAuthorized(testDomain.apiId, polywrapController.address);
+    let isAuthorized = await versionRegistry.isAuthorized(testDomain.packageId, polywrapController.address);
     expect(isAuthorized).to.be.true;
 
-    isAuthorized = await versionRegistry.isAuthorized(testDomain.apiId, polywrapController2.address);
+    isAuthorized = await versionRegistry.isAuthorized(testDomain.packageId, polywrapController2.address);
     expect(isAuthorized).to.be.false;
 
     await ens.setPolywrapController(domainOwner, testDomain, polywrapController2.address);
 
-    isAuthorized = await versionRegistry.isAuthorized(testDomain.apiId, polywrapController.address);
+    isAuthorized = await versionRegistry.isAuthorized(testDomain.packageId, polywrapController.address);
     expect(isAuthorized).to.be.true;
 
-    isAuthorized = await versionRegistry.isAuthorized(testDomain.apiId, polywrapController2.address);
+    isAuthorized = await versionRegistry.isAuthorized(testDomain.packageId, polywrapController2.address);
     expect(isAuthorized).to.be.false;
   });
 });
