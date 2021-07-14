@@ -21,7 +21,18 @@ abstract contract VersionRegistry is StringToAddressParser {
   string internal constant POLYWRAP_CONTROLLER_RECORD_NAME =
     "polywrap-controller";
 
-  event ApiRegistered(bytes32 indexed ensNode, bytes32 indexed apiId);
+  event ApiRegistered(
+    bytes32 indexed ensNode,
+    bytes32 indexed apiId,
+    address indexed controller
+  );
+
+  event ControllerChanged(
+    bytes32 indexed ensNode,
+    bytes32 indexed apiId,
+    address indexed controller
+  );
+
   event VersionPublished(
     bytes32 indexed apiId,
     bytes32 versionId,
@@ -38,8 +49,13 @@ abstract contract VersionRegistry is StringToAddressParser {
     string location; // empty on non-leaf nodes
   }
 
+  struct ApiInfo {
+    address controller;
+    uint256 ensNode;
+  }
+
   mapping(bytes32 => Web3APIVersion) public nodes;
-  mapping(bytes32 => uint256) public apiToEns;
+  mapping(bytes32 => ApiInfo) public registeredAPI;
 
   ENS internal ens;
 
@@ -47,15 +63,25 @@ abstract contract VersionRegistry is StringToAddressParser {
     ens = _ens;
   }
 
-  function registerAPI(bytes32 ensNode) public ensOwner(ensNode) {
+  function registerAPI(bytes32 ensNode) public {
     //Create a different hash from ens node to not conflict with subdomains
     bytes32 apiId = keccak256(abi.encodePacked(ensNode));
 
-    require(apiToEns[apiId] == 0, "API is already registered");
+    require(registeredAPI[apiId].ensNode == 0, "API is already registered");
 
-    apiToEns[apiId] = uint256(ensNode);
+    address controller = getPolywrapController(ensNode);
+    registeredAPI[apiId] = ApiInfo(controller, uint256(ensNode));
 
-    emit ApiRegistered(ensNode, apiId);
+    emit ApiRegistered(ensNode, apiId, controller);
+  }
+
+  function updateOwnership(bytes32 apiId) public {
+    ApiInfo memory apiInfo = registeredAPI[apiId];
+
+    require(apiInfo.ensNode != 0, "API is not registered");
+
+    address controller = getPolywrapController(bytes32(apiInfo.ensNode));
+    registeredAPI[apiId].controller = controller;
   }
 
   function publishNewVersion(
@@ -113,21 +139,13 @@ abstract contract VersionRegistry is StringToAddressParser {
     virtual
     returns (bool);
 
-  modifier ensOwner(bytes32 ensNode) {
-    require(
-      getPolywrapController(ensNode) == msg.sender,
-      "You do not have access to the ENS domain"
-    );
-    _;
-  }
-
   modifier apiOwner(bytes32 apiId) {
-    uint256 ensNode = apiToEns[apiId];
+    ApiInfo memory apiInfo = registeredAPI[apiId];
 
-    require(ensNode != 0, "API is not registered");
+    require(apiInfo.ensNode != 0, "API is not registered");
 
     require(
-      getPolywrapController(bytes32(ensNode)) == msg.sender,
+      apiInfo.controller == msg.sender,
       "You do not have access to the ENS domain of this API"
     );
     _;

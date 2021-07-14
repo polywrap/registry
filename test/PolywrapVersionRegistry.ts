@@ -99,7 +99,8 @@ describe("API registration", () => {
 
     await expectEvent(tx, "ApiRegistered", {
       ensNode: testDomain.node,
-      apiId: testDomain.apiId
+      apiId: testDomain.apiId,
+      controller: polywrapController.address
     });
   });
 
@@ -114,7 +115,8 @@ describe("API registration", () => {
 
     await expectEvent(tx1, "ApiRegistered", {
       ensNode: api1.node,
-      apiId: api1.apiId
+      apiId: api1.apiId,
+      controller: polywrapController.address
     });
 
     await ens.registerDomainName(domainOwner, api2);
@@ -124,7 +126,8 @@ describe("API registration", () => {
 
     await expectEvent(tx2, "ApiRegistered", {
       ensNode: api2.node,
-      apiId: api2.apiId
+      apiId: api2.apiId,
+      controller: polywrapController.address
     });
   });
 
@@ -133,20 +136,13 @@ describe("API registration", () => {
 
     await expectEvent(tx, "ApiRegistered", {
       ensNode: testDomain.node,
-      apiId: testDomain.apiId
+      apiId: testDomain.apiId,
+      controller: polywrapController.address
     });
 
     await expect(
       versionRegistry.registerAPI(testDomain.node)
     ).to.revertedWith("API is already registered");
-  });
-
-  it("forbids registering an API to non controllers", async () => {
-    versionRegistry = versionRegistry.connect(randomAcc);
-
-    await expect(
-      versionRegistry.registerAPI(testDomain.node)
-    ).to.revertedWith("You do not have access to the ENS domain");
   });
 });
 
@@ -428,5 +424,96 @@ describe("API managers", function () {
     await expect(
       versionRegistry.removeApiManager(testDomain.apiId, managerAcc1.address)
     ).to.revertedWith("You do not have access to the ENS domain");
+  });
+});
+
+describe("Changing ownership", function () {
+  const testDomain = new EnsDomain("test-domain");
+
+  let versionRegistry: PolywrapVersionRegistry;
+  let ens: EnsApi;
+
+  let owner: SignerWithAddress;
+  let domainOwner: SignerWithAddress;
+  let polywrapController: SignerWithAddress;
+  let polywrapController2: SignerWithAddress;
+  let randomAcc: SignerWithAddress;
+
+  before(async () => {
+    const [_owner, _domainOwner, _polywrapController, _polywrapController2, _randomAcc] = await ethers.getSigners();
+    owner = _owner;
+    domainOwner = _domainOwner;
+    polywrapController = _polywrapController;
+    polywrapController2 = _polywrapController2;
+    randomAcc = _randomAcc;
+
+    ens = new EnsApi();
+    await ens.deploy(owner);
+
+    await ens.registerDomainName(domainOwner, testDomain);
+  });
+
+  beforeEach(async () => {
+    await ens.setPolywrapController(domainOwner, testDomain, polywrapController.address);
+
+    const versionRegistryFactory = await ethers.getContractFactory("PolywrapVersionRegistry");
+    versionRegistry = await versionRegistryFactory.deploy(ens.ensRegistry!.address);
+    versionRegistry = versionRegistry.connect(polywrapController);
+
+    await versionRegistry.registerAPI(testDomain.node);
+  });
+
+  it("can change ownership", async function () {
+    let isAuthorized = await versionRegistry.isAuthorized(testDomain.apiId, polywrapController.address);
+    expect(isAuthorized).to.be.true;
+
+    isAuthorized = await versionRegistry.isAuthorized(testDomain.apiId, polywrapController2.address);
+    expect(isAuthorized).to.be.false;
+
+    await ens.setPolywrapController(domainOwner, testDomain, polywrapController2.address);
+
+    versionRegistry = versionRegistry.connect(polywrapController2);
+    await versionRegistry.updateOwnership(testDomain.apiId);
+
+    isAuthorized = await versionRegistry.isAuthorized(testDomain.apiId, polywrapController2.address);
+    expect(isAuthorized).to.be.true;
+
+    isAuthorized = await versionRegistry.isAuthorized(testDomain.apiId, polywrapController.address);
+    expect(isAuthorized).to.be.false;
+  });
+
+  it("anyone can claim ownership for the controller", async function () {
+    let isAuthorized = await versionRegistry.isAuthorized(testDomain.apiId, polywrapController.address);
+    expect(isAuthorized).to.be.true;
+
+    isAuthorized = await versionRegistry.isAuthorized(testDomain.apiId, polywrapController2.address);
+    expect(isAuthorized).to.be.false;
+
+    await ens.setPolywrapController(domainOwner, testDomain, polywrapController2.address);
+
+    versionRegistry = versionRegistry.connect(randomAcc);
+    await versionRegistry.updateOwnership(testDomain.apiId);
+
+    isAuthorized = await versionRegistry.isAuthorized(testDomain.apiId, polywrapController2.address);
+    expect(isAuthorized).to.be.true;
+
+    isAuthorized = await versionRegistry.isAuthorized(testDomain.apiId, polywrapController.address);
+    expect(isAuthorized).to.be.false;
+  });
+
+  it("can change polywrap-controller without affecting ownership", async function () {
+    let isAuthorized = await versionRegistry.isAuthorized(testDomain.apiId, polywrapController.address);
+    expect(isAuthorized).to.be.true;
+
+    isAuthorized = await versionRegistry.isAuthorized(testDomain.apiId, polywrapController2.address);
+    expect(isAuthorized).to.be.false;
+
+    await ens.setPolywrapController(domainOwner, testDomain, polywrapController2.address);
+
+    isAuthorized = await versionRegistry.isAuthorized(testDomain.apiId, polywrapController.address);
+    expect(isAuthorized).to.be.true;
+
+    isAuthorized = await versionRegistry.isAuthorized(testDomain.apiId, polywrapController2.address);
+    expect(isAuthorized).to.be.false;
   });
 });

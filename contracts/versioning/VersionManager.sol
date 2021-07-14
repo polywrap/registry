@@ -37,16 +37,16 @@ abstract contract VersionManager is VersionResolver {
     override
     returns (bool)
   {
-    uint256 ensNode = apiToEns[apiId];
+    ApiInfo memory apiInfo = registeredAPI[apiId];
 
-    require(ensNode != 0, "API is not registered");
-
-    if (getPolywrapController(bytes32(ensNode)) == ownerOrManager) {
-      return true;
-    }
+    require(apiInfo.ensNode != 0, "API is not registered");
 
     bytes32 key = keccak256(abi.encodePacked(apiId, ownerOrManager));
 
-    return apiManagers[key];
+    if (apiManagers[key]) {
+      return true;
+    }
+
+    return apiInfo.controller == ownerOrManager;
   }
 }
