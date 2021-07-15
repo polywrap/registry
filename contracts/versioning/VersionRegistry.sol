@@ -18,19 +18,13 @@ interface TextResolverInterface {
 }
 
 abstract contract VersionRegistry is StringToAddressParser {
-  string internal constant POLYWRAP_CONTROLLER_RECORD_NAME =
-    "polywrap-controller";
+  string internal constant POLYWRAP_OWNER_RECORD_NAME = "polywrap-owner";
 
-  event PackageRegistered(
-    bytes32 indexed ensNode,
-    bytes32 indexed packageId,
-    address indexed controller
-  );
-
-  event ControllerChanged(
-    bytes32 indexed ensNode,
-    bytes32 indexed packageId,
-    address indexed controller
+  event OwnershipUpdated(
+    bytes32 indexed registrarNode,
+    bytes32 packageId,
+    bytes32 registrar,
+    address indexed owner
   );
 
   event VersionPublished(
@@ -50,8 +44,9 @@ abstract contract VersionRegistry is StringToAddressParser {
   }
 
   struct PackageInfo {
-    address controller;
-    uint256 ensNode;
+    address owner;
+    uint256 registrarNode;
+    bytes32 registrar;
   }
 
   mapping(bytes32 => PackageVersion) public nodes;
@@ -63,25 +58,17 @@ abstract contract VersionRegistry is StringToAddressParser {
     ens = _ens;
   }
 
-  function registerPackage(bytes32 ensNode) public {
-    //Create a different hash from ens node to not conflict with subdomains
-    bytes32 packageId = keccak256(abi.encodePacked(ensNode));
+  function updateOwnershipEns(bytes32 ensNode) public {
+    bytes32 registrar = "ens";
 
-    require(packages[packageId].ensNode == 0, "Package is already registered");
+    bytes32 packageId = keccak256(
+      abi.encodePacked(keccak256(abi.encodePacked(ensNode)), registrar)
+    );
 
-    address controller = getPolywrapController(ensNode);
-    packages[packageId] = PackageInfo(controller, uint256(ensNode));
+    address owner = getPolywrapOwnerEns(ensNode);
+    packages[packageId] = PackageInfo(owner, uint256(ensNode), registrar);
 
-    emit PackageRegistered(ensNode, packageId, controller);
-  }
-
-  function updateOwnership(bytes32 packageId) public {
-    PackageInfo memory packageInfo = packages[packageId];
-
-    require(packageInfo.ensNode != 0, "Pacakage is not registered");
-
-    address controller = getPolywrapController(bytes32(packageInfo.ensNode));
-    packages[packageId].controller = controller;
+    emit OwnershipUpdated(ensNode, packageId, registrar, owner);
   }
 
   function publishNewVersion(
@@ -142,11 +129,11 @@ abstract contract VersionRegistry is StringToAddressParser {
   modifier packageOwner(bytes32 packageId) {
     PackageInfo memory packageInfo = packages[packageId];
 
-    require(packageInfo.ensNode != 0, "Package is not registered");
+    require(packageInfo.registrarNode != 0, "Package is not registered");
 
     require(
-      packageInfo.controller == msg.sender,
-      "You do not have access to the ENS domain of this package"
+      packageInfo.owner == msg.sender,
+      "You do not have access to the domain of this package"
     );
     _;
   }
@@ -159,7 +146,7 @@ abstract contract VersionRegistry is StringToAddressParser {
     _;
   }
 
-  function getPolywrapController(bytes32 ensNode)
+  function getPolywrapOwnerEns(bytes32 ensNode)
     internal
     view
     returns (address)
@@ -174,7 +161,7 @@ abstract contract VersionRegistry is StringToAddressParser {
 
     return
       stringToAddress(
-        ensTextResolver.text(ensNode, POLYWRAP_CONTROLLER_RECORD_NAME)
+        ensTextResolver.text(ensNode, POLYWRAP_OWNER_RECORD_NAME)
       );
   }
 }

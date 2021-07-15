@@ -1,1 +1,1 @@
-export const POLYWRAP_CONTROLLER_RECORD_NAME = "polywrap-controller";
+export const POLYWRAP_OWNER_RECORD_NAME = "polywrap-owner";

@@ -8,22 +8,23 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { EnsDomain } from "./helpers/ens/EnsDomain";
 import { EnsApi } from "./helpers/ens/EnsApi";
 import { getPackageLocation } from "./helpers/getPackageLocation";
+import { toUtf8Bytes, toUtf8String } from "ethers/lib/utils";
 
 
 describe("ENS registration", () => {
   let owner: SignerWithAddress;
   let domainOwner: SignerWithAddress;
-  let polywrapController: SignerWithAddress;
+  let polywrapOwner: SignerWithAddress;
   let randomAcc: SignerWithAddress;
 
   let ens: EnsApi;
   const testDomain = new EnsDomain("test-domain");
 
   before(async () => {
-    const [_owner, _domainOwner, _polywrapController, _randomAcc] = await ethers.getSigners();
+    const [_owner, _domainOwner, _polywrapOwner, _randomAcc] = await ethers.getSigners();
     owner = _owner;
     domainOwner = _domainOwner;
-    polywrapController = _polywrapController;
+    polywrapOwner = _polywrapOwner;
     randomAcc = _randomAcc;
   });
 
@@ -36,30 +37,30 @@ describe("ENS registration", () => {
     await ens.registerDomainName(domainOwner, testDomain);
   });
 
-  it("can set polywrap controller", async () => {
+  it("can set polywrap-owner", async () => {
     await ens.registerDomainName(domainOwner, testDomain);
 
-    await ens.setPolywrapController(domainOwner, testDomain, polywrapController.address);
+    await ens.setPolywrapOwner(domainOwner, testDomain, polywrapOwner.address);
 
-    const actualController = await ens.getPolywrapController(testDomain);
+    const actualOwner = await ens.getPolywrapOwner(testDomain);
 
-    expect(actualController).to.equal(polywrapController.address);
+    expect(actualOwner).to.equal(polywrapOwner.address);
   });
 
-  it("can change polywrap controller", async () => {
+  it("can change polywrap-owner", async () => {
     await ens.registerDomainName(domainOwner, testDomain);
 
-    await ens.setPolywrapController(domainOwner, testDomain, polywrapController.address);
+    await ens.setPolywrapOwner(domainOwner, testDomain, polywrapOwner.address);
 
-    const actualController1 = await ens.getPolywrapController(testDomain);
+    const actualOwner1 = await ens.getPolywrapOwner(testDomain);
 
-    expect(actualController1).to.equal(polywrapController.address);
+    expect(actualOwner1).to.equal(polywrapOwner.address);
 
-    await ens.setPolywrapController(domainOwner, testDomain, randomAcc.address);
+    await ens.setPolywrapOwner(domainOwner, testDomain, randomAcc.address);
 
-    const actualController2 = await ens.getPolywrapController(testDomain);
+    const actualOwner2 = await ens.getPolywrapOwner(testDomain);
 
-    expect(actualController2).to.equal(randomAcc.address);
+    expect(actualOwner2).to.equal(randomAcc.address);
   });
 });
 
@@ -71,14 +72,14 @@ describe("Package registration", () => {
 
   let owner: SignerWithAddress;
   let domainOwner: SignerWithAddress;
-  let polywrapController: SignerWithAddress;
+  let polywrapOwner: SignerWithAddress;
   let randomAcc: SignerWithAddress;
 
   before(async () => {
-    const [_owner, _domainOwner, _polywrapController, _randomAcc] = await ethers.getSigners();
+    const [_owner, _domainOwner, _polywrapOwner, _randomAcc] = await ethers.getSigners();
     owner = _owner;
     domainOwner = _domainOwner;
-    polywrapController = _polywrapController;
+    polywrapOwner = _polywrapOwner;
     randomAcc = _randomAcc;
   });
 
@@ -87,20 +88,21 @@ describe("Package registration", () => {
     await ens.deploy(owner);
 
     await ens.registerDomainName(domainOwner, testDomain);
-    await ens.setPolywrapController(domainOwner, testDomain, polywrapController.address);
+    await ens.setPolywrapOwner(domainOwner, testDomain, polywrapOwner.address);
 
     const versionRegistryFactory = await ethers.getContractFactory("PolywrapVersionRegistry");
     versionRegistry = await versionRegistryFactory.deploy(ens.ensRegistry!.address);
-    versionRegistry = versionRegistry.connect(polywrapController);
+    versionRegistry = versionRegistry.connect(polywrapOwner);
   });
 
   it("can register a new package", async () => {
-    const tx = await versionRegistry.registerPackage(testDomain.node);
+    const tx = await versionRegistry.updateOwnershipEns(testDomain.node);
 
-    await expectEvent(tx, "PackageRegistered", {
-      ensNode: testDomain.node,
+    await expectEvent(tx, "OwnershipUpdated", {
+      registrarNode: testDomain.node,
       packageId: testDomain.packageId,
-      controller: polywrapController.address
+      registrar: ethers.utils.formatBytes32String("ens"),
+      owner: polywrapOwner.address
     });
   });
 
@@ -109,40 +111,41 @@ describe("Package registration", () => {
     const package2 = new EnsDomain("test-package2");
 
     await ens.registerDomainName(domainOwner, package1);
-    await ens.setPolywrapController(domainOwner, package1, polywrapController.address);
+    await ens.setPolywrapOwner(domainOwner, package1, polywrapOwner.address);
 
-    const tx1 = await versionRegistry.registerPackage(package1.node);
+    const tx1 = await versionRegistry.updateOwnershipEns(package1.node);
 
-    await expectEvent(tx1, "PackageRegistered", {
-      ensNode: package1.node,
+    await expectEvent(tx1, "OwnershipUpdated", {
+      registrarNode: package1.node,
       packageId: package1.packageId,
-      controller: polywrapController.address
+      registrar: ethers.utils.formatBytes32String("ens"),
+      owner: polywrapOwner.address
     });
 
     await ens.registerDomainName(domainOwner, package2);
-    await ens.setPolywrapController(domainOwner, package2, polywrapController.address);
+    await ens.setPolywrapOwner(domainOwner, package2, polywrapOwner.address);
 
-    const tx2 = await versionRegistry.registerPackage(package2.node);
+    const tx2 = await versionRegistry.updateOwnershipEns(package2.node);
 
-    await expectEvent(tx2, "PackageRegistered", {
-      ensNode: package2.node,
+    await expectEvent(tx2, "OwnershipUpdated", {
+      registrarNode: package2.node,
       packageId: package2.packageId,
-      controller: polywrapController.address
+      registrar: ethers.utils.formatBytes32String("ens"),
+      owner: polywrapOwner.address
     });
   });
 
-  it("forbids registering the same package more than once", async () => {
-    const tx = await versionRegistry.registerPackage(testDomain.node);
+  it("allow anyone to register a package for the owner", async () => {
+    versionRegistry = versionRegistry.connect(randomAcc);
 
-    await expectEvent(tx, "PackageRegistered", {
-      ensNode: testDomain.node,
+    const tx = await versionRegistry.updateOwnershipEns(testDomain.node);
+
+    await expectEvent(tx, "OwnershipUpdated", {
+      registrarNode: testDomain.node,
       packageId: testDomain.packageId,
-      controller: polywrapController.address
+      registrar: ethers.utils.formatBytes32String("ens"),
+      owner: polywrapOwner.address
     });
-
-    await expect(
-      versionRegistry.registerPackage(testDomain.node)
-    ).to.revertedWith("Package is already registered");
   });
 });
 
@@ -154,29 +157,29 @@ describe("Version publish", function () {
 
   let owner: SignerWithAddress;
   let domainOwner: SignerWithAddress;
-  let polywrapController: SignerWithAddress;
+  let polywrapOwner: SignerWithAddress;
   let randomAcc: SignerWithAddress;
 
   before(async () => {
-    const [_owner, _domainOwner, _polywrapController, _randomAcc] = await ethers.getSigners();
+    const [_owner, _domainOwner, _polywrapOwner, _randomAcc] = await ethers.getSigners();
     owner = _owner;
     domainOwner = _domainOwner;
-    polywrapController = _polywrapController;
+    polywrapOwner = _polywrapOwner;
     randomAcc = _randomAcc;
 
     ens = new EnsApi();
     await ens.deploy(owner);
 
     await ens.registerDomainName(domainOwner, testDomain);
-    await ens.setPolywrapController(domainOwner, testDomain, polywrapController.address);
+    await ens.setPolywrapOwner(domainOwner, testDomain, polywrapOwner.address);
   });
 
   beforeEach(async () => {
     const versionRegistryFactory = await ethers.getContractFactory("PolywrapVersionRegistry");
     versionRegistry = await versionRegistryFactory.deploy(ens.ensRegistry!.address);
-    versionRegistry = versionRegistry.connect(polywrapController);
+    versionRegistry = versionRegistry.connect(polywrapOwner);
 
-    await versionRegistry.registerPackage(testDomain.node);
+    await versionRegistry.updateOwnershipEns(testDomain.node);
   });
 
   it("can publish a new version", async function () {
@@ -301,16 +304,16 @@ describe("Package managers", function () {
 
   let owner: SignerWithAddress;
   let domainOwner: SignerWithAddress;
-  let polywrapController: SignerWithAddress;
+  let polywrapOwner: SignerWithAddress;
   let managerAcc1: SignerWithAddress;
   let managerAcc2: SignerWithAddress;
   let randomAcc: SignerWithAddress;
 
   before(async () => {
-    const [_owner, _domainOwner, _polywrapController, _managerAcc1, _managerAcc2, _randomAcc] = await ethers.getSigners();
+    const [_owner, _domainOwner, _polywrapOwner, _managerAcc1, _managerAcc2, _randomAcc] = await ethers.getSigners();
     owner = _owner;
     domainOwner = _domainOwner;
-    polywrapController = _polywrapController;
+    polywrapOwner = _polywrapOwner;
     managerAcc1 = _managerAcc1;
     managerAcc2 = _managerAcc2;
     randomAcc = _randomAcc;
@@ -319,15 +322,15 @@ describe("Package managers", function () {
     await ens.deploy(owner);
 
     await ens.registerDomainName(domainOwner, testDomain);
-    await ens.setPolywrapController(domainOwner, testDomain, polywrapController.address);
+    await ens.setPolywrapOwner(domainOwner, testDomain, polywrapOwner.address);
   });
 
   beforeEach(async () => {
     const versionRegistryFactory = await ethers.getContractFactory("PolywrapVersionRegistry");
     versionRegistry = await versionRegistryFactory.deploy(ens.ensRegistry!.address);
-    versionRegistry = versionRegistry.connect(polywrapController);
+    versionRegistry = versionRegistry.connect(polywrapOwner);
 
-    await versionRegistry.registerPackage(testDomain.node);
+    await versionRegistry.updateOwnershipEns(testDomain.node);
   });
 
   it("can add an package manager", async function () {
@@ -419,11 +422,11 @@ describe("Package managers", function () {
 
     await expect(
       versionRegistry.addManager(testDomain.packageId, managerAcc2.address)
-    ).to.revertedWith("You do not have access to the ENS domain");
+    ).to.revertedWith("You do not have access to the domain of this package");
 
     await expect(
       versionRegistry.removeManager(testDomain.packageId, managerAcc1.address)
-    ).to.revertedWith("You do not have access to the ENS domain");
+    ).to.revertedWith("You do not have access to the domain of this package");
   });
 });
 
@@ -435,16 +438,16 @@ describe("Changing ownership", function () {
 
   let owner: SignerWithAddress;
   let domainOwner: SignerWithAddress;
-  let polywrapController: SignerWithAddress;
-  let polywrapController2: SignerWithAddress;
+  let polywrapOwner: SignerWithAddress;
+  let polywrapOwner2: SignerWithAddress;
   let randomAcc: SignerWithAddress;
 
   before(async () => {
-    const [_owner, _domainOwner, _polywrapController, _polywrapController2, _randomAcc] = await ethers.getSigners();
+    const [_owner, _domainOwner, _polywrapOwner, _polywrapOwner2, _randomAcc] = await ethers.getSigners();
     owner = _owner;
     domainOwner = _domainOwner;
-    polywrapController = _polywrapController;
-    polywrapController2 = _polywrapController2;
+    polywrapOwner = _polywrapOwner;
+    polywrapOwner2 = _polywrapOwner2;
     randomAcc = _randomAcc;
 
     ens = new EnsApi();
@@ -454,66 +457,66 @@ describe("Changing ownership", function () {
   });
 
   beforeEach(async () => {
-    await ens.setPolywrapController(domainOwner, testDomain, polywrapController.address);
+    await ens.setPolywrapOwner(domainOwner, testDomain, polywrapOwner.address);
 
     const versionRegistryFactory = await ethers.getContractFactory("PolywrapVersionRegistry");
     versionRegistry = await versionRegistryFactory.deploy(ens.ensRegistry!.address);
-    versionRegistry = versionRegistry.connect(polywrapController);
+    versionRegistry = versionRegistry.connect(polywrapOwner);
 
-    await versionRegistry.registerPackage(testDomain.node);
+    await versionRegistry.updateOwnershipEns(testDomain.node);
   });
 
   it("can change ownership", async function () {
-    let isAuthorized = await versionRegistry.isAuthorized(testDomain.packageId, polywrapController.address);
+    let isAuthorized = await versionRegistry.isAuthorized(testDomain.packageId, polywrapOwner.address);
     expect(isAuthorized).to.be.true;
 
-    isAuthorized = await versionRegistry.isAuthorized(testDomain.packageId, polywrapController2.address);
+    isAuthorized = await versionRegistry.isAuthorized(testDomain.packageId, polywrapOwner2.address);
     expect(isAuthorized).to.be.false;
 
-    await ens.setPolywrapController(domainOwner, testDomain, polywrapController2.address);
+    await ens.setPolywrapOwner(domainOwner, testDomain, polywrapOwner2.address);
 
-    versionRegistry = versionRegistry.connect(polywrapController2);
-    await versionRegistry.updateOwnership(testDomain.packageId);
+    versionRegistry = versionRegistry.connect(polywrapOwner2);
+    await versionRegistry.updateOwnershipEns(testDomain.node);
 
-    isAuthorized = await versionRegistry.isAuthorized(testDomain.packageId, polywrapController2.address);
+    isAuthorized = await versionRegistry.isAuthorized(testDomain.packageId, polywrapOwner2.address);
     expect(isAuthorized).to.be.true;
 
-    isAuthorized = await versionRegistry.isAuthorized(testDomain.packageId, polywrapController.address);
+    isAuthorized = await versionRegistry.isAuthorized(testDomain.packageId, polywrapOwner.address);
     expect(isAuthorized).to.be.false;
   });
 
-  it("anyone can claim ownership for the controller", async function () {
-    let isAuthorized = await versionRegistry.isAuthorized(testDomain.packageId, polywrapController.address);
+  it("anyone can update ownership for the owner", async function () {
+    let isAuthorized = await versionRegistry.isAuthorized(testDomain.packageId, polywrapOwner.address);
     expect(isAuthorized).to.be.true;
 
-    isAuthorized = await versionRegistry.isAuthorized(testDomain.packageId, polywrapController2.address);
+    isAuthorized = await versionRegistry.isAuthorized(testDomain.packageId, polywrapOwner2.address);
     expect(isAuthorized).to.be.false;
 
-    await ens.setPolywrapController(domainOwner, testDomain, polywrapController2.address);
+    await ens.setPolywrapOwner(domainOwner, testDomain, polywrapOwner2.address);
 
     versionRegistry = versionRegistry.connect(randomAcc);
-    await versionRegistry.updateOwnership(testDomain.packageId);
+    await versionRegistry.updateOwnershipEns(testDomain.node);
 
-    isAuthorized = await versionRegistry.isAuthorized(testDomain.packageId, polywrapController2.address);
+    isAuthorized = await versionRegistry.isAuthorized(testDomain.packageId, polywrapOwner2.address);
     expect(isAuthorized).to.be.true;
 
-    isAuthorized = await versionRegistry.isAuthorized(testDomain.packageId, polywrapController.address);
+    isAuthorized = await versionRegistry.isAuthorized(testDomain.packageId, polywrapOwner.address);
     expect(isAuthorized).to.be.false;
   });
 
-  it("can change polywrap-controller without affecting ownership", async function () {
-    let isAuthorized = await versionRegistry.isAuthorized(testDomain.packageId, polywrapController.address);
+  it("can change polywrap-owner without affecting ownership", async function () {
+    let isAuthorized = await versionRegistry.isAuthorized(testDomain.packageId, polywrapOwner.address);
     expect(isAuthorized).to.be.true;
 
-    isAuthorized = await versionRegistry.isAuthorized(testDomain.packageId, polywrapController2.address);
+    isAuthorized = await versionRegistry.isAuthorized(testDomain.packageId, polywrapOwner2.address);
     expect(isAuthorized).to.be.false;
 
-    await ens.setPolywrapController(domainOwner, testDomain, polywrapController2.address);
+    await ens.setPolywrapOwner(domainOwner, testDomain, polywrapOwner2.address);
 
-    isAuthorized = await versionRegistry.isAuthorized(testDomain.packageId, polywrapController.address);
+    isAuthorized = await versionRegistry.isAuthorized(testDomain.packageId, polywrapOwner.address);
     expect(isAuthorized).to.be.true;
 
-    isAuthorized = await versionRegistry.isAuthorized(testDomain.packageId, polywrapController2.address);
+    isAuthorized = await versionRegistry.isAuthorized(testDomain.packageId, polywrapOwner2.address);
     expect(isAuthorized).to.be.false;
   });
 });
