@@ -39,7 +39,7 @@ abstract contract VersionManager is VersionResolver {
   {
     PackageInfo memory packageInfo = packages[packageId];
 
-    require(packageInfo.ensNode != 0, "Package is not registered");
+    require(packageInfo.registrarNode != 0, "Package is not registered");
 
     bytes32 key = keccak256(abi.encodePacked(packageId, ownerOrManager));
 
@@ -47,6 +47,6 @@ abstract contract VersionManager is VersionResolver {
       return true;
     }
 
-    return packageInfo.controller == ownerOrManager;
+    return packageInfo.owner == ownerOrManager;
   }
 }

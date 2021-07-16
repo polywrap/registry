@@ -2,7 +2,7 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { ethers } from "hardhat";
 import { TestENSRegistry, TestEthRegistrar, TestPublicResolver } from "../../../typechain";
 import { labelhash } from "../labelhash";
-import { POLYWRAP_CONTROLLER_RECORD_NAME } from "../constants";
+import { POLYWRAP_OWNER_RECORD_NAME } from "../constants";
 import { EnsDomain } from "./EnsDomain";
 
 const rootNode = ethers.utils.zeroPad([0], 32);
@@ -41,15 +41,15 @@ export class EnsApi {
     await ownedRegistry.setResolver(domain.node, this.ensPublicResolver!.address);
   }
 
-  async setPolywrapController(domainOwner: SignerWithAddress, domain: EnsDomain, controllerAddress: string): Promise<void> {
+  async setPolywrapOwner(domainOwner: SignerWithAddress, domain: EnsDomain, ownerAddress: string): Promise<void> {
 
     const ownedPublicResolver = this.ensPublicResolver!.connect(domainOwner);
 
-    const tx = await ownedPublicResolver.setText(domain.node, POLYWRAP_CONTROLLER_RECORD_NAME, controllerAddress);
+    const tx = await ownedPublicResolver.setText(domain.node, POLYWRAP_OWNER_RECORD_NAME, ownerAddress);
     await tx.wait();
   }
 
-  async getPolywrapController(domain: EnsDomain): Promise<string> {
-    return await this.ensPublicResolver!.text(domain.node, POLYWRAP_CONTROLLER_RECORD_NAME);
+  async getPolywrapOwner(domain: EnsDomain): Promise<string> {
+    return await this.ensPublicResolver!.text(domain.node, POLYWRAP_OWNER_RECORD_NAME);
   }
 }

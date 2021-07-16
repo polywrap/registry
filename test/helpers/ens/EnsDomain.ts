@@ -1,4 +1,4 @@
-import { ethers } from "hardhat";
+import { formatBytes32String, keccak256, namehash, solidityKeccak256 } from "ethers/lib/utils";
 import { labelhash } from "../labelhash";
 
 export class EnsDomain {
@@ -6,8 +6,8 @@ export class EnsDomain {
     this.label = label;
     this.labelHash = labelhash(label);
     this.name = `${label}.${EnsDomain.TLD}`;
-    this.node = ethers.utils.namehash(this.name);
-    this.packageId = ethers.utils.keccak256(this.node);
+    this.node = namehash(this.name);
+    this.packageId = solidityKeccak256(["bytes32", "bytes32"], [keccak256(this.node), formatBytes32String(EnsDomain.Registrar)]);
   }
 
   label: string;
@@ -17,4 +17,5 @@ export class EnsDomain {
   packageId: string;
 
   static TLD: string = "eth";
+  static Registrar: string = "ens";
 }
