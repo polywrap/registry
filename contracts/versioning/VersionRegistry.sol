@@ -52,7 +52,7 @@ abstract contract VersionRegistry is StringToAddressParser {
   mapping(bytes32 => PackageVersion) public nodes;
   mapping(bytes32 => PackageInfo) public packages;
 
-  ENS internal ens;
+  ENS public ens;
 
   constructor(ENS _ens) internal {
     ens = _ens;
