@@ -133,6 +133,22 @@ describe("Domain registrar links", () => {
     const testAddress = await versionRegistry.domainRegistrarLinks(TestDomain.RegistrarBytes32);
     expect(testAddress).to.equal(testLink.address);
   });
+
+
+  it("forbids non version registry owners to connect a new domain registrar link", async () => {
+    const versionRegistryFactory = await ethers.getContractFactory("PolywrapVersionRegistry");
+    versionRegistry = await versionRegistryFactory.deploy([
+      EnsDomain.RegistrarBytes32
+    ], [
+      ensLink.address
+    ]);
+
+    versionRegistry = versionRegistry.connect(randomAcc);
+
+    await expect(
+      versionRegistry.connectDomainRegistrarLink(TestDomain.RegistrarBytes32, testLink.address)
+    ).to.revertedWith("Ownable: caller is not the owner");
+  });
 });
 
 describe("Package registration", () => {
