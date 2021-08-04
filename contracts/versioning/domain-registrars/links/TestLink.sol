@@ -15,6 +15,8 @@ contract TestLink is IDomainRegistrarLink {
     override
     returns (address)
   {
-    return msg.sender;
+    //Using the transaction origin the caller account will be the owner
+    //This allows us to not need a "Test" domain registrar to test custom link contracts
+    return tx.origin;
   }
 }

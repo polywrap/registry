@@ -11,7 +11,7 @@ import { getPackageLocation } from "./helpers/getPackageLocation";
 import { toUtf8Bytes, toUtf8String } from "ethers/lib/utils";
 import { EnsLink } from "../typechain/EnsLink";
 import { TestLink } from "../typechain/TestLink";
-import { TestDomain } from "./helpers/ens/TestDomain";
+import { CustomDomain } from "./helpers/ens/CustomDomain";
 
 
 describe("ENS registration", () => {
@@ -104,7 +104,7 @@ describe("Domain registrar links", () => {
     const versionRegistryFactory = await ethers.getContractFactory("PolywrapVersionRegistry");
     versionRegistry = await versionRegistryFactory.deploy([
       EnsDomain.RegistrarBytes32,
-      TestDomain.RegistrarBytes32
+      CustomDomain.RegistrarBytes32
     ], [
       ensLink.address,
       testLink.address
@@ -113,7 +113,7 @@ describe("Domain registrar links", () => {
     const ensAddress = await versionRegistry.domainRegistrarLinks(EnsDomain.RegistrarBytes32);
     expect(ensAddress).to.equal(ensLink.address);
 
-    const testAddress = await versionRegistry.domainRegistrarLinks(TestDomain.RegistrarBytes32);
+    const testAddress = await versionRegistry.domainRegistrarLinks(CustomDomain.RegistrarBytes32);
     expect(testAddress).to.equal(testLink.address);
   });
 
@@ -125,12 +125,12 @@ describe("Domain registrar links", () => {
       ensLink.address
     ]);
 
-    await versionRegistry.connectDomainRegistrarLink(TestDomain.RegistrarBytes32, testLink.address);
+    await versionRegistry.connectDomainRegistrarLink(CustomDomain.RegistrarBytes32, testLink.address);
 
     const ensAddress = await versionRegistry.domainRegistrarLinks(EnsDomain.RegistrarBytes32);
     expect(ensAddress).to.equal(ensLink.address);
 
-    const testAddress = await versionRegistry.domainRegistrarLinks(TestDomain.RegistrarBytes32);
+    const testAddress = await versionRegistry.domainRegistrarLinks(CustomDomain.RegistrarBytes32);
     expect(testAddress).to.equal(testLink.address);
   });
 
@@ -146,13 +146,14 @@ describe("Domain registrar links", () => {
     versionRegistry = versionRegistry.connect(randomAcc);
 
     await expect(
-      versionRegistry.connectDomainRegistrarLink(TestDomain.RegistrarBytes32, testLink.address)
+      versionRegistry.connectDomainRegistrarLink(CustomDomain.RegistrarBytes32, testLink.address)
     ).to.revertedWith("Ownable: caller is not the owner");
   });
 });
 
 describe("Package registration", () => {
   const testDomain = new EnsDomain("test-domain");
+  const testDomain2 = new CustomDomain("test-domain");
 
   let versionRegistry: PolywrapVersionRegistry;
   let ens: EnsApi;
@@ -198,6 +199,35 @@ describe("Package registration", () => {
       packageId: testDomain.packageId,
       registrar: EnsDomain.RegistrarBytes32,
       owner: polywrapOwner.address
+    });
+  });
+
+  it("can register a packages from different domain registrars", async () => {
+    const tx = await versionRegistry.updateOwnership(EnsDomain.RegistrarBytes32, testDomain.node);
+
+    await expectEvent(tx, "OwnershipUpdated", {
+      registrarNode: testDomain.node,
+      packageId: testDomain.packageId,
+      registrar: EnsDomain.RegistrarBytes32,
+      owner: polywrapOwner.address
+    });
+
+    versionRegistry = versionRegistry.connect(owner);
+
+    const testLinkFactory = await ethers.getContractFactory("TestLink");
+    const testLink = await testLinkFactory.deploy();
+
+    await versionRegistry.connectDomainRegistrarLink(CustomDomain.RegistrarBytes32, testLink.address);
+
+    versionRegistry = versionRegistry.connect(randomAcc);
+
+    const tx2 = await versionRegistry.updateOwnership(CustomDomain.RegistrarBytes32, testDomain2.node);
+
+    await expectEvent(tx2, "OwnershipUpdated", {
+      registrarNode: testDomain2.node,
+      packageId: testDomain2.packageId,
+      registrar: CustomDomain.RegistrarBytes32,
+      owner: randomAcc.address
     });
   });
 
