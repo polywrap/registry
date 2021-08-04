@@ -1,25 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import "@ensdomains/ens-contracts/contracts/registry/ENS.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "../helpers/StringToAddressParser.sol";
+import "./domain-registrars/IDomainRegistrarLink.sol";
 
-interface TextResolverInterface {
-  function setText(
-    bytes32 node,
-    string calldata key,
-    string calldata value
-  ) external;
-
-  function text(bytes32 node, string calldata key)
-    external
-    view
-    returns (string memory);
-}
-
-abstract contract VersionRegistry is StringToAddressParser {
-  string internal constant POLYWRAP_OWNER_RECORD_NAME = "polywrap-owner";
-
+abstract contract VersionRegistry is OwnableUpgradeable, StringToAddressParser {
   event OwnershipUpdated(
     bytes32 indexed registrarNode,
     bytes32 packageId,
@@ -45,30 +31,71 @@ abstract contract VersionRegistry is StringToAddressParser {
 
   struct PackageInfo {
     address owner;
-    uint256 registrarNode;
-    bytes32 registrar;
+    bytes32 domainRegistrarNode;
+    bytes32 domainRegistrar;
   }
 
   mapping(bytes32 => PackageVersion) public nodes;
   mapping(bytes32 => PackageInfo) public packages;
+  mapping(bytes32 => address) public domainRegistrarLinks;
 
-  ENS internal ens;
-
-  constructor(ENS _ens) internal {
-    ens = _ens;
+  constructor(
+    bytes32[] memory domainRegistrars,
+    address[] memory domainRegistrarAddresses
+  ) {
+    initialize(domainRegistrars, domainRegistrarAddresses);
   }
 
-  function updateOwnershipEns(bytes32 ensNode) public {
-    bytes32 registrar = "ens";
+  function initialize(
+    bytes32[] memory domainRegistrars,
+    address[] memory domainRegistrarAddresses
+  ) public initializer {
+    __Ownable_init();
 
-    bytes32 packageId = keccak256(
-      abi.encodePacked(keccak256(abi.encodePacked(ensNode)), registrar)
+    require(
+      domainRegistrars.length == domainRegistrarAddresses.length,
+      "Parameter arrays must have the same length"
     );
 
-    address owner = getPolywrapOwnerEns(ensNode);
-    packages[packageId] = PackageInfo(owner, uint256(ensNode), registrar);
+    for (uint256 i = 0; i < domainRegistrars.length; i++) {
+      domainRegistrarLinks[domainRegistrars[i]] = domainRegistrarAddresses[i];
+    }
+  }
 
-    emit OwnershipUpdated(ensNode, packageId, registrar, owner);
+  function connectDomainRegistrarLink(
+    bytes32 domainRegistrar,
+    address domainRegistrarAddress
+  ) public onlyOwner {
+    domainRegistrarLinks[domainRegistrar] = domainRegistrarAddress;
+  }
+
+  function updateOwnership(bytes32 domainRegistrar, bytes32 domainRegistrarNode)
+    public
+  {
+    bytes32 packageId = keccak256(
+      abi.encodePacked(
+        keccak256(abi.encodePacked(domainRegistrarNode)),
+        domainRegistrar
+      )
+    );
+
+    IDomainRegistrarLink drApi = IDomainRegistrarLink(
+      domainRegistrarLinks[domainRegistrar]
+    );
+
+    address owner = drApi.getPolywrapOwner(domainRegistrarNode);
+    packages[packageId] = PackageInfo(
+      owner,
+      domainRegistrarNode,
+      domainRegistrar
+    );
+
+    emit OwnershipUpdated(
+      domainRegistrarNode,
+      packageId,
+      domainRegistrar,
+      owner
+    );
   }
 
   function publishNewVersion(
@@ -129,7 +156,7 @@ abstract contract VersionRegistry is StringToAddressParser {
   modifier packageOwner(bytes32 packageId) {
     PackageInfo memory packageInfo = packages[packageId];
 
-    require(packageInfo.registrarNode != 0, "Package is not registered");
+    require(packageInfo.domainRegistrarNode != 0, "Package is not registered");
 
     require(
       packageInfo.owner == msg.sender,
@@ -144,24 +171,5 @@ abstract contract VersionRegistry is StringToAddressParser {
       "You do not have access to this package"
     );
     _;
-  }
-
-  function getPolywrapOwnerEns(bytes32 ensNode)
-    internal
-    view
-    returns (address)
-  {
-    address textResolverAddr = ens.resolver(ensNode);
-
-    require(textResolverAddr != address(0), "Resolver not set");
-
-    TextResolverInterface ensTextResolver = TextResolverInterface(
-      textResolverAddr
-    );
-
-    return
-      stringToAddress(
-        ensTextResolver.text(ensNode, POLYWRAP_OWNER_RECORD_NAME)
-      );
   }
 }

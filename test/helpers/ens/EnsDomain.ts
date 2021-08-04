@@ -1,5 +1,6 @@
 import { formatBytes32String, keccak256, namehash, solidityKeccak256 } from "ethers/lib/utils";
 import { labelhash } from "../labelhash";
+import { TestDomain } from "./TestDomain";
 
 export class EnsDomain {
   constructor(label: string) {
@@ -7,7 +8,7 @@ export class EnsDomain {
     this.labelHash = labelhash(label);
     this.name = `${label}.${EnsDomain.TLD}`;
     this.node = namehash(this.name);
-    this.packageId = solidityKeccak256(["bytes32", "bytes32"], [keccak256(this.node), formatBytes32String(EnsDomain.Registrar)]);
+    this.packageId = solidityKeccak256(["bytes32", "bytes32"], [keccak256(this.node), EnsDomain.RegistrarBytes32]);
   }
 
   label: string;
@@ -18,4 +19,5 @@ export class EnsDomain {
 
   static TLD: string = "eth";
   static Registrar: string = "ens";
+  static RegistrarBytes32: string = formatBytes32String(EnsDomain.Registrar);
 }
