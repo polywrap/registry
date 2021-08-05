@@ -2,10 +2,9 @@
 pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "../helpers/StringToAddressParser.sol";
 import "./domain-registrars/IDomainRegistrarLink.sol";
 
-abstract contract VersionRegistry is OwnableUpgradeable, StringToAddressParser {
+abstract contract VersionRegistry is OwnableUpgradeable {
   event OwnershipUpdated(
     bytes32 indexed registrarNode,
     bytes32 packageId,
