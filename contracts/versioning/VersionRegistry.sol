@@ -146,6 +146,55 @@ abstract contract VersionRegistry is OwnableUpgradeable {
     );
   }
 
+  function internalPublishNewVersion(
+    bytes32 packageId,
+    uint256 majorVersion,
+    uint256 minorVersion,
+    uint256 patchVersion,
+    string memory location
+  ) internal {
+    PackageVersion storage packageNode = nodes[packageId];
+
+    if (packageNode.latestSubVersion < majorVersion) {
+      packageNode.latestSubVersion = majorVersion;
+    }
+    packageNode.created = true;
+
+    bytes32 majorNodeId = keccak256(abi.encodePacked(packageId, majorVersion));
+    PackageVersion storage majorNode = nodes[majorNodeId];
+    if (majorNode.latestSubVersion < minorVersion) {
+      majorNode.latestSubVersion = minorVersion;
+    }
+    majorNode.created = true;
+
+    bytes32 minorNodeId = keccak256(
+      abi.encodePacked(majorNodeId, minorVersion)
+    );
+    PackageVersion storage minorNode = nodes[minorNodeId];
+
+    if (minorNode.latestSubVersion < patchVersion) {
+      minorNode.latestSubVersion = patchVersion;
+    }
+    minorNode.created = true;
+
+    bytes32 patchNodeId = keccak256(
+      abi.encodePacked(minorNodeId, patchVersion)
+    );
+
+    require(!nodes[patchNodeId].created, "Version is already published");
+
+    nodes[patchNodeId] = PackageVersion(true, 0, true, location);
+
+    emit VersionPublished(
+      packageId,
+      patchNodeId,
+      majorVersion,
+      minorVersion,
+      patchVersion,
+      location
+    );
+  }
+
   function isAuthorized(bytes32 packageId, address ownerOrManager)
     public
     view

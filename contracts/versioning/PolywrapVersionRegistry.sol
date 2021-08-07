@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import "./VersionManager.sol";
+import "./VersionVerification.sol";
 
-contract PolywrapVersionRegistry is VersionManager {
+contract PolywrapVersionRegistry is VersionVerification {
   constructor(
     bytes32[] memory domainRegistrars,
     address[] memory domainRegistrarAddresses
