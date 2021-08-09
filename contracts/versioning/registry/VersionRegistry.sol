@@ -2,7 +2,7 @@
 pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "./domain-registrars/IDomainRegistrarLink.sol";
+import "../domain-registrars/IDomainRegistrarLink.sol";
 
 abstract contract VersionRegistry is OwnableUpgradeable {
   event OwnershipUpdated(
@@ -37,6 +37,7 @@ abstract contract VersionRegistry is OwnableUpgradeable {
   mapping(bytes32 => PackageVersion) public nodes;
   mapping(bytes32 => PackageInfo) public packages;
   mapping(bytes32 => address) public domainRegistrarLinks;
+  address public trustedOwnershipOverrider;
 
   constructor(
     bytes32[] memory domainRegistrars,
@@ -78,8 +79,15 @@ abstract contract VersionRegistry is OwnableUpgradeable {
       )
     );
 
+    address domainRegistrarLinkAddress = domainRegistrarLinks[domainRegistrar];
+
+    require(
+      domainRegistrarLinkAddress != address(0),
+      "Domain registrar is not supported"
+    );
+
     IDomainRegistrarLink drApi = IDomainRegistrarLink(
-      domainRegistrarLinks[domainRegistrar]
+      domainRegistrarLinkAddress
     );
 
     address owner = drApi.getPolywrapOwner(domainRegistrarNode);
@@ -97,93 +105,81 @@ abstract contract VersionRegistry is OwnableUpgradeable {
     );
   }
 
-  function publishNewVersion(
-    bytes32 packageId,
-    uint256 majorVersion,
-    uint256 minorVersion,
-    uint256 patchVersion,
-    string memory location
-  ) public authorized(packageId) {
-    PackageVersion storage packageNode = nodes[packageId];
+  function overrideOwnership(
+    bytes32 domainRegistrar,
+    bytes32 domainRegistrarNode,
+    address domainOwner
+  ) public {
+    require(msg.sender == trustedOwnershipOverrider);
 
-    if (packageNode.latestSubVersion < majorVersion) {
-      packageNode.latestSubVersion = majorVersion;
-    }
-    packageNode.created = true;
-
-    bytes32 majorNodeId = keccak256(abi.encodePacked(packageId, majorVersion));
-    PackageVersion storage majorNode = nodes[majorNodeId];
-    if (majorNode.latestSubVersion < minorVersion) {
-      majorNode.latestSubVersion = minorVersion;
-    }
-    majorNode.created = true;
-
-    bytes32 minorNodeId = keccak256(
-      abi.encodePacked(majorNodeId, minorVersion)
-    );
-    PackageVersion storage minorNode = nodes[minorNodeId];
-
-    if (minorNode.latestSubVersion < patchVersion) {
-      minorNode.latestSubVersion = patchVersion;
-    }
-    minorNode.created = true;
-
-    bytes32 patchNodeId = keccak256(
-      abi.encodePacked(minorNodeId, patchVersion)
+    bytes32 packageId = keccak256(
+      abi.encodePacked(
+        keccak256(abi.encodePacked(domainRegistrarNode)),
+        domainRegistrar
+      )
     );
 
-    require(!nodes[patchNodeId].created, "Version is already published");
+    packages[packageId] = PackageInfo(
+      domainOwner,
+      domainRegistrarNode,
+      domainRegistrar
+    );
 
-    nodes[patchNodeId] = PackageVersion(true, 0, true, location);
-
-    emit VersionPublished(
+    emit OwnershipUpdated(
+      domainRegistrarNode,
       packageId,
-      patchNodeId,
-      majorVersion,
-      minorVersion,
-      patchVersion,
-      location
+      domainRegistrar,
+      owner
     );
   }
 
-  function internalPublishNewVersion(
+  function internalPublishVersion(
     bytes32 packageId,
+    bytes32 proposedVersionId,
     uint256 majorVersion,
     uint256 minorVersion,
     uint256 patchVersion,
-    string memory location
+    string memory location,
+    bytes32[] merkleProof,
+    uint256 verifiedVersionIndex
   ) internal {
     PackageVersion storage packageNode = nodes[packageId];
 
-    if (packageNode.latestSubVersion < majorVersion) {
-      packageNode.latestSubVersion = majorVersion;
-    }
-    packageNode.created = true;
-
     bytes32 majorNodeId = keccak256(abi.encodePacked(packageId, majorVersion));
     PackageVersion storage majorNode = nodes[majorNodeId];
-    if (majorNode.latestSubVersion < minorVersion) {
-      majorNode.latestSubVersion = minorVersion;
-    }
-    majorNode.created = true;
 
     bytes32 minorNodeId = keccak256(
       abi.encodePacked(majorNodeId, minorVersion)
     );
     PackageVersion storage minorNode = nodes[minorNodeId];
 
+    bytes32 patchNodeId = keccak256(
+      abi.encodePacked(minorNodeId, patchVersion)
+    );
+
+    if (packageNode.latestSubVersion < majorVersion) {
+      packageNode.latestSubVersion = majorVersion;
+    }
+    packageNode.created = true;
+
+    if (majorNode.latestSubVersion < minorVersion) {
+      majorNode.latestSubVersion = minorVersion;
+    }
+    majorNode.created = true;
+
     if (minorNode.latestSubVersion < patchVersion) {
       minorNode.latestSubVersion = patchVersion;
     }
     minorNode.created = true;
 
-    bytes32 patchNodeId = keccak256(
-      abi.encodePacked(minorNodeId, patchVersion)
-    );
-
     require(!nodes[patchNodeId].created, "Version is already published");
 
     nodes[patchNodeId] = PackageVersion(true, 0, true, location);
+
+    require(
+      proposedVersionId == keccak256(abi.encodePacked(patchNodeId, location)),
+      "Proposed version ID does not match the patch version and location pair"
+    );
 
     emit VersionPublished(
       packageId,
@@ -193,31 +189,5 @@ abstract contract VersionRegistry is OwnableUpgradeable {
       patchVersion,
       location
     );
-  }
-
-  function isAuthorized(bytes32 packageId, address ownerOrManager)
-    public
-    view
-    virtual
-    returns (bool);
-
-  modifier packageOwner(bytes32 packageId) {
-    PackageInfo memory packageInfo = packages[packageId];
-
-    require(packageInfo.domainRegistrarNode != 0, "Package is not registered");
-
-    require(
-      packageInfo.owner == msg.sender,
-      "You do not have access to the domain of this package"
-    );
-    _;
-  }
-
-  modifier authorized(bytes32 packageId) {
-    require(
-      isAuthorized(packageId, msg.sender),
-      "You do not have access to this package"
-    );
-    _;
   }
 }

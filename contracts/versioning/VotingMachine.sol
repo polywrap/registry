@@ -2,64 +2,53 @@
 pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "./bridge/IVersionRegistryBridgeLink.sol";
+import "./version-events-listeners/IVersionDecidedListener.sol";
+import "./version-events-listeners/IVersionVoteListener.sol";
 
 contract VotingMachine is OwnableUpgradeable {
-  struct VotingPeriod {
-    bytes32[] proposedVersionIds;
-    mapping(bytes32 => VersionVotingResult) votingResults;
-    bytes32 merkleRoot;
-    //Track unpaired leaves and the highest level(root is at the top) to calculate the merkle root on the fly
-    uint256 highestTreeLevel;
-    mapping(uint256 => bytes32) unpairedTreeLeaves;
-    bool resultsRelayed;
-  }
+  event VersionProposed(
+    bytes32 packageId,
+    bytes32 majorVersion,
+    bytes32 minorVersion,
+    bytes32 patchVersion,
+    bytes32 patchNodeId,
+    string location,
+    address proposer
+  );
 
-  struct VersionVotingResult {
+  event VersionDecided(bytes32 patchNodeId, string location, address proposer);
+
+  struct ProposedVersion {
     address[] approvingVerifierAddresses;
     address[] rejectingVerifierAddresses;
     mapping(address => bool) votedVerifierAddresses;
     bool decided;
+    bool verified;
+    bytes32 patchNodeId;
+    string location;
   }
 
   struct Vote {
-    bytes32 versionId;
+    //This is equal to keccak256(abi.encodePacked(patchNodeId, location))
+    bytes32 proposedVersionId;
     bool approved;
   }
 
-  constructor(uint256 blocksPerVotingPeriod) {
-    initialize(blocksPerVotingPeriod);
-  }
-
-  function initialize(uint256 blocksPerVotingPeriod) public initializer {
-    __Ownable_init();
-
-    setBlocksPerVotingPeriod(blocksPerVotingPeriod);
-  }
+  address public registrar;
+  address public versionDecidedListener;
+  address public versionVoteListener;
 
   mapping(address => bool) public authorizedVerifierAddresses;
   uint256 public authorizedVerifierAddressCount;
 
-  mapping(uint256 => VotingPeriod) public votingPeriods;
-  mapping(uint256 => bool) public relayedVotingPeriods;
+  mapping(bytes32 => ProposedVersions) proposedVersions;
 
-  uint256 public blocksPerVotingPeriod;
-  uint256 public lastVotingPeriodWithVotesId;
-
-  address public versionRegistryBridgeLinkAddres;
-
-  function setBlocksPerVotingPeriod(uint256 _blocksPerVotingPeriod)
-    public
-    onlyOwner
-  {
-    blocksPerVotingPeriod = _blocksPerVotingPeriod;
+  constructor() {
+    initialize();
   }
 
-  function setBridgeInfo(address _versionRegistryBridgeLinkAddres)
-    public
-    onlyOwner
-  {
-    versionRegistryBridgeLinkAddres = _versionRegistryBridgeLinkAddres;
+  function initialize() public initializer {
+    __Ownable_init();
   }
 
   function authorizeVerifierAddresses(address[] memory addresses)
@@ -86,8 +75,40 @@ contract VotingMachine is OwnableUpgradeable {
     }
   }
 
-  function getCurrentVotingPeriodId() public view returns (uint256) {
-    return block.number / blocksPerVotingPeriod;
+  function proposeVersion(
+    bytes32 packageId,
+    uint256 majorVersion,
+    uint256 minorVersion,
+    uint256 patchVersion,
+    string memory location,
+    address proposer
+  ) public {
+    require(msg.sender == registrar);
+
+    bytes32 majorNodeId = keccak256(abi.encodePacked(packageId, majorVersion));
+    bytes32 minorNodeId = keccak256(
+      abi.encodePacked(majorNodeId, minorVersion)
+    );
+    bytes32 patchNodeId = keccak256(
+      abi.encodePacked(minorNodeId, patchVersion)
+    );
+
+    ProposedVersions proposedVersion = proposedVersions[patchNodeId];
+
+    require(proposedVersion.patchNodeId != 0x0, "Version is already proposed");
+
+    proposedVersion.patchNodeId = patchNodeId;
+    proposedVersion.location = location;
+
+    emit VersionProposed(
+      packageId,
+      majorVersion,
+      minorVersion,
+      patchVersion,
+      patchNodeId,
+      location,
+      proposer
+    );
   }
 
   function vote(Vote[] memory votes) public {
@@ -96,143 +117,74 @@ contract VotingMachine is OwnableUpgradeable {
       "You are not an authorized verifier"
     );
 
-    uint256 currentVotingPeriodId = getCurrentVotingPeriodId();
-
-    if (lastVotingPeriodWithVotesId != currentVotingPeriodId) {
-      relayResults(lastVotingPeriodWithVotesId);
-    }
-
-    lastVotingPeriodWithVotesId = currentVotingPeriodId;
-
-    VotingPeriod storage votingPeriod = votingPeriods[currentVotingPeriodId];
-
     for (uint256 i = 0; i < votes.length; i++) {
       Vote memory vote = votes[i];
 
-      VersionVotingResult storage votingResult = votingPeriod.votingResults[
-        vote.versionId
+      ProposedVersion storage proposedVersion = proposedVersions[
+        vote.proposedVersionId
       ];
 
       require(
-        !votingResult.decided,
+        proposedVersion.patchNodeId != 0x0,
+        "Version is not yet proposed"
+      );
+
+      require(
+        !proposedVersion.decided,
         "Voting for this version has already been decided"
       );
 
       require(
-        !votingResult.votedVerifierAddresses[msg.sender],
+        !proposedVersion.votedVerifierAddresses[msg.sender],
         "You already voted"
       );
 
-      votingResult.votedVerifierAddresses[msg.sender] = true;
+      proposedVersion.votedVerifierAddresses[msg.sender] = true;
 
       if (vote.approved) {
-        votingResult.approvingVerifierAddresses.push(msg.sender);
+        proposedVersion.approvingVerifierAddresses.push(msg.sender);
       } else {
-        votingResult.rejectingVerifierAddresses.push(msg.sender);
+        proposedVersion.rejectingVerifierAddresses.push(msg.sender);
       }
 
       if (
-        votingResult.approvingVerifierAddresses.length >
+        proposedVersion.approvingVerifierAddresses.length >
         authorizedVerifierAddressCount / 2
       ) {
-        votingResult.decided = true;
+        proposedVersion.decided = true;
+        proposedVersion.verified = true;
 
-        //Hash the version ID with "false" to signal that the version was approved
-        bytes32 leaf = keccak256(abi.encodePacked(vote.versionId, true));
-      } else if (
-        votingResult.rejectingVerifierAddresses.length >
-        authorizedVerifierAddressCount / 2
-      ) {
-        votingResult.decided = true;
+        onVersionDecided(vote.proposedVersionId, proposedVersion.verified);
 
-        //Hash the version ID with "false" to signal that the version was rejected
-        bytes32 leaf = keccak256(abi.encodePacked(vote.versionId, false));
+        emit VersionDecided(proposedVersion.patchNodeId, location, verified);
+      } else {
+        proposedVersion.decided = true;
+        proposedVersion.verified = false;
 
-        //Go through the unpaired tree leaves and pair them with the new leaf
-        uint256 currentTreeLevel = 0;
-        while (votingPeriod.unpairedTreeLeaves[currentTreeLevel] != 0x0) {
-          leaf = keccak256(
-            abi.encodePacked(
-              votingPeriod.unpairedTreeLeaves[currentTreeLevel],
-              leaf
-            )
-          );
+        onVersionDecided(vote.proposedVersionId, proposedVersion.verified);
 
-          currentTreeLevel++;
-        }
-
-        //Store the unpaired leaf to be paired later
-        votingPeriod.unpairedTreeLeaves[currentTreeLevel] = leaf;
-
-        //Track the highest level
-        if (currentTreeLevel > votingPeriod.highestTreeLevel) {
-          votingPeriod.highestTreeLevel = currentTreeLevel;
-        }
+        emit VersionDecided(proposedVersion.patchNodeId, location, verified);
       }
+
+      onVersionVote(vote.proposedVersionId, vote.approved);
     }
   }
 
-  function relayResults(uint256 votingPeriodId) public {
-    VotingPeriod storage votingPeriod = votingPeriods[votingPeriodId];
-    require(
-      !votingPeriod.resultsRelayed,
-      "Voting period results have already been relayed"
-    );
-    votingPeriod.resultsRelayed = true;
+  function onVersionDecided(bytes32 proposedVersionId, bool verified) private {
+    if (versionDecidedListener != address(0)) {
+      IVersionDecidedListener listener = IVersionDecidedListener(
+        versionDecidedListener
+      );
 
-    bytes32 merkleRoot;
-    uint256 highestTreeLevel;
-    (merkleRoot, highestTreeLevel) = calculateMerkleRoot(votingPeriod);
-
-    votingPeriod.merkleRoot = merkleRoot;
-    votingPeriod.highestTreeLevel = highestTreeLevel;
-
-    IVersionRegistryBridgeLink bridgeLink = IVersionRegistryBridgeLink(
-      versionRegistryBridgeLinkAddres
-    );
-    bridgeLink.setVotingPeriodResult(votingPeriodId, merkleRoot);
+      listener.onVersionDecided(proposedVersionId, verified);
+    }
   }
 
-  function calculateMerkleRoot(VotingPeriod storage votingPeriod)
-    private
-    view
-    returns (bytes32 merkleRoot, uint256 highestTreeLevel)
-  {
-    bytes32 leaf = 0;
+  function onVersionVote(bytes32 proposedVersionId, bool approved) private {
+    if (versionVoteListener != address(0)) {
+      IVersionVoteListener listener = IVersionVoteListener(versionVoteListener);
 
-    //Go through the unpaired tree leaves and pair them with the "0" leaf
-    //If there is no unpaired leaf, just propagate the current one upwards
-    uint256 currentTreeLevel = 0;
-    while (currentTreeLevel < votingPeriod.highestTreeLevel) {
-      if (votingPeriod.unpairedTreeLeaves[currentTreeLevel] != 0x0) {
-        leaf = keccak256(
-          abi.encodePacked(
-            votingPeriod.unpairedTreeLeaves[currentTreeLevel],
-            leaf
-          )
-        );
-      }
-
-      currentTreeLevel++;
-    }
-
-    if (leaf != 0) {
-      //The tree was unbalanced
-      return (
-        keccak256(
-          abi.encodePacked(
-            votingPeriod.unpairedTreeLeaves[currentTreeLevel],
-            leaf
-          )
-        ),
-        votingPeriod.highestTreeLevel + 1
-      );
-    } else {
-      //The tree was balanced and the highest unpaired leaf was already the root
-      return (
-        votingPeriod.unpairedTreeLeaves[currentTreeLevel],
-        votingPeriod.highestTreeLevel
-      );
+      listener.onVersionVote(proposedVersionId, approved);
     }
   }
 }
