@@ -2,29 +2,31 @@
 pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "./VersionResolver.sol";
-import "./VersionRegistry.sol";
+import "./registry/VersionResolver.sol";
+import "./registry/VersionRegistry.sol";
+import "./VotingMachine.sol";
 
 abstract contract VersionRegistrar is OwnableUpgradeable {
   event ManagerAdded(bytes32 indexed packageId, address indexed manager);
   event ManagerRemoved(bytes32 indexed packageId, address indexed manager);
 
-  mapping(bytes32 => bool) public managers;
-  address public polywrapRegistryAddress;
-  address public votingMachineAddress;
+  address public registry;
+  address public votingMachine;
 
-  constructor(address _polywrapRegistryAddress, address _votingMachineAddress) {
-    initialize(_polywrapRegistryAddress, _votingMachineAddress);
+  mapping(bytes32 => bool) public managers;
+
+  constructor(address _registry, address _votingMachine) {
+    initialize(_registry, _votingMachine);
   }
 
-  function initialize(
-    address _polywrapRegistryAddress,
-    address _votingMachineAddress
-  ) public initializer {
+  function initialize(address _registry, address _votingMachine)
+    public
+    initializer
+  {
     __Ownable_init();
 
-    polywrapRegistryAddress = _polywrapRegistryAddress;
-    votingMachineAddress = _votingMachineAddress;
+    registry = registry;
+    votingMachine = _votingMachine;
   }
 
   function addManager(bytes32 packageId, address manager)
@@ -55,12 +57,22 @@ abstract contract VersionRegistrar is OwnableUpgradeable {
     uint256 minorVersion,
     uint256 patchVersion,
     string memory location
-  ) public authorized(packageId) {}
+  ) public authorized(packageId) {
+    VotingMachine votingMachineContract = VotingMachine(votingMachine);
+
+    votingMachineContract.proposeVersion(
+      packageId,
+      majorVersion,
+      minorVersion,
+      patchVersion,
+      location,
+      msg.sender
+    );
+  }
 
   function isAuthorized(bytes32 packageId, address ownerOrManager)
     public
     view
-    override
     returns (bool)
   {
     bytes32 key = keccak256(abi.encodePacked(packageId, ownerOrManager));
@@ -88,9 +100,7 @@ abstract contract VersionRegistrar is OwnableUpgradeable {
     _;
   }
 
-  function getPackageOwner(bytes32 packageId) private returns (address) {
-    VersionRegistry registry = VersionRegistry(polywrapRegistryAddress);
-
-    return registry.packages[packageId].owner;
+  function getPackageOwner(bytes32 packageId) private view returns (address) {
+    return VersionRegistry(registry).getPackageOwner(packageId);
   }
 }

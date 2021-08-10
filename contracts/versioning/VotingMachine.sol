@@ -7,21 +7,35 @@ import "./version-events-listeners/IVersionVoteListener.sol";
 
 contract VotingMachine is OwnableUpgradeable {
   event VersionProposed(
-    bytes32 packageId,
-    bytes32 majorVersion,
-    bytes32 minorVersion,
-    bytes32 patchVersion,
+    bytes32 indexed packageId,
+    bytes32 proposedVersionId,
+    uint256 majorVersion,
+    uint256 minorVersion,
+    uint256 patchVersion,
     bytes32 patchNodeId,
     string location,
     address proposer
   );
 
-  event VersionDecided(bytes32 patchNodeId, string location, address proposer);
+  event VersionVote(
+    address indexed verifier,
+    bytes32 indexed proposedVersionId,
+    bytes32 patchNodeId,
+    string location,
+    bool approved
+  );
+
+  event VersionDecided(
+    bytes32 indexed proposedVersionId,
+    bytes32 patchNodeId,
+    string location,
+    bool verified
+  );
 
   struct ProposedVersion {
-    address[] approvingVerifierAddresses;
-    address[] rejectingVerifierAddresses;
-    mapping(address => bool) votedVerifierAddresses;
+    address[] approvingVerifiers;
+    address[] rejectingVerifiers;
+    mapping(address => bool) votedVerifiers;
     bool decided;
     bool verified;
     bytes32 patchNodeId;
@@ -29,7 +43,7 @@ contract VotingMachine is OwnableUpgradeable {
   }
 
   struct Vote {
-    //This is equal to keccak256(abi.encodePacked(patchNodeId, location))
+    //This is equal to hash of patchNodeId and location
     bytes32 proposedVersionId;
     bool approved;
   }
@@ -38,10 +52,10 @@ contract VotingMachine is OwnableUpgradeable {
   address public versionDecidedListener;
   address public versionVoteListener;
 
-  mapping(address => bool) public authorizedVerifierAddresses;
-  uint256 public authorizedVerifierAddressCount;
+  mapping(address => bool) public authorizedVerifiers;
+  uint256 public authorizedVerifierCount;
 
-  mapping(bytes32 => ProposedVersions) proposedVersions;
+  mapping(bytes32 => ProposedVersion) proposedVersions;
 
   constructor() {
     initialize();
@@ -51,26 +65,20 @@ contract VotingMachine is OwnableUpgradeable {
     __Ownable_init();
   }
 
-  function authorizeVerifierAddresses(address[] memory addresses)
-    public
-    onlyOwner
-  {
+  function authorizeVerifiers(address[] memory addresses) public onlyOwner {
     for (uint256 i = 0; i < addresses.length; i++) {
-      if (!authorizedVerifierAddresses[addresses[i]]) {
-        authorizedVerifierAddresses[addresses[i]] = true;
-        authorizedVerifierAddressCount++;
+      if (!authorizedVerifiers[addresses[i]]) {
+        authorizedVerifiers[addresses[i]] = true;
+        authorizedVerifierCount++;
       }
     }
   }
 
-  function unauthorizeVerifierAddresses(address[] memory addresses)
-    public
-    onlyOwner
-  {
+  function unauthorizeVerifiers(address[] memory addresses) public onlyOwner {
     for (uint256 i = 0; i < addresses.length; i++) {
-      if (authorizedVerifierAddresses[addresses[i]]) {
-        authorizedVerifierAddresses[addresses[i]] = false;
-        authorizedVerifierAddressCount--;
+      if (authorizedVerifiers[addresses[i]]) {
+        authorizedVerifiers[addresses[i]] = false;
+        authorizedVerifierCount--;
       }
     }
   }
@@ -83,7 +91,7 @@ contract VotingMachine is OwnableUpgradeable {
     string memory location,
     address proposer
   ) public {
-    require(msg.sender == registrar);
+    assert(msg.sender == registrar);
 
     bytes32 majorNodeId = keccak256(abi.encodePacked(packageId, majorVersion));
     bytes32 minorNodeId = keccak256(
@@ -93,15 +101,22 @@ contract VotingMachine is OwnableUpgradeable {
       abi.encodePacked(minorNodeId, patchVersion)
     );
 
-    ProposedVersions proposedVersion = proposedVersions[patchNodeId];
+    bytes32 proposedVersionId = keccak256(
+      abi.encodePacked(patchNodeId, location)
+    );
 
-    require(proposedVersion.patchNodeId != 0x0, "Version is already proposed");
+    ProposedVersion storage proposedVersion = proposedVersions[
+      proposedVersionId
+    ];
+
+    require(proposedVersion.patchNodeId == 0x0, "Version is already proposed");
 
     proposedVersion.patchNodeId = patchNodeId;
     proposedVersion.location = location;
 
     emit VersionProposed(
       packageId,
+      proposedVersionId,
       majorVersion,
       minorVersion,
       patchVersion,
@@ -113,7 +128,7 @@ contract VotingMachine is OwnableUpgradeable {
 
   function vote(Vote[] memory votes) public {
     require(
-      authorizedVerifierAddresses[msg.sender],
+      authorizedVerifiers[msg.sender],
       "You are not an authorized verifier"
     );
 
@@ -129,44 +144,55 @@ contract VotingMachine is OwnableUpgradeable {
         "Version is not yet proposed"
       );
 
-      require(
-        !proposedVersion.decided,
-        "Voting for this version has already been decided"
-      );
+      require(!proposedVersion.decided, "Voting for this version has ended");
 
-      require(
-        !proposedVersion.votedVerifierAddresses[msg.sender],
-        "You already voted"
-      );
+      require(!proposedVersion.votedVerifiers[msg.sender], "You already voted");
 
-      proposedVersion.votedVerifierAddresses[msg.sender] = true;
+      proposedVersion.votedVerifiers[msg.sender] = true;
 
       if (vote.approved) {
-        proposedVersion.approvingVerifierAddresses.push(msg.sender);
+        proposedVersion.approvingVerifiers.push(msg.sender);
       } else {
-        proposedVersion.rejectingVerifierAddresses.push(msg.sender);
+        proposedVersion.rejectingVerifiers.push(msg.sender);
       }
 
       if (
-        proposedVersion.approvingVerifierAddresses.length >
-        authorizedVerifierAddressCount / 2
+        proposedVersion.approvingVerifiers.length > authorizedVerifierCount / 2
       ) {
         proposedVersion.decided = true;
         proposedVersion.verified = true;
 
         onVersionDecided(vote.proposedVersionId, proposedVersion.verified);
 
-        emit VersionDecided(proposedVersion.patchNodeId, location, verified);
+        emit VersionDecided(
+          vote.proposedVersionId,
+          proposedVersion.patchNodeId,
+          proposedVersion.location,
+          proposedVersion.verified
+        );
       } else {
         proposedVersion.decided = true;
         proposedVersion.verified = false;
 
         onVersionDecided(vote.proposedVersionId, proposedVersion.verified);
 
-        emit VersionDecided(proposedVersion.patchNodeId, location, verified);
+        emit VersionDecided(
+          vote.proposedVersionId,
+          proposedVersion.patchNodeId,
+          proposedVersion.location,
+          proposedVersion.verified
+        );
       }
 
       onVersionVote(vote.proposedVersionId, vote.approved);
+
+      emit VersionVote(
+        msg.sender,
+        vote.proposedVersionId,
+        proposedVersion.patchNodeId,
+        proposedVersion.location,
+        vote.approved
+      );
     }
   }
 

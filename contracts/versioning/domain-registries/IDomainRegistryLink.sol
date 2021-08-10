@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-interface IDomainRegistrarLink {
-  function getPolywrapOwner(bytes32 domainRegistrarNode)
+interface IDomainRegistryLink {
+  function getPolywrapOwner(bytes32 domainRegistryNode)
     external
     view
     returns (address);

@@ -2,5 +2,5 @@
 pragma solidity ^0.8.4;
 
 interface IVersionDecidedListener {
-  function onVersionDecided(bytes32 patchNodeId, bool verified) external;
+  function onVersionDecided(bytes32 proposedVersionId, bool verified) external;
 }

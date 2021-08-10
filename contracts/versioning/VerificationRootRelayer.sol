@@ -2,34 +2,36 @@
 pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "./bridge/IPolywrapBridgeLink.sol";
+import "./token-bridge/PolywrapVerificationRootBridgeLink.sol";
 
 contract VerificationRootRelayer is OwnableUpgradeable {
-  address public bridgeLinkAddress;
-  address public versionRegistry;
+  address public bridgeLink;
+  address public registry;
 
-  constructor(address _bridgeLinkAddress, address _versionRegistry) {
-    initialize(_bridgeLinkAddress, _versionRegistry);
+  constructor(address _bridgeLink, address _registry) {
+    initialize(_bridgeLink, _registry);
   }
 
-  function initialize(address _bridgeLinkAddress, address _versionRegistry)
+  function initialize(address _bridgeLink, address _registry)
     public
     initializer
   {
     __Ownable_init();
-    updateTrustedAddresses(_bridgeLinkAddress, _versionRegistry);
+    updateTrustedAddresses(_bridgeLink, _registry);
   }
 
-  function updateTrustedAddresses(
-    address _bridgeLinkAddress,
-    address _versionRegistry
-  ) public {
-    bridgeLinkAddress = _bridgeLinkAddress;
-    versionRegistry = _versionRegistry;
+  function updateTrustedAddresses(address _bridgeLink, address _registry)
+    public
+  {
+    bridgeLink = _bridgeLink;
+    registry = _registry;
   }
 
-  function relayVerificationRoot(bytes32 root) public {
-    IPolywrapBridgeLink bridgeLink = IPolywrapBridgeLink(bridgeLinkAddress);
-    bridgeLink.relayVerificationRoot(root);
+  function relayVerificationRoot() public {
+    bytes32 verificationRoot = VersionVerification(registry).verificationRoot();
+
+    PolywrapVerificationRootBridgeLink(bridgeLink).relayVerificationRoot(
+      verificationRoot
+    );
   }
 }

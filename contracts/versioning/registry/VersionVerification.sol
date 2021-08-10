@@ -22,12 +22,13 @@ abstract contract VersionVerification is VersionResolver {
 
   function publishVersion(
     bytes32 packageId,
+    //Hash of patchNodeId and location
     bytes32 proposedVersionId,
     uint256 majorVersion,
     uint256 minorVersion,
     uint256 patchVersion,
     string memory location,
-    bytes32[] proof,
+    bytes32[] memory proof,
     uint256 verifiedVersionIndex
   ) public {
     require(
@@ -46,15 +47,13 @@ abstract contract VersionVerification is VersionResolver {
       majorVersion,
       minorVersion,
       patchVersion,
-      location,
-      proof,
-      verifiedVersionIndex
+      location
     );
   }
 
   function proveVerifiedVersion(
     uint256 index,
-    bytes32[] proof,
+    bytes32[] memory proof,
     bytes32 leaf,
     bytes32 root
   ) private pure returns (bool) {

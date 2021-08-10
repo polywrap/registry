@@ -3,7 +3,7 @@ pragma solidity ^0.8.4;
 
 import "@ensdomains/ens-contracts/contracts/registry/ENS.sol";
 import "../../../helpers/StringToAddressParser.sol";
-import "../IDomainRegistrarLink.sol";
+import "../IDomainRegistryLink.sol";
 
 interface ITextResolverInterface {
   function setText(
@@ -18,7 +18,7 @@ interface ITextResolverInterface {
     returns (string memory);
 }
 
-contract EnsLink is StringToAddressParser, IDomainRegistrarLink {
+contract EnsLink is StringToAddressParser, IDomainRegistryLink {
   string internal constant POLYWRAP_OWNER_RECORD_NAME = "polywrap-owner";
 
   ENS internal ens;

@@ -2,18 +2,18 @@
 pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "../domain-registrars/IDomainRegistrarLink.sol";
 
 abstract contract VersionRegistry is OwnableUpgradeable {
   event OwnershipUpdated(
-    bytes32 indexed registrarNode,
+    bytes32 indexed domainRegistryNode,
     bytes32 packageId,
-    bytes32 registrar,
+    bytes32 domainRegistry,
     address indexed owner
   );
 
   event VersionPublished(
     bytes32 indexed packageId,
+    bytes32 indexed proposedVersionId,
     bytes32 versionId,
     uint256 major,
     uint256 minor,
@@ -30,128 +30,68 @@ abstract contract VersionRegistry is OwnableUpgradeable {
 
   struct PackageInfo {
     address owner;
-    bytes32 domainRegistrarNode;
-    bytes32 domainRegistrar;
+    bytes32 domainRegistryNode;
+    bytes32 domainRegistry;
   }
 
-  mapping(bytes32 => PackageVersion) public nodes;
+  mapping(bytes32 => PackageVersion) public versionNodes;
   mapping(bytes32 => PackageInfo) public packages;
-  mapping(bytes32 => address) public domainRegistrarLinks;
-  address public trustedOwnershipOverrider;
+  address public trustedOwnershipUpdater;
 
-  constructor(
-    bytes32[] memory domainRegistrars,
-    address[] memory domainRegistrarAddresses
-  ) {
-    initialize(domainRegistrars, domainRegistrarAddresses);
+  constructor() {
+    initialize();
   }
 
-  function initialize(
-    bytes32[] memory domainRegistrars,
-    address[] memory domainRegistrarAddresses
-  ) public initializer {
+  function initialize() public initializer {
     __Ownable_init();
-
-    require(
-      domainRegistrars.length == domainRegistrarAddresses.length,
-      "Parameter arrays must have the same length"
-    );
-
-    for (uint256 i = 0; i < domainRegistrars.length; i++) {
-      domainRegistrarLinks[domainRegistrars[i]] = domainRegistrarAddresses[i];
-    }
   }
 
-  function connectDomainRegistrarLink(
-    bytes32 domainRegistrar,
-    address domainRegistrarAddress
-  ) public onlyOwner {
-    domainRegistrarLinks[domainRegistrar] = domainRegistrarAddress;
-  }
-
-  function updateOwnership(bytes32 domainRegistrar, bytes32 domainRegistrarNode)
-    public
-  {
-    bytes32 packageId = keccak256(
-      abi.encodePacked(
-        keccak256(abi.encodePacked(domainRegistrarNode)),
-        domainRegistrar
-      )
-    );
-
-    address domainRegistrarLinkAddress = domainRegistrarLinks[domainRegistrar];
-
-    require(
-      domainRegistrarLinkAddress != address(0),
-      "Domain registrar is not supported"
-    );
-
-    IDomainRegistrarLink drApi = IDomainRegistrarLink(
-      domainRegistrarLinkAddress
-    );
-
-    address owner = drApi.getPolywrapOwner(domainRegistrarNode);
-    packages[packageId] = PackageInfo(
-      owner,
-      domainRegistrarNode,
-      domainRegistrar
-    );
-
-    emit OwnershipUpdated(
-      domainRegistrarNode,
-      packageId,
-      domainRegistrar,
-      owner
-    );
-  }
-
-  function overrideOwnership(
-    bytes32 domainRegistrar,
-    bytes32 domainRegistrarNode,
+  function updateOwnership(
+    bytes32 domainRegistry,
+    bytes32 domainRegistryNode,
     address domainOwner
   ) public {
-    require(msg.sender == trustedOwnershipOverrider);
+    assert(msg.sender == trustedOwnershipUpdater);
 
     bytes32 packageId = keccak256(
       abi.encodePacked(
-        keccak256(abi.encodePacked(domainRegistrarNode)),
-        domainRegistrar
+        keccak256(abi.encodePacked(domainRegistryNode)),
+        domainRegistry
       )
     );
 
     packages[packageId] = PackageInfo(
       domainOwner,
-      domainRegistrarNode,
-      domainRegistrar
+      domainRegistryNode,
+      domainRegistry
     );
 
     emit OwnershipUpdated(
-      domainRegistrarNode,
+      domainRegistryNode,
       packageId,
-      domainRegistrar,
-      owner
+      domainRegistry,
+      domainOwner
     );
   }
 
   function internalPublishVersion(
     bytes32 packageId,
+    //Hash of patchNodeId and location
     bytes32 proposedVersionId,
     uint256 majorVersion,
     uint256 minorVersion,
     uint256 patchVersion,
-    string memory location,
-    bytes32[] merkleProof,
-    uint256 verifiedVersionIndex
+    string memory location
   ) internal {
-    PackageVersion storage packageNode = nodes[packageId];
+    PackageVersion storage packageNode = versionNodes[packageId];
 
     bytes32 majorNodeId = keccak256(abi.encodePacked(packageId, majorVersion));
-    PackageVersion storage majorNode = nodes[majorNodeId];
+    PackageVersion storage majorNode = versionNodes[majorNodeId];
 
     bytes32 minorNodeId = keccak256(
       abi.encodePacked(majorNodeId, minorVersion)
     );
-    PackageVersion storage minorNode = nodes[minorNodeId];
+    PackageVersion storage minorNode = versionNodes[minorNodeId];
 
     bytes32 patchNodeId = keccak256(
       abi.encodePacked(minorNodeId, patchVersion)
@@ -172,9 +112,9 @@ abstract contract VersionRegistry is OwnableUpgradeable {
     }
     minorNode.created = true;
 
-    require(!nodes[patchNodeId].created, "Version is already published");
+    require(!versionNodes[patchNodeId].created, "Version is already published");
 
-    nodes[patchNodeId] = PackageVersion(true, 0, true, location);
+    versionNodes[patchNodeId] = PackageVersion(true, 0, true, location);
 
     require(
       proposedVersionId == keccak256(abi.encodePacked(patchNodeId, location)),
@@ -183,11 +123,16 @@ abstract contract VersionRegistry is OwnableUpgradeable {
 
     emit VersionPublished(
       packageId,
+      proposedVersionId,
       patchNodeId,
       majorVersion,
       minorVersion,
       patchVersion,
       location
     );
+  }
+
+  function getPackageOwner(bytes32 packageId) public view returns (address) {
+    return packages[packageId].owner;
   }
 }
