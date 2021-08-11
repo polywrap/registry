@@ -6,30 +6,47 @@ import "./token-bridge/PolywrapVerificationRootBridgeLink.sol";
 import "./VerificationTreeManager.sol";
 
 contract VerificationRootRelayer is OwnableUpgradeable {
-  address public bridgeLink;
   address public registry;
+  address public bridgeLink;
   address public verificationTreeManager;
   uint256 public blocksPerRootRelay;
 
   uint256 public lastRootRelayBlock;
 
-  constructor(address _bridgeLink, address _registry) {
-    initialize(_bridgeLink, _registry);
+  constructor(address _registry, uint256 _blocksPerRootRelay) {
+    initialize(_registry, _blocksPerRootRelay);
   }
 
-  function initialize(address _bridgeLink, address _registry)
+  function initialize(address _registry, uint256 _blocksPerRootRelay)
     public
     initializer
   {
     __Ownable_init();
-    updateTrustedAddresses(_bridgeLink, _registry);
+
+    registry = _registry;
+    blocksPerRootRelay = _blocksPerRootRelay;
   }
 
-  function updateTrustedAddresses(address _bridgeLink, address _registry)
-    public
-  {
+  function updateBridgeLink(address _bridgeLink) public onlyOwner {
     bridgeLink = _bridgeLink;
+  }
+
+  function updateRegistry(address _registry) public onlyOwner {
     registry = _registry;
+  }
+
+  function updateVerificationTreeManager(address _verificationTreeManager)
+    public
+    onlyOwner
+  {
+    verificationTreeManager = _verificationTreeManager;
+  }
+
+  function updateBlocksPerRootRelay(uint256 _blocksPerRootRelay)
+    public
+    onlyOwner
+  {
+    blocksPerRootRelay = _blocksPerRootRelay;
   }
 
   function onVersionDecided() public {
@@ -48,6 +65,12 @@ contract VerificationRootRelayer is OwnableUpgradeable {
   }
 
   function relayVerificationRoot() public {
+    assert(registry != address(0));
+
+    if (bridgeLink == address(0)) {
+      return;
+    }
+
     bytes32 verificationRoot = VersionVerification(registry).verificationRoot();
 
     PolywrapVerificationRootBridgeLink(bridgeLink).relayVerificationRoot(

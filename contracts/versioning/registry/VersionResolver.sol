@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import "./VersionRegistry.sol";
+import "./Registry.sol";
 
-abstract contract VersionResolver is VersionRegistry {
+abstract contract VersionResolver is Registry {
   function resolveToLeaf(bytes32 versionNodeId) public view returns (bytes32) {
     PackageVersion storage versionNode = versionNodes[versionNodeId];
     require(versionNode.created, "Invalid Node");

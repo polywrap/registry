@@ -3,7 +3,7 @@ pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-abstract contract VersionRegistry is OwnableUpgradeable {
+abstract contract Registry is OwnableUpgradeable {
   event OwnershipUpdated(
     bytes32 indexed domainRegistryNode,
     bytes32 packageId,
@@ -14,7 +14,6 @@ abstract contract VersionRegistry is OwnableUpgradeable {
   event VersionPublished(
     bytes32 indexed packageId,
     bytes32 indexed proposedVersionId,
-    bytes32 versionId,
     uint256 major,
     uint256 minor,
     uint256 patch,
@@ -40,6 +39,13 @@ abstract contract VersionRegistry is OwnableUpgradeable {
 
   constructor() {
     initialize();
+  }
+
+  function updateTrustedOwnershipUpdater(address _trustedOwnershipUpdater)
+    public
+    onlyOwner
+  {
+    trustedOwnershipUpdater = _trustedOwnershipUpdater;
   }
 
   function initialize() public initializer {
@@ -76,8 +82,7 @@ abstract contract VersionRegistry is OwnableUpgradeable {
 
   function internalPublishVersion(
     bytes32 packageId,
-    //Hash of patchNodeId and location
-    bytes32 proposedVersionId,
+    bytes32 provedPatchNodeId,
     uint256 majorVersion,
     uint256 minorVersion,
     uint256 patchVersion,
@@ -117,18 +122,8 @@ abstract contract VersionRegistry is OwnableUpgradeable {
     versionNodes[patchNodeId] = PackageVersion(true, 0, true, location);
 
     require(
-      proposedVersionId == keccak256(abi.encodePacked(patchNodeId, location)),
-      "Proposed version ID does not match the patch version and location pair"
-    );
-
-    emit VersionPublished(
-      packageId,
-      proposedVersionId,
-      patchNodeId,
-      majorVersion,
-      minorVersion,
-      patchVersion,
-      location
+      provedPatchNodeId == patchNodeId,
+      "Supplied patchNodeId does not match the calculated patchNodeId"
     );
   }
 

@@ -2,7 +2,7 @@
 pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "./registry/VersionRegistry.sol";
+import "./registry/Registry.sol";
 import "./token-bridge/PolywrapOwnershipBridgeLink.sol";
 import "./token-bridge/PolywrapVerificationRootBridgeLink.sol";
 import "./domain-registries/IDomainRegistryLink.sol";
@@ -18,40 +18,67 @@ contract PackageOwnershipManager is OwnableUpgradeable {
 
   constructor(
     address _registry,
-    bytes32[] memory domainRegistries,
-    address[] memory domainRegistryAddresses
+    bytes32[] memory _domainRegistries,
+    address[] memory _domainRegistryLinks
   ) {
-    initialize(_registry, domainRegistries, domainRegistryAddresses);
+    initialize(_registry, _domainRegistries, _domainRegistryLinks);
   }
 
   function initialize(
     address _registry,
-    bytes32[] memory domainRegistries,
-    address[] memory domainRegistryAddresses
+    bytes32[] memory _domainRegistries,
+    address[] memory _domainRegistryLinks
   ) public initializer {
     __Ownable_init();
 
-    updateGlobalVars(_registry);
+    registry = _registry;
 
     require(
-      domainRegistries.length == domainRegistryAddresses.length,
+      _domainRegistries.length == _domainRegistryLinks.length,
       "Registry arrays must have the same length"
     );
 
-    for (uint256 i = 0; i < domainRegistries.length; i++) {
-      domainRegistryLinks[domainRegistries[i]] = domainRegistryAddresses[i];
+    for (uint256 i = 0; i < _domainRegistries.length; i++) {
+      domainRegistryLinks[_domainRegistries[i]] = _domainRegistryLinks[i];
     }
   }
 
-  function updateGlobalVars(address _registry) public {
+  function updateRegistry(address _registry) public {
     registry = _registry;
+  }
+
+  function updateLocalDomainRegistryPermission(
+    bytes32 domainRegistry,
+    bool allowed
+  ) public onlyOwner {
+    allowedLocalDomainRegistries[domainRegistry] = allowed;
+  }
+
+  function updateIncomingBridgeLink(
+    bytes32 domainRegistry,
+    bytes32 blockchainName,
+    address bridgeLink
+  ) public onlyOwner {
+    bytes32 key = keccak256(abi.encodePacked(domainRegistry, blockchainName));
+
+    incomingBridgeLinks[key] = bridgeLink;
+  }
+
+  function updateOutgoingBridgeLink(
+    bytes32 domainRegistry,
+    bytes32 blockchainName,
+    address bridgeLink
+  ) public onlyOwner {
+    bytes32 key = keccak256(abi.encodePacked(domainRegistry, blockchainName));
+
+    outgoingBridgeLinks[key] = bridgeLink;
   }
 
   function connectDomainRegistryLink(
     bytes32 domainRegistry,
-    address domainRegistryAddress
+    address _domainRegistryLink
   ) public onlyOwner {
-    domainRegistryLinks[domainRegistry] = domainRegistryAddress;
+    domainRegistryLinks[domainRegistry] = _domainRegistryLink;
   }
 
   function updateOwnership(bytes32 domainRegistry, bytes32 domainRegistryNode)
@@ -64,7 +91,7 @@ contract PackageOwnershipManager is OwnableUpgradeable {
 
     address owner = getPolywrapOwner(domainRegistry, domainRegistryNode);
 
-    VersionRegistry(registry).updateOwnership(
+    Registry(registry).updateOwnership(
       domainRegistry,
       domainRegistryNode,
       owner
@@ -111,7 +138,7 @@ contract PackageOwnershipManager is OwnableUpgradeable {
 
     assert(msg.sender == bridgeLink);
 
-    VersionRegistry(registry).updateOwnership(
+    Registry(registry).updateOwnership(
       domainRegistry,
       domainRegistryNode,
       owner

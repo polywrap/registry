@@ -14,12 +14,70 @@ contract PolywrapOwnershipBridgeLink is OwnableUpgradeable {
   bytes32 public bridgeChainId;
   uint256 public relayOwnershipGasLimit;
 
-  constructor() {
-    initialize();
+  constructor(
+    address _bridge,
+    address _bridgeLink,
+    address _packageOwnershipManager,
+    bytes32 _blockchainName,
+    bytes32 _bridgeChainId,
+    uint256 _relayOwnershipGasLimit
+  ) {
+    initialize(
+      _bridge,
+      _bridgeLink,
+      _packageOwnershipManager,
+      _blockchainName,
+      _bridgeChainId,
+      _relayOwnershipGasLimit
+    );
   }
 
-  function initialize() public initializer {
+  function initialize(
+    address _bridge,
+    address _bridgeLink,
+    address _packageOwnershipManager,
+    bytes32 _blockchainName,
+    bytes32 _bridgeChainId,
+    uint256 _relayOwnershipGasLimit
+  ) public initializer {
     __Ownable_init();
+
+    bridge = _bridge;
+    bridgeLink = _bridgeLink;
+    packageOwnershipManager = _packageOwnershipManager;
+    blockchainName = _blockchainName;
+    bridgeChainId = _bridgeChainId;
+    relayOwnershipGasLimit = _relayOwnershipGasLimit;
+  }
+
+  function updateBridge(address _bridge) public onlyOwner {
+    bridge = _bridge;
+  }
+
+  function updateBridgeLink(address _bridgeLink) public onlyOwner {
+    bridgeLink = _bridgeLink;
+  }
+
+  function updatePackageOwnershipManager(address _packageOwnershipManager)
+    public
+    onlyOwner
+  {
+    packageOwnershipManager = _packageOwnershipManager;
+  }
+
+  function updateBlockchainName(bytes32 _blockchainName) public onlyOwner {
+    blockchainName = _blockchainName;
+  }
+
+  function updateBridgeChainId(bytes32 _bridgeChainId) public onlyOwner {
+    bridgeChainId = _bridgeChainId;
+  }
+
+  function updateRelayOwnershipGasLimit(uint256 _relayOwnershipGasLimit)
+    public
+    onlyOwner
+  {
+    relayOwnershipGasLimit = _relayOwnershipGasLimit;
   }
 
   function relayOwnership(

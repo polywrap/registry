@@ -31,18 +31,39 @@ contract VerificationTreeManager is
 
   DynamicMerkleTree private verificationTree;
 
-  address public verificationRootRelayer;
   address public registry;
   address public votingMachine;
+  address public verificationRootRelayer;
 
   uint256 public decidedVersionCount;
 
-  constructor() {
-    initialize();
+  constructor(address _registry, address _votingMachine) {
+    initialize(_registry, _votingMachine);
   }
 
-  function initialize() public initializer {
+  function initialize(address _registry, address _votingMachine)
+    public
+    initializer
+  {
     __Ownable_init();
+
+    registry = _registry;
+    votingMachine = _votingMachine;
+  }
+
+  function updateRegistry(address _registry) public onlyOwner {
+    registry = _registry;
+  }
+
+  function updateVotingMachine(address _votingMachine) public onlyOwner {
+    votingMachine = _votingMachine;
+  }
+
+  function updateVerificationRootRelayer(address _verificationRootRelayer)
+    public
+    onlyOwner
+  {
+    verificationRootRelayer = _verificationRootRelayer;
   }
 
   function onVersionDecided(bytes32 proposedVersionId, bool verified)

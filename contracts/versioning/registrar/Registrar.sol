@@ -2,11 +2,11 @@
 pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "./registry/VersionResolver.sol";
-import "./registry/VersionRegistry.sol";
-import "./VotingMachine.sol";
+import "../registry/VersionResolver.sol";
+import "../registry/Registry.sol";
+import "../VotingMachine.sol";
 
-abstract contract VersionRegistrar is OwnableUpgradeable {
+abstract contract Registrar is OwnableUpgradeable {
   event ManagerAdded(bytes32 indexed packageId, address indexed manager);
   event ManagerRemoved(bytes32 indexed packageId, address indexed manager);
 
@@ -26,6 +26,14 @@ abstract contract VersionRegistrar is OwnableUpgradeable {
     __Ownable_init();
 
     registry = registry;
+    votingMachine = _votingMachine;
+  }
+
+  function updateRegistry(address _registry) public onlyOwner {
+    registry = _registry;
+  }
+
+  function updateVotingMachine(address _votingMachine) public onlyOwner {
     votingMachine = _votingMachine;
   }
 
@@ -101,6 +109,6 @@ abstract contract VersionRegistrar is OwnableUpgradeable {
   }
 
   function getPackageOwner(bytes32 packageId) private view returns (address) {
-    return VersionRegistry(registry).getPackageOwner(packageId);
+    return Registry(registry).getPackageOwner(packageId);
   }
 }

@@ -1,5 +1,5 @@
 
-import { ethers } from "hardhat";
+/*import { ethers } from "hardhat";
 import chai, { expect } from "chai";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { VotingMachineBridgeLink } from "../typechain";
@@ -100,4 +100,4 @@ describe("Bridge Info", () => {
       )
     ).to.revertedWith("Ownable: caller is not the owner");
   });
-});
+});*/

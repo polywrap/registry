@@ -1,8 +1,8 @@
-
+/*
 import { ethers } from "hardhat";
 import chai, { expect } from "chai";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { VersionRegistryBridgeLink } from "../typechain";
+import { RegistryBridgeLink } from "../typechain";
 
 
 describe("Bridge Info", () => {
@@ -12,7 +12,7 @@ describe("Bridge Info", () => {
   let randomAcc3: SignerWithAddress;
   let randomAcc4: SignerWithAddress;
 
-  let versionRegistryBridgeLink: VersionRegistryBridgeLink;
+  let versionRegistryBridgeLink: RegistryBridgeLink;
 
   before(async () => {
     const [_owner, _randomAcc1, _randomAcc2, _randomAcc3, _randomAcc4] = await ethers.getSigners();
@@ -24,7 +24,7 @@ describe("Bridge Info", () => {
   });
 
   it("allows owner to set bridge info", async () => {
-    const versionRegistryBridgeLinkFactory = await ethers.getContractFactory("VersionRegistryBridgeLink");
+    const versionRegistryBridgeLinkFactory = await ethers.getContractFactory("RegistryBridgeLink");
     versionRegistryBridgeLink = await versionRegistryBridgeLinkFactory.deploy(randomAcc1.address, randomAcc2.address, 100000);
 
     expect(
@@ -57,7 +57,7 @@ describe("Bridge Info", () => {
   });
 
   it("forbids non owner to set bridge info", async () => {
-    const versionRegistryBridgeLinkFactory = await ethers.getContractFactory("VersionRegistryBridgeLink");
+    const versionRegistryBridgeLinkFactory = await ethers.getContractFactory("RegistryBridgeLink");
     versionRegistryBridgeLink = await versionRegistryBridgeLinkFactory.deploy(randomAcc1.address, randomAcc2.address, 100000);
 
     versionRegistryBridgeLink = versionRegistryBridgeLink.connect(randomAcc1);
@@ -66,4 +66,4 @@ describe("Bridge Info", () => {
       versionRegistryBridgeLink.setBridgeInfo(randomAcc3.address, randomAcc4.address, 200000)
     ).to.revertedWith("Ownable: caller is not the owner");
   });
-});
+});*/

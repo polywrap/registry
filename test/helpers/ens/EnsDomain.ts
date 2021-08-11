@@ -7,7 +7,7 @@ export class EnsDomain {
     this.labelHash = labelhash(label);
     this.name = `${label}.${EnsDomain.TLD}`;
     this.node = namehash(this.name);
-    this.packageId = solidityKeccak256(["bytes32", "bytes32"], [keccak256(this.node), EnsDomain.RegistrarBytes32]);
+    this.packageId = solidityKeccak256(["bytes32", "bytes32"], [keccak256(this.node), EnsDomain.RegistryBytes32]);
   }
 
   label: string;
@@ -17,6 +17,6 @@ export class EnsDomain {
   packageId: string;
 
   static TLD: string = "eth";
-  static Registrar: string = "ens";
-  static RegistrarBytes32: string = formatBytes32String(EnsDomain.Registrar);
+  static Registry: string = "ens";
+  static RegistryBytes32: string = formatBytes32String(EnsDomain.Registry);
 }

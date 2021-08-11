@@ -8,7 +8,7 @@ abstract contract VersionVerification is VersionResolver {
 
   bytes32 public verificationRoot;
 
-  function setTrustedVerificationRootUpdater(
+  function updateTrustedVerificationRootUpdater(
     address _trustedVerificationRootUpdater
   ) public onlyOwner {
     trustedVerificationRootUpdater = _trustedVerificationRootUpdater;
@@ -22,8 +22,7 @@ abstract contract VersionVerification is VersionResolver {
 
   function publishVersion(
     bytes32 packageId,
-    //Hash of patchNodeId and location
-    bytes32 proposedVersionId,
+    bytes32 patchNodeId,
     uint256 majorVersion,
     uint256 minorVersion,
     uint256 patchVersion,
@@ -31,6 +30,10 @@ abstract contract VersionVerification is VersionResolver {
     bytes32[] memory proof,
     uint256 verifiedVersionIndex
   ) public {
+    bytes32 proposedVersionId = keccak256(
+      abi.encodePacked(patchNodeId, location)
+    );
+
     require(
       proveVerifiedVersion(
         verifiedVersionIndex,
@@ -43,6 +46,15 @@ abstract contract VersionVerification is VersionResolver {
 
     internalPublishVersion(
       packageId,
+      patchNodeId,
+      majorVersion,
+      minorVersion,
+      patchVersion,
+      location
+    );
+
+    emit VersionPublished(
+      packageId,
       proposedVersionId,
       majorVersion,
       minorVersion,
@@ -54,9 +66,12 @@ abstract contract VersionVerification is VersionResolver {
   function proveVerifiedVersion(
     uint256 index,
     bytes32[] memory proof,
-    bytes32 leaf,
+    bytes32 proposedVersionId,
     bytes32 root
   ) private pure returns (bool) {
+    //Pass "true" to confirm version is verified
+    bytes32 leaf = keccak256(abi.encodePacked(proposedVersionId, true));
+
     bytes32 hash = leaf;
 
     for (uint256 i = 0; i < proof.length; i++) {
