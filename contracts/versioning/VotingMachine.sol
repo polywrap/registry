@@ -3,7 +3,6 @@ pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "./version-events-listeners/IVersionDecidedListener.sol";
-import "./version-events-listeners/IVersionVoteListener.sol";
 
 contract VotingMachine is OwnableUpgradeable {
   event VersionProposed(
@@ -50,7 +49,6 @@ contract VotingMachine is OwnableUpgradeable {
 
   address public registrar;
   address public versionDecidedListener;
-  address public versionVoteListener;
 
   mapping(address => bool) public authorizedVerifiers;
   uint256 public authorizedVerifierCount;
@@ -184,8 +182,6 @@ contract VotingMachine is OwnableUpgradeable {
         );
       }
 
-      onVersionVote(vote.proposedVersionId, vote.approved);
-
       emit VersionVote(
         msg.sender,
         vote.proposedVersionId,
@@ -203,14 +199,6 @@ contract VotingMachine is OwnableUpgradeable {
       );
 
       listener.onVersionDecided(proposedVersionId, verified);
-    }
-  }
-
-  function onVersionVote(bytes32 proposedVersionId, bool approved) private {
-    if (versionVoteListener != address(0)) {
-      IVersionVoteListener listener = IVersionVoteListener(versionVoteListener);
-
-      listener.onVersionVote(proposedVersionId, approved);
     }
   }
 }

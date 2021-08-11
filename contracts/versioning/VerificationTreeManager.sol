@@ -3,12 +3,10 @@ pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "./version-events-listeners/IVersionDecidedListener.sol";
-import "./version-events-listeners/IVersionVoteListener.sol";
 import "./VerificationRootRelayer.sol";
 import "./registry/VersionVerification.sol";
 
 contract VerificationTreeManager is
-  IVersionVoteListener,
   IVersionDecidedListener,
   OwnableUpgradeable
 {
@@ -58,32 +56,7 @@ contract VerificationTreeManager is
     emit VersionDecided(proposedVersionId, verified, decidedVersionCount);
     decidedVersionCount++;
 
-    bytes32 verificationRoot = calculateMerkleRoot();
-    emit VerificationRootCalculated(verificationRoot, decidedVersionCount);
-
-    updateRegistryVerificationRoot(verificationRoot);
-    relayVerificationRoot();
-  }
-
-  function onVersionVote(bytes32 proposedVersionId, bool approved)
-    public
-    override
-  {
-    assert(msg.sender == votingMachine);
-
-    emit VersionVote(proposedVersionId, approved);
-  }
-
-  function updateRegistryVerificationRoot(bytes32 verificationRoot) private {
-    if (registry != address(0)) {
-      VersionVerification(registry).updateVerificationRoot(verificationRoot);
-    }
-  }
-
-  function relayVerificationRoot() private {
-    if (verificationRootRelayer != address(0)) {
-      VerificationRootRelayer(verificationRootRelayer).relayVerificationRoot();
-    }
+    VerificationRootRelayer(verificationRootRelayer).onVersionDecided();
   }
 
   function addVersionToTree(bytes32 proposedVersionId, bool verified) private {
@@ -112,7 +85,9 @@ contract VerificationTreeManager is
     }
   }
 
-  function calculateMerkleRoot() private view returns (bytes32) {
+  function calculateVerificationRoot() public returns (bytes32) {
+    assert(msg.sender == verificationRootRelayer);
+
     bytes32 leaf = 0;
 
     //Go through the unpaired tree leaves and pair them with the "0" leaf
@@ -145,6 +120,8 @@ contract VerificationTreeManager is
       //The tree was balanced and the highest unpaired leaf was already the root
       root = verificationTree.unpairedTreeLeaves[currentTreeLevel];
     }
+
+    emit VerificationRootCalculated(root, decidedVersionCount);
 
     return root;
   }
