@@ -13,7 +13,6 @@ abstract contract Registry is OwnableUpgradeable {
 
   event VersionPublished(
     bytes32 indexed packageId,
-    bytes32 indexed proposedVersionId,
     uint256 major,
     uint256 minor,
     uint256 patch,
@@ -35,21 +34,23 @@ abstract contract Registry is OwnableUpgradeable {
 
   mapping(bytes32 => PackageVersion) public versionNodes;
   mapping(bytes32 => PackageInfo) public packages;
-  address public trustedOwnershipUpdater;
+  address public ownershipUpdater;
+  address public versionPublisher;
 
   constructor() {
     initialize();
   }
 
-  function updateTrustedOwnershipUpdater(address _trustedOwnershipUpdater)
-    public
-    onlyOwner
-  {
-    trustedOwnershipUpdater = _trustedOwnershipUpdater;
-  }
-
   function initialize() public initializer {
     __Ownable_init();
+  }
+
+  function updateOwnershipUpdater(address _ownershipUpdater) public onlyOwner {
+    ownershipUpdater = _ownershipUpdater;
+  }
+
+  function updateVersionPublisher(address _versionPublisher) public onlyOwner {
+    versionPublisher = _versionPublisher;
   }
 
   function updateOwnership(
@@ -57,7 +58,7 @@ abstract contract Registry is OwnableUpgradeable {
     bytes32 domainRegistryNode,
     address domainOwner
   ) public {
-    assert(msg.sender == trustedOwnershipUpdater);
+    assert(msg.sender == ownershipUpdater);
 
     bytes32 packageId = keccak256(
       abi.encodePacked(
@@ -80,14 +81,13 @@ abstract contract Registry is OwnableUpgradeable {
     );
   }
 
-  function internalPublishVersion(
+  function publishVersion(
     bytes32 packageId,
-    bytes32 provedPatchNodeId,
     uint256 majorVersion,
     uint256 minorVersion,
     uint256 patchVersion,
     string memory location
-  ) internal {
+  ) public returns (bytes32) {
     PackageVersion storage packageNode = versionNodes[packageId];
 
     bytes32 majorNodeId = keccak256(abi.encodePacked(packageId, majorVersion));
@@ -121,10 +121,15 @@ abstract contract Registry is OwnableUpgradeable {
 
     versionNodes[patchNodeId] = PackageVersion(true, 0, true, location);
 
-    require(
-      provedPatchNodeId == patchNodeId,
-      "Supplied patchNodeId does not match the calculated patchNodeId"
+    emit VersionPublished(
+      packageId,
+      majorVersion,
+      minorVersion,
+      patchVersion,
+      location
     );
+
+    return patchNodeId;
   }
 
   function getPackageOwner(bytes32 packageId) public view returns (address) {

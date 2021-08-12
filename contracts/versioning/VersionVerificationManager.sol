@@ -1,21 +1,37 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import "./VersionResolver.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "./registry/Registry.sol";
 
-abstract contract VersionVerification is VersionResolver {
-  address public trustedVerificationRootUpdater;
+contract VersionVerificationManager is OwnableUpgradeable {
+  event VersionPublished(
+    bytes32 indexed packageId,
+    bytes32 indexed proposedVersionId,
+    uint256 major,
+    uint256 minor,
+    uint256 patch,
+    string location
+  );
+
+  address public registry;
+  address public verificationRootUpdater;
 
   bytes32 public verificationRoot;
 
-  function updateTrustedVerificationRootUpdater(
-    address _trustedVerificationRootUpdater
-  ) public onlyOwner {
-    trustedVerificationRootUpdater = _trustedVerificationRootUpdater;
+  function updateRegistry(address _registry) public onlyOwner {
+    _registry = registry;
+  }
+
+  function updateVerificationRootUpdater(address _verificationRootUpdater)
+    public
+    onlyOwner
+  {
+    verificationRootUpdater = _verificationRootUpdater;
   }
 
   function updateVerificationRoot(bytes32 root) public {
-    require(msg.sender == trustedVerificationRootUpdater);
+    assert(msg.sender == verificationRootUpdater);
 
     verificationRoot = root;
   }
@@ -44,13 +60,17 @@ abstract contract VersionVerification is VersionResolver {
       "Invalid proof"
     );
 
-    internalPublishVersion(
+    bytes32 actualPatchNodeId = Registry(registry).publishVersion(
       packageId,
-      patchNodeId,
       majorVersion,
       minorVersion,
       patchVersion,
       location
+    );
+
+    require(
+      patchNodeId == actualPatchNodeId,
+      "Supplied patchNodeId does not match the calculated patchNodeId"
     );
 
     emit VersionPublished(

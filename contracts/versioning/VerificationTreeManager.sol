@@ -4,7 +4,6 @@ pragma solidity ^0.8.4;
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "./version-events-listeners/IVersionDecidedListener.sol";
 import "./VerificationRootRelayer.sol";
-import "./registry/VersionVerification.sol";
 
 contract VerificationTreeManager is
   IVersionDecidedListener,

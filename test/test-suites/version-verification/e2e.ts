@@ -118,7 +118,7 @@ describe("Voting", () => {
   });
 
 
-  it("can not unauthorize the same verifier more than once", async () => {
+  it("can propose and publish a version", async () => {
     packageOwnershipManagerL1 = packageOwnershipManagerL1.connect(polywrapOwner);
     registryL1 = registryL1.connect(polywrapOwner);
 
@@ -156,23 +156,5 @@ describe("Voting", () => {
       1, 0, 0,
       "test-location",
       [], 1);
-
-    // await votingMachine.authorizeVerifierAddresses([randomAcc1.address, randomAcc2.address]);
-
-    // expect(
-    //   await votingMachine.authorizedVerifierAddressCount()
-    // ).to.equal(2);
-
-    // await votingMachine.unauthorizeVerifierAddresses([randomAcc1.address]);
-
-    // expect(
-    //   await votingMachine.authorizedVerifierAddressCount()
-    // ).to.equal(1);
-
-    // await votingMachine.unauthorizeVerifierAddresses([randomAcc1.address]);
-
-    // expect(
-    //   await votingMachine.authorizedVerifierAddressCount()
-    // ).to.equal(1);
   });
 });

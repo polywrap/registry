@@ -2,7 +2,7 @@
 pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "../registry/VersionVerification.sol";
+import "../VersionVerificationManager.sol";
 import "../PackageOwnershipManager.sol";
 import "./ITokenBridge.sol";
 
@@ -10,7 +10,7 @@ contract PolywrapVerificationRootBridgeLink is OwnableUpgradeable {
   address public bridge;
   address public bridgeLink;
   address public verificationRootRelayer;
-  address public registry;
+  address public versionVerificationManager;
   bytes32 public bridgeChainId;
   uint256 public relayVerificationRootGasLimit;
 
@@ -18,7 +18,7 @@ contract PolywrapVerificationRootBridgeLink is OwnableUpgradeable {
     address _bridge,
     address _bridgeLink,
     address _verificationRootRelayer,
-    address _registry,
+    address _versionVerificationManager,
     bytes32 _bridgeChainId,
     uint256 _relayVerificationRootGasLimit
   ) {
@@ -26,7 +26,7 @@ contract PolywrapVerificationRootBridgeLink is OwnableUpgradeable {
       _bridge,
       _bridgeLink,
       _verificationRootRelayer,
-      _registry,
+      _versionVerificationManager,
       _bridgeChainId,
       _relayVerificationRootGasLimit
     );
@@ -36,7 +36,7 @@ contract PolywrapVerificationRootBridgeLink is OwnableUpgradeable {
     address _bridge,
     address _bridgeLink,
     address _verificationRootRelayer,
-    address _registry,
+    address _versionVerificationManager,
     bytes32 _bridgeChainId,
     uint256 _relayVerificationRootGasLimit
   ) public initializer {
@@ -45,7 +45,7 @@ contract PolywrapVerificationRootBridgeLink is OwnableUpgradeable {
     bridge = _bridge;
     bridgeLink = _bridgeLink;
     verificationRootRelayer = _verificationRootRelayer;
-    registry = _registry;
+    versionVerificationManager = _versionVerificationManager;
     bridgeChainId = _bridgeChainId;
     relayVerificationRootGasLimit = _relayVerificationRootGasLimit;
   }
@@ -65,8 +65,11 @@ contract PolywrapVerificationRootBridgeLink is OwnableUpgradeable {
     verificationRootRelayer = _verificationRootRelayer;
   }
 
-  function updateRegistry(address _registry) public onlyOwner {
-    registry = _registry;
+  function updateVersionVerificationManager(address _versionVerificationManager)
+    public
+    onlyOwner
+  {
+    versionVerificationManager = _versionVerificationManager;
   }
 
   function updateBridgeChainId(bytes32 _bridgeChainId) public onlyOwner {
@@ -100,6 +103,7 @@ contract PolywrapVerificationRootBridgeLink is OwnableUpgradeable {
     require(bridgeContract.messageSender() == bridgeLink);
     require(bridgeContract.messageSourceChainId() == bridgeChainId);
 
-    VersionVerification(registry).updateVerificationRoot(root);
+    VersionVerificationManager(versionVerificationManager)
+      .updateVerificationRoot(root);
   }
 }
