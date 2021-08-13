@@ -3,7 +3,7 @@ pragma solidity ^0.8.4;
 
 import "@ensdomains/ens-contracts/contracts/registry/ENS.sol";
 import "../../../helpers/StringToAddressParser.sol";
-import "../IDomainRegistryLink.sol";
+import "../interfaces/IDomainRegistryLink.sol";
 
 interface ITextResolverInterface {
   function setText(

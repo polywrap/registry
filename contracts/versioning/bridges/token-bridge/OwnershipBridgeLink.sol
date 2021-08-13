@@ -2,10 +2,11 @@
 pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "../PackageOwnershipManager.sol";
+import "../../PackageOwnershipManager.sol";
 import "./ITokenBridge.sol";
+import "../interfaces/IOwnershipBridgeLink.sol";
 
-contract PolywrapOwnershipBridgeLink is OwnableUpgradeable {
+contract OwnershipBridgeLink is IOwnershipBridgeLink, OwnableUpgradeable {
   address public bridge;
   address public bridgeLink;
   address public packageOwnershipManager;
@@ -15,7 +16,6 @@ contract PolywrapOwnershipBridgeLink is OwnableUpgradeable {
 
   constructor(
     address _bridge,
-    address _bridgeLink,
     address _packageOwnershipManager,
     bytes32 _blockchainName,
     bytes32 _bridgeChainId,
@@ -23,7 +23,6 @@ contract PolywrapOwnershipBridgeLink is OwnableUpgradeable {
   ) {
     initialize(
       _bridge,
-      _bridgeLink,
       _packageOwnershipManager,
       _blockchainName,
       _bridgeChainId,
@@ -33,7 +32,6 @@ contract PolywrapOwnershipBridgeLink is OwnableUpgradeable {
 
   function initialize(
     address _bridge,
-    address _bridgeLink,
     address _packageOwnershipManager,
     bytes32 _blockchainName,
     bytes32 _bridgeChainId,
@@ -42,7 +40,6 @@ contract PolywrapOwnershipBridgeLink is OwnableUpgradeable {
     __Ownable_init();
 
     bridge = _bridge;
-    bridgeLink = _bridgeLink;
     packageOwnershipManager = _packageOwnershipManager;
     blockchainName = _blockchainName;
     bridgeChainId = _bridgeChainId;
@@ -83,10 +80,10 @@ contract PolywrapOwnershipBridgeLink is OwnableUpgradeable {
     bytes32 domainRegistrar,
     bytes32 domainRegistrarNode,
     address owner
-  ) public {
+  ) public virtual override {
     assert(msg.sender == packageOwnershipManager);
 
-    bytes4 methodSelector = PolywrapOwnershipBridgeLink(address(0))
+    bytes4 methodSelector = IOwnershipBridgeLink(address(0))
       .receiveOwnership
       .selector;
     bytes memory data = abi.encodeWithSelector(
@@ -106,7 +103,7 @@ contract PolywrapOwnershipBridgeLink is OwnableUpgradeable {
     bytes32 domainRegistrar,
     bytes32 domainRegistrarNode,
     address owner
-  ) public {
+  ) public virtual override {
     assert(msg.sender == bridge);
 
     ITokenBridge bridgeContract = ITokenBridge(bridge);

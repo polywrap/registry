@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import "../IDomainRegistryLink.sol";
+import "../interfaces/IDomainRegistryLink.sol";
 
 contract TestLink is IDomainRegistryLink {
   string internal constant POLYWRAP_OWNER_RECORD_NAME = "polywrap-owner";

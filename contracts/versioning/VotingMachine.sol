@@ -55,12 +55,25 @@ contract VotingMachine is OwnableUpgradeable {
 
   mapping(bytes32 => ProposedVersion) proposedVersions;
 
-  constructor() {
-    initialize();
+  constructor(address _registrar) {
+    initialize(_registrar);
   }
 
-  function initialize() public initializer {
+  function initialize(address _registrar) public initializer {
     __Ownable_init();
+
+    registrar = _registrar;
+  }
+
+  function updateRegistrar(address _registrar) public onlyOwner {
+    registrar = _registrar;
+  }
+
+  function updateVersionDecidedListener(address _versionDecidedListener)
+    public
+    onlyOwner
+  {
+    versionDecidedListener = _versionDecidedListener;
   }
 
   function authorizeVerifiers(address[] memory addresses) public onlyOwner {

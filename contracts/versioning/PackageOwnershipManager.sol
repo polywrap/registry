@@ -3,9 +3,8 @@ pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "./registry/Registry.sol";
-import "./token-bridge/PolywrapOwnershipBridgeLink.sol";
-import "./token-bridge/PolywrapVerificationRootBridgeLink.sol";
-import "./domain-registries/IDomainRegistryLink.sol";
+import "./bridges/interfaces/IOwnershipBridgeLink.sol";
+import "./domain-registries/interfaces/IDomainRegistryLink.sol";
 
 contract PackageOwnershipManager is OwnableUpgradeable {
   address public registry;
@@ -114,7 +113,7 @@ contract PackageOwnershipManager is OwnableUpgradeable {
 
     address owner = getPolywrapOwner(domainRegistry, domainRegistryNode);
 
-    PolywrapOwnershipBridgeLink(bridgeLink).relayOwnership(
+    IOwnershipBridgeLink(bridgeLink).relayOwnership(
       domainRegistry,
       domainRegistryNode,
       owner

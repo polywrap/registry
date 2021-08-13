@@ -2,11 +2,15 @@
 pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "../VersionVerificationManager.sol";
-import "../PackageOwnershipManager.sol";
+import "../../VersionVerificationManager.sol";
+import "../../PackageOwnershipManager.sol";
 import "./ITokenBridge.sol";
+import "../interfaces/IVerificationRootBridgeLink.sol";
 
-contract PolywrapVerificationRootBridgeLink is OwnableUpgradeable {
+contract VerificationRootBridgeLink is
+  IVerificationRootBridgeLink,
+  OwnableUpgradeable
+{
   address public bridge;
   address public bridgeLink;
   address public verificationRootRelayer;
@@ -16,36 +20,20 @@ contract PolywrapVerificationRootBridgeLink is OwnableUpgradeable {
 
   constructor(
     address _bridge,
-    address _bridgeLink,
-    address _verificationRootRelayer,
-    address _versionVerificationManager,
     bytes32 _bridgeChainId,
     uint256 _relayVerificationRootGasLimit
   ) {
-    initialize(
-      _bridge,
-      _bridgeLink,
-      _verificationRootRelayer,
-      _versionVerificationManager,
-      _bridgeChainId,
-      _relayVerificationRootGasLimit
-    );
+    initialize(_bridge, _bridgeChainId, _relayVerificationRootGasLimit);
   }
 
   function initialize(
     address _bridge,
-    address _bridgeLink,
-    address _verificationRootRelayer,
-    address _versionVerificationManager,
     bytes32 _bridgeChainId,
     uint256 _relayVerificationRootGasLimit
   ) public initializer {
     __Ownable_init();
 
     bridge = _bridge;
-    bridgeLink = _bridgeLink;
-    verificationRootRelayer = _verificationRootRelayer;
-    versionVerificationManager = _versionVerificationManager;
     bridgeChainId = _bridgeChainId;
     relayVerificationRootGasLimit = _relayVerificationRootGasLimit;
   }
@@ -82,13 +70,20 @@ contract PolywrapVerificationRootBridgeLink is OwnableUpgradeable {
     relayVerificationRootGasLimit = _relayVerificationRootGasLimit;
   }
 
-  function relayVerificationRoot(bytes32 root) public {
+  function relayVerificationRoot(bytes32 verificationRoot)
+    public
+    virtual
+    override
+  {
     assert(msg.sender == verificationRootRelayer);
 
-    bytes4 methodSelector = PolywrapVerificationRootBridgeLink(address(0))
+    bytes4 methodSelector = IVerificationRootBridgeLink(address(0))
       .receiveVerificationRoot
       .selector;
-    bytes memory data = abi.encodeWithSelector(methodSelector, root);
+    bytes memory data = abi.encodeWithSelector(
+      methodSelector,
+      verificationRoot
+    );
     ITokenBridge(bridge).requireToPassMessage(
       bridgeLink,
       data,
@@ -96,7 +91,11 @@ contract PolywrapVerificationRootBridgeLink is OwnableUpgradeable {
     );
   }
 
-  function receiveVerificationRoot(bytes32 root) public {
+  function receiveVerificationRoot(bytes32 verificationRoot)
+    public
+    virtual
+    override
+  {
     assert(msg.sender == bridge);
 
     ITokenBridge bridgeContract = ITokenBridge(bridge);
@@ -104,6 +103,6 @@ contract PolywrapVerificationRootBridgeLink is OwnableUpgradeable {
     require(bridgeContract.messageSourceChainId() == bridgeChainId);
 
     VersionVerificationManager(versionVerificationManager)
-      .updateVerificationRoot(root);
+      .updateVerificationRoot(verificationRoot);
   }
 }

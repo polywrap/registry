@@ -88,19 +88,17 @@ abstract contract Registry is OwnableUpgradeable {
     uint256 patchVersion,
     string memory location
   ) public returns (bytes32) {
-    PackageVersion storage packageNode = versionNodes[packageId];
-
     bytes32 majorNodeId = keccak256(abi.encodePacked(packageId, majorVersion));
-    PackageVersion storage majorNode = versionNodes[majorNodeId];
-
     bytes32 minorNodeId = keccak256(
       abi.encodePacked(majorNodeId, minorVersion)
     );
-    PackageVersion storage minorNode = versionNodes[minorNodeId];
-
     bytes32 patchNodeId = keccak256(
       abi.encodePacked(minorNodeId, patchVersion)
     );
+
+    PackageVersion storage packageNode = versionNodes[packageId];
+    PackageVersion storage majorNode = versionNodes[majorNodeId];
+    PackageVersion storage minorNode = versionNodes[minorNodeId];
 
     if (packageNode.latestSubVersion < majorVersion) {
       packageNode.latestSubVersion = majorVersion;
