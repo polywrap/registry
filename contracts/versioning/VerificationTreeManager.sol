@@ -74,9 +74,9 @@ contract VerificationTreeManager is
     addVersionToTree(proposedVersionId, verified);
 
     emit VersionDecided(proposedVersionId, verified, decidedVersionCount);
-    decidedVersionCount++;
-
     VerificationRootRelayer(verificationRootRelayer).onVersionDecided();
+
+    decidedVersionCount++;
   }
 
   function addVersionToTree(bytes32 proposedVersionId, bool verified) private {
@@ -93,6 +93,7 @@ contract VerificationTreeManager is
         )
       );
 
+      verificationTree.unpairedTreeLeaves[currentTreeLevel] = 0x0;
       currentTreeLevel++;
     }
 
@@ -108,38 +109,44 @@ contract VerificationTreeManager is
   function calculateVerificationRoot() public returns (bytes32) {
     assert(msg.sender == verificationRootRelayer);
 
-    bytes32 leaf = 0;
+    bytes32 leaf = 0x0;
 
-    //Go through the unpaired tree leaves and pair them with the "0" leaf
+    //Go through the unpaired tree leaves and pair them with the "0x0" leaf
     //If there is no unpaired leaf, just propagate the current one upwards
     uint256 currentTreeLevel = 0;
-    while (currentTreeLevel < verificationTree.highestTreeLevel) {
+    while (currentTreeLevel <= verificationTree.highestTreeLevel) {
       if (verificationTree.unpairedTreeLeaves[currentTreeLevel] != 0x0) {
-        leaf = keccak256(
-          abi.encodePacked(
-            verificationTree.unpairedTreeLeaves[currentTreeLevel],
-            leaf
-          )
-        );
+        if (leaf == 0x0) {
+          leaf = verificationTree.unpairedTreeLeaves[currentTreeLevel];
+        } else {
+          leaf = keccak256(
+            abi.encodePacked(
+              verificationTree.unpairedTreeLeaves[currentTreeLevel],
+              leaf
+            )
+          );
+        }
       }
 
       currentTreeLevel++;
     }
 
+    return leaf;
+
     bytes32 root;
 
-    if (leaf != 0) {
-      //The tree was unbalanced
-      root = keccak256(
-        abi.encodePacked(
-          verificationTree.unpairedTreeLeaves[currentTreeLevel],
-          leaf
-        )
-      );
-    } else {
-      //The tree was balanced and the highest unpaired leaf was already the root
-      root = verificationTree.unpairedTreeLeaves[currentTreeLevel];
-    }
+    // if (leaf != 0) {
+    //   //The tree was unbalanced
+    //   root = keccak256(
+    //     abi.encodePacked(
+    //       verificationTree.unpairedTreeLeaves[currentTreeLevel],
+    //       leaf
+    //     )
+    //   );
+    // } else {
+    //   //The tree was balanced and the highest unpaired leaf was already the root
+    //   root = verificationTree.unpairedTreeLeaves[currentTreeLevel];
+    // }
 
     emit VerificationRootCalculated(root, decidedVersionCount);
 

@@ -22,7 +22,7 @@ abstract contract Registrar is OwnableUpgradeable {
   function initialize(address _registry) public initializer {
     __Ownable_init();
 
-    registry = registry;
+    registry = _registry;
   }
 
   function updateRegistry(address _registry) public onlyOwner {

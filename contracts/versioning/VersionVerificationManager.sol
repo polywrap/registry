@@ -54,19 +54,14 @@ contract VersionVerificationManager is OwnableUpgradeable {
     uint256 patchVersion,
     string memory location,
     bytes32[] memory proof,
-    uint256 verifiedVersionIndex
+    bool[] memory sides
   ) public {
     bytes32 proposedVersionId = keccak256(
       abi.encodePacked(patchNodeId, location)
     );
 
     require(
-      proveVerifiedVersion(
-        verifiedVersionIndex,
-        proof,
-        proposedVersionId,
-        verificationRoot
-      ),
+      proveVerifiedVersion(proof, sides, proposedVersionId, verificationRoot),
       "Invalid proof"
     );
 
@@ -94,8 +89,8 @@ contract VersionVerificationManager is OwnableUpgradeable {
   }
 
   function proveVerifiedVersion(
-    uint256 index,
     bytes32[] memory proof,
+    bool[] memory sides,
     bytes32 proposedVersionId,
     bytes32 root
   ) private pure returns (bool) {
@@ -107,13 +102,11 @@ contract VersionVerificationManager is OwnableUpgradeable {
     for (uint256 i = 0; i < proof.length; i++) {
       bytes32 proofElement = proof[i];
 
-      if (index % 2 == 0) {
-        hash = keccak256(abi.encodePacked(hash, proofElement));
-      } else {
+      if (sides[i]) {
         hash = keccak256(abi.encodePacked(proofElement, hash));
+      } else {
+        hash = keccak256(abi.encodePacked(hash, proofElement));
       }
-
-      index = index / 2;
     }
 
     return hash == root;

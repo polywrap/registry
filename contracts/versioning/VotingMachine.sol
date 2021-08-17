@@ -53,7 +53,7 @@ contract VotingMachine is OwnableUpgradeable {
   mapping(address => bool) public authorizedVerifiers;
   uint256 public authorizedVerifierCount;
 
-  mapping(bytes32 => ProposedVersion) proposedVersions;
+  mapping(bytes32 => ProposedVersion) public proposedVersions;
 
   constructor(address _registrar) {
     initialize(_registrar);

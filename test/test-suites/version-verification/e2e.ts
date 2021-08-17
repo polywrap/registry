@@ -9,6 +9,7 @@ import { formatBytes32String, keccak256, solidityKeccak256 } from "ethers/lib/ut
 import { VerificationRootBridgeLinkMock } from "../../../typechain/VerificationRootBridgeLinkMock";
 import { OwnershipBridgeLinkMock } from "../../../typechain/OwnershipBridgeLinkMock";
 import { expectEvent } from "../../helpers";
+import { computeMerkleProof } from "../../helpers/merkle-tree/computeMerkleProof";
 
 describe("Voting", () => {
   const testDomain = new EnsDomain("test-domain");
@@ -78,7 +79,7 @@ describe("Voting", () => {
     ownershipBridgeLinkL1 = await ownershipBridgeLinkFactory.deploy(
       ethers.constants.AddressZero,
       packageOwnershipManagerL1.address,
-      formatBytes32String("xdai"),
+      formatBytes32String("l2-chain-name"),
       formatBytes32String("2"),
       1
     );
@@ -129,7 +130,7 @@ describe("Voting", () => {
     ownershipBridgeLinkL2 = await ownershipBridgeLinkFactory.deploy(
       ethers.constants.AddressZero,
       packageOwnershipManagerL2.address,
-      formatBytes32String("ethereum"),
+      formatBytes32String("l1-chain-name"),
       formatBytes32String("1"),
       1
     );
@@ -163,13 +164,13 @@ describe("Voting", () => {
 
     await packageOwnershipManagerL1.updateOutgoingBridgeLink(
       EnsDomain.RegistryBytes32,
-      formatBytes32String("xdai"),
+      formatBytes32String("l2-chain-name"),
       ownershipBridgeLinkL1.address
     );
 
     await packageOwnershipManagerL2.updateIncomingBridgeLink(
       EnsDomain.RegistryBytes32,
-      formatBytes32String("ethereum"),
+      formatBytes32String("l1-chain-name"),
       ownershipBridgeLinkL2.address
     );
 
@@ -184,81 +185,99 @@ describe("Voting", () => {
 
 
   it("can propose and publish a version", async () => {
-    const packageLocation = "test-location";
-
-    const majorNodeId = solidityKeccak256(["bytes32", "uint256"], [testDomain.packageId, 1]);
-    const minorNodeId = solidityKeccak256(["bytes32", "uint256"], [majorNodeId, 0]);
-    const patchNodeId = solidityKeccak256(["bytes32", "uint256"], [minorNodeId, 0]);
-
-    const proposedVersionId = solidityKeccak256(["bytes32", "string"], [patchNodeId, "test-location"]);
-
     packageOwnershipManagerL1 = packageOwnershipManagerL1.connect(polywrapOwner);
     registryL1 = registryL1.connect(polywrapOwner);
     registryL2 = registryL2.connect(polywrapOwner);
-
-    await packageOwnershipManagerL1.relayOwnership(
-      formatBytes32String("xdai"),
-      EnsDomain.RegistryBytes32,
-      testDomain.node
-    );
-
     await registrar.updateRegistry(registryL2.address);
-    registrar = registrar.connect(polywrapOwner);
 
-    console.log(await registrar.registry());
-    console.log(await registryL2.getPackageOwner(testDomain.packageId));
-    await registrar.proposeVersion(
-      testDomain.packageId,
-      1, 0, 0,
-      packageLocation
-    );
+    const packageLocation = "test-location";
 
-    votingMachine = votingMachine.connect(verifier1);
+    const leaves: string[] = [];
 
-    await votingMachine.vote([
-      {
-        proposedVersionId: proposedVersionId,
-        approved: true
-      }
-    ]);
+    for (let i = 0; i < 20; i++) {
+      const major = 1;
+      const minor = 0;
+      const patch = i;
 
-    const a = solidityKeccak256(["bytes32", "bool"], [proposedVersionId, true]);
+      const majorNodeId = solidityKeccak256(["bytes32", "uint256"], [testDomain.packageId, major]);
+      const minorNodeId = solidityKeccak256(["bytes32", "uint256"], [majorNodeId, minor]);
+      const patchNodeId = solidityKeccak256(["bytes32", "uint256"], [minorNodeId, patch]);
 
-    console.log("Leaf", a);
-    console.log("Root", await versionVerificationManagerL2.verificationRoot());
+      const proposedVersionId = solidityKeccak256(["bytes32", "string"], [patchNodeId, packageLocation]);
+      const decidedVersionLeaf = solidityKeccak256(["bytes32", "bool"], [proposedVersionId, true]);
 
-    const l2Tx = await versionVerificationManagerL2.publishVersion(
-      testDomain.packageId,
-      patchNodeId,
-      1, 0, 0,
-      "test-location",
-      [],
-      0
-    );
+      leaves.push(decidedVersionLeaf);
 
-    await expectEvent(l2Tx, "VersionPublished", {
-      packageId: testDomain.packageId,
-      major: 1,
-      minor: 0,
-      patch: 0,
-      location: packageLocation
-    });
+      await packageOwnershipManagerL1.relayOwnership(
+        formatBytes32String("l2-chain-name"),
+        EnsDomain.RegistryBytes32,
+        testDomain.node
+      );
 
-    const l1Tx = await versionVerificationManagerL1.publishVersion(
-      testDomain.packageId,
-      patchNodeId,
-      1, 0, 0,
-      packageLocation,
-      [],
-      0
-    );
+      registrar = registrar.connect(polywrapOwner);
 
-    await expectEvent(l1Tx, "VersionPublished", {
-      packageId: testDomain.packageId,
-      major: 1,
-      minor: 0,
-      patch: 0,
-      location: packageLocation
-    });
+      await registrar.proposeVersion(
+        testDomain.packageId,
+        major, minor, patch,
+        packageLocation
+      );
+
+      votingMachine = votingMachine.connect(verifier1);
+
+      await votingMachine.vote([
+        {
+          proposedVersionId: proposedVersionId,
+          approved: true
+        }
+      ]);
+
+      const [proof, sides] = computeMerkleProof(leaves, i);
+
+      const l2Tx = await versionVerificationManagerL2.publishVersion(
+        testDomain.packageId,
+        patchNodeId,
+        major, minor, patch,
+        "test-location",
+        proof,
+        sides,
+      );
+
+      await expectEvent(l2Tx, "VersionPublished", {
+        packageId: testDomain.packageId,
+        major: major,
+        minor: minor,
+        patch: patch,
+        location: packageLocation
+      });
+
+      const versionNodeL2 = await registryL2.versionNodes(patchNodeId);
+      expect(versionNodeL2.leaf).to.be.true;
+      expect(versionNodeL2.created).to.be.true;
+      expect(versionNodeL2.latestSubVersion).to.equal(0);
+      expect(versionNodeL2.location).to.equal(packageLocation);
+
+      const l1Tx = await versionVerificationManagerL1.publishVersion(
+        testDomain.packageId,
+        patchNodeId,
+        major, minor, patch,
+        packageLocation,
+        proof,
+        sides
+      );
+
+      await expectEvent(l1Tx, "VersionPublished", {
+        packageId: testDomain.packageId,
+        major: major,
+        minor: minor,
+        patch: patch,
+        location: packageLocation
+      });
+
+      const versionNodeL1 = await registryL2.versionNodes(patchNodeId);
+      expect(versionNodeL1.leaf).to.be.true;
+      expect(versionNodeL1.created).to.be.true;
+      expect(versionNodeL1.latestSubVersion).to.equal(0);
+      expect(versionNodeL1.location).to.equal(packageLocation);
+    }
   });
 });
