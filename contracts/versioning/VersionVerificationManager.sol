@@ -55,7 +55,7 @@ contract VersionVerificationManager is OwnableUpgradeable {
     string memory location,
     bytes32[] memory proof,
     bool[] memory sides
-  ) public {
+  ) public packageOwner(packageId) {
     bytes32 proposedVersionId = keccak256(
       abi.encodePacked(patchNodeId, location)
     );
@@ -110,5 +110,17 @@ contract VersionVerificationManager is OwnableUpgradeable {
     }
 
     return hash == root;
+  }
+
+  modifier packageOwner(bytes32 packageId) {
+    require(
+      getPackageOwner(packageId) == msg.sender,
+      "You do not have access to the domain of this package"
+    );
+    _;
+  }
+
+  function getPackageOwner(bytes32 packageId) private view returns (address) {
+    return Registry(registry).getPackageOwner(packageId);
   }
 }

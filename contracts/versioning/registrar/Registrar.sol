@@ -61,7 +61,7 @@ abstract contract Registrar is OwnableUpgradeable {
     uint256 minorVersion,
     uint256 patchVersion,
     string memory location
-  ) public authorized(packageId) {
+  ) public {
     VotingMachine votingMachineContract = VotingMachine(votingMachine);
 
     votingMachineContract.proposeVersion(

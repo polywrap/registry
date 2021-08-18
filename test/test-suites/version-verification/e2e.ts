@@ -52,9 +52,6 @@ describe("Voting", () => {
     ens = new EnsApi();
     await ens.deploy(owner);
 
-    const ensLinkFactory = await ethers.getContractFactory("EnsLink");
-    const ensLink = await ensLinkFactory.deploy(ens.ensRegistry!.address);
-
     await ens.registerDomainName(domainOwner, testDomain);
     await ens.setPolywrapOwner(domainOwner, testDomain, polywrapOwner.address);
   };
@@ -96,8 +93,11 @@ describe("Voting", () => {
 
     await verificationRootBridgeLinkL1.updateVersionVerificationManager(versionVerificationManagerL1.address);
 
+    await registryL1.updateOwnershipUpdater(packageOwnershipManagerL1.address);
     await registryL1.updateVersionPublisher(versionVerificationManagerL1.address);
     await versionVerificationManagerL1.updateVerificationRootUpdater(verificationRootBridgeLinkL1.address);
+    await packageOwnershipManagerL1.updateOutgoingBridgeLink(EnsDomain.RegistryBytes32, formatBytes32String("l2-chain-name"), ownershipBridgeLinkL1.address);
+    await packageOwnershipManagerL1.updateLocalDomainRegistryPermission(EnsDomain.RegistryBytes32, true);
   };
 
   const deployL2 = async () => {
@@ -137,7 +137,6 @@ describe("Voting", () => {
 
     const versionVerificationManagerFactory = await ethers.getContractFactory("VersionVerificationManager");
     versionVerificationManagerL2 = await versionVerificationManagerFactory.deploy(registryL2.address);
-    await registryL1.updateVersionPublisher(versionVerificationManagerL2.address);
 
     const verificationRootBridgeLinkFactory = await ethers.getContractFactory("VerificationRootBridgeLinkMock");
     verificationRootBridgeLinkL2 = await verificationRootBridgeLinkFactory.deploy(
@@ -151,11 +150,15 @@ describe("Voting", () => {
     const verificationRootRelayerFactory = await ethers.getContractFactory("VerificationRootRelayer");
     verificationRootRelayer = await verificationRootRelayerFactory.deploy(versionVerificationManagerL2.address, 5);
 
+    await registryL2.updateOwnershipUpdater(packageOwnershipManagerL2.address);
+    await registryL2.updateVersionPublisher(versionVerificationManagerL2.address);
     await verificationTreeManager.updateVerificationRootRelayer(verificationRootRelayer.address);
     await verificationRootBridgeLinkL2.updateVerificationRootRelayer(verificationRootRelayer.address);
     await versionVerificationManagerL2.updateVerificationRootUpdater(verificationRootRelayer.address);
     await verificationRootRelayer.updateBridgeLink(verificationRootBridgeLinkL2.address);
     await verificationRootRelayer.updateVerificationTreeManager(verificationTreeManager.address);
+
+    await packageOwnershipManagerL2.updateIncomingBridgeLink(EnsDomain.RegistryBytes32, formatBytes32String("l1-chain-name"), ownershipBridgeLinkL2.address);
   };
 
   beforeEach(async () => {
@@ -188,7 +191,13 @@ describe("Voting", () => {
     packageOwnershipManagerL1 = packageOwnershipManagerL1.connect(polywrapOwner);
     registryL1 = registryL1.connect(polywrapOwner);
     registryL2 = registryL2.connect(polywrapOwner);
+    versionVerificationManagerL1 = versionVerificationManagerL1.connect(polywrapOwner);
+    versionVerificationManagerL2 = versionVerificationManagerL2.connect(polywrapOwner);
+
     await registrar.updateRegistry(registryL2.address);
+
+    packageOwnershipManagerL1.updateOwnership(EnsDomain.RegistryBytes32, testDomain.node);
+    packageOwnershipManagerL1.relayOwnership(formatBytes32String("l2-chain-name"), EnsDomain.RegistryBytes32, testDomain.node);
 
     const packageLocation = "test-location";
 
