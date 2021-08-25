@@ -212,6 +212,9 @@ describe("Voting", () => {
       const minorNodeId = solidityKeccak256(["bytes32", "uint256"], [majorNodeId, minor]);
       const patchNodeId = solidityKeccak256(["bytes32", "uint256"], [minorNodeId, patch]);
 
+      const nextMinorNodeId = ethers.constants.HashZero;
+      const prevMinorNodeId = ethers.constants.HashZero;
+
       const proposedVersionId = solidityKeccak256(["bytes32", "string"], [patchNodeId, packageLocation]);
       const decidedVersionLeaf = solidityKeccak256(["bytes32", "bool"], [proposedVersionId, true]);
 
@@ -235,12 +238,16 @@ describe("Voting", () => {
 
       await votingMachine.vote([
         {
-          proposedVersionId: proposedVersionId,
+          patchNodeId: patchNodeId,
+          nextMinorNodeId: nextMinorNodeId,
+          prevMinorNodeId: prevMinorNodeId,
           approved: true
         }
       ]);
 
       const [proof, sides] = computeMerkleProof(leaves, i);
+
+      console.log(await versionVerificationManagerL2.verificationRoot());
 
       const l2Tx = await versionVerificationManagerL2.publishVersion(
         testDomain.packageId,

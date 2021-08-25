@@ -131,25 +131,8 @@ contract VerificationTreeManager is
       currentTreeLevel++;
     }
 
+    emit VerificationRootCalculated(leaf, decidedVersionCount);
+
     return leaf;
-
-    bytes32 root;
-
-    // if (leaf != 0) {
-    //   //The tree was unbalanced
-    //   root = keccak256(
-    //     abi.encodePacked(
-    //       verificationTree.unpairedTreeLeaves[currentTreeLevel],
-    //       leaf
-    //     )
-    //   );
-    // } else {
-    //   //The tree was balanced and the highest unpaired leaf was already the root
-    //   root = verificationTree.unpairedTreeLeaves[currentTreeLevel];
-    // }
-
-    emit VerificationRootCalculated(root, decidedVersionCount);
-
-    return root;
   }
 }

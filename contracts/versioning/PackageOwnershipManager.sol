@@ -149,13 +149,6 @@ contract PackageOwnershipManager is OwnableUpgradeable {
     view
     returns (address)
   {
-    bytes32 packageId = keccak256(
-      abi.encodePacked(
-        keccak256(abi.encodePacked(domainRegistryNode)),
-        domainRegistry
-      )
-    );
-
     address domainRegistryLinkAddress = domainRegistryLinks[domainRegistry];
 
     require(
