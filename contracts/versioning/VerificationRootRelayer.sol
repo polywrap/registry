@@ -54,7 +54,7 @@ contract VerificationRootRelayer is OwnableUpgradeable {
     blocksPerRootRelay = _blocksPerRootRelay;
   }
 
-  function onVersionDecided() public {
+  function onVersionVerified() public {
     assert(msg.sender == verificationTreeManager);
 
     bytes32 verificationRoot = VerificationTreeManager(verificationTreeManager)

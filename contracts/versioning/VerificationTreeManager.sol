@@ -2,24 +2,22 @@
 pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "./version-events-listeners/IVersionDecidedListener.sol";
+import "./version-events-listeners/IVersionVerifiedListener.sol";
 import "./VerificationRootRelayer.sol";
 
 contract VerificationTreeManager is
-  IVersionDecidedListener,
+  IVersionVerifiedListener,
   OwnableUpgradeable
 {
   event VerificationRootCalculated(
     bytes32 indexed verificationRoot,
-    uint256 decidedVersionCount
+    uint256 verifiedVersionCount
   );
 
-  event VersionVote(bytes32 indexed proposedVersionId, bool approved);
-
-  event VersionDecided(
-    bytes32 indexed proposedVersionId,
-    bool verified,
-    uint256 decidedVersionIndex
+  event VersionVerified(
+    bytes32 indexed patchNodeId,
+    bytes32 packageLocationHash,
+    uint256 verifiedVersionIndex
   );
 
   struct DynamicMerkleTree {
@@ -34,7 +32,7 @@ contract VerificationTreeManager is
   address public votingMachine;
   address public verificationRootRelayer;
 
-  uint256 public decidedVersionCount;
+  uint256 public verifiedVersionCount;
 
   constructor(address _registry, address _votingMachine) {
     initialize(_registry, _votingMachine);
@@ -65,23 +63,31 @@ contract VerificationTreeManager is
     verificationRootRelayer = _verificationRootRelayer;
   }
 
-  function onVersionDecided(bytes32 proposedVersionId, bool verified)
+  function onVersionVerified(bytes32 patchNodeId, bytes32 packageLocationHash)
     public
     override
   {
     assert(msg.sender == votingMachine);
 
-    addVersionToTree(proposedVersionId, verified);
+    addVersionToTree(patchNodeId, packageLocationHash);
 
-    emit VersionDecided(proposedVersionId, verified, decidedVersionCount);
-    VerificationRootRelayer(verificationRootRelayer).onVersionDecided();
+    emit VersionVerified(
+      patchNodeId,
+      packageLocationHash,
+      verifiedVersionCount
+    );
 
-    decidedVersionCount++;
+    VerificationRootRelayer(verificationRootRelayer).onVersionVerified();
+
+    verifiedVersionCount++;
   }
 
-  function addVersionToTree(bytes32 proposedVersionId, bool verified) private {
-    //Hash the version ID with the "verified" variable to store that the version is approved or not
-    bytes32 leaf = keccak256(abi.encodePacked(proposedVersionId, verified));
+  function addVersionToTree(bytes32 patchNodeId, bytes32 packageLocationHash)
+    private
+  {
+    bytes32 leaf = keccak256(
+      abi.encodePacked(patchNodeId, packageLocationHash)
+    );
 
     //Go through the unpaired tree leaves and pair them with the new leaf
     uint256 currentTreeLevel = 0;
@@ -131,7 +137,7 @@ contract VerificationTreeManager is
       currentTreeLevel++;
     }
 
-    emit VerificationRootCalculated(leaf, decidedVersionCount);
+    emit VerificationRootCalculated(leaf, verifiedVersionCount);
 
     return leaf;
   }

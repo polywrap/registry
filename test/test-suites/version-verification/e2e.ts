@@ -124,7 +124,7 @@ describe("Voting", () => {
     const verificationTreeManagerFactory = await ethers.getContractFactory("VerificationTreeManager");
     verificationTreeManager = await verificationTreeManagerFactory.deploy(registryL2.address, votingMachine.address);
 
-    await votingMachine.updateVersionDecidedListener(verificationTreeManager.address);
+    await votingMachine.updateVersionVerifiedListener(verificationTreeManager.address);
 
     const ownershipBridgeLinkFactory = await ethers.getContractFactory("OwnershipBridgeLinkMock");
     ownershipBridgeLinkL2 = await ownershipBridgeLinkFactory.deploy(
@@ -215,10 +215,11 @@ describe("Voting", () => {
       const nextMinorNodeId = ethers.constants.HashZero;
       const prevMinorNodeId = ethers.constants.HashZero;
 
-      const proposedVersionId = solidityKeccak256(["bytes32", "string"], [patchNodeId, packageLocation]);
-      const decidedVersionLeaf = solidityKeccak256(["bytes32", "bool"], [proposedVersionId, true]);
+      const packageLocation = "test-location";
+      const packageLocationHash = solidityKeccak256(["string"], [packageLocation]);
+      const verifiedVersionId = solidityKeccak256(["bytes32", "bytes32"], [patchNodeId, packageLocationHash]);
 
-      leaves.push(decidedVersionLeaf);
+      leaves.push(verifiedVersionId);
 
       await packageOwnershipManagerL1.relayOwnership(
         formatBytes32String("l2-chain-name"),
@@ -228,32 +229,38 @@ describe("Voting", () => {
 
       registrar = registrar.connect(polywrapOwner);
 
-      await registrar.proposeVersion(
+      const proposeTx = await registrar.proposeVersion(
         testDomain.packageId,
         major, minor, patch,
-        packageLocation
+        packageLocationHash
       );
 
       votingMachine = votingMachine.connect(verifier1);
 
-      await votingMachine.vote([
+      const voteTx = await votingMachine.vote([
         {
           patchNodeId: patchNodeId,
+          packageLocationHash: packageLocationHash,
           nextMinorNodeId: nextMinorNodeId,
           prevMinorNodeId: prevMinorNodeId,
           approved: true
         }
       ]);
 
-      const [proof, sides] = computeMerkleProof(leaves, i);
+      await expectEvent(voteTx, "VersionVote", {
+        verifier: verifier1.address,
+        patchNodeId: patchNodeId,
+        packageLocationHash: packageLocationHash,
+        approved: true
+      });
 
-      console.log(await versionVerificationManagerL2.verificationRoot());
+      const [proof, sides] = computeMerkleProof(leaves, i);
 
       const l2Tx = await versionVerificationManagerL2.publishVersion(
         testDomain.packageId,
         patchNodeId,
         major, minor, patch,
-        "test-location",
+        packageLocation,
         proof,
         sides,
       );

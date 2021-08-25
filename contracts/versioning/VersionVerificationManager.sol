@@ -7,7 +7,8 @@ import "./registry/Registry.sol";
 contract VersionVerificationManager is OwnableUpgradeable {
   event VersionPublished(
     bytes32 indexed packageId,
-    bytes32 indexed proposedVersionId,
+    bytes32 indexed verifiedVersionId,
+    bytes32 indexed patchNodeId,
     uint256 major,
     uint256 minor,
     uint256 patch,
@@ -56,12 +57,12 @@ contract VersionVerificationManager is OwnableUpgradeable {
     bytes32[] memory proof,
     bool[] memory sides
   ) public packageOwner(packageId) {
-    bytes32 proposedVersionId = keccak256(
-      abi.encodePacked(patchNodeId, location)
+    bytes32 verifiedVersionId = keccak256(
+      abi.encodePacked(patchNodeId, keccak256(abi.encodePacked(location)))
     );
 
     require(
-      proveVerifiedVersion(proof, sides, proposedVersionId, verificationRoot),
+      proveVerifiedVersion(proof, sides, verifiedVersionId, verificationRoot),
       "Invalid proof"
     );
 
@@ -80,7 +81,8 @@ contract VersionVerificationManager is OwnableUpgradeable {
 
     emit VersionPublished(
       packageId,
-      proposedVersionId,
+      verifiedVersionId,
+      patchNodeId,
       majorVersion,
       minorVersion,
       patchVersion,
@@ -91,13 +93,10 @@ contract VersionVerificationManager is OwnableUpgradeable {
   function proveVerifiedVersion(
     bytes32[] memory proof,
     bool[] memory sides,
-    bytes32 proposedVersionId,
+    bytes32 verifiedVersionId,
     bytes32 root
   ) private pure returns (bool) {
-    //Pass "true" to confirm version is verified
-    bytes32 leaf = keccak256(abi.encodePacked(proposedVersionId, true));
-
-    bytes32 hash = leaf;
+    bytes32 hash = verifiedVersionId;
 
     for (uint256 i = 0; i < proof.length; i++) {
       bytes32 proofElement = proof[i];

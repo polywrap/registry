@@ -2,7 +2,7 @@
 pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "./version-events-listeners/IVersionDecidedListener.sol";
+import "./version-events-listeners/IVersionVerifiedListener.sol";
 
 contract VotingMachine is OwnableUpgradeable {
   event VersionProposed(
@@ -11,7 +11,7 @@ contract VotingMachine is OwnableUpgradeable {
     uint256 majorVersion,
     uint256 minorVersion,
     uint256 patchVersion,
-    string location,
+    bytes32 packageLocationHash,
     address proposer
   );
 
@@ -21,21 +21,21 @@ contract VotingMachine is OwnableUpgradeable {
     uint256 majorVersion,
     uint256 minorVersion,
     uint256 patchVersion,
-    string location,
+    bytes32 packageLocationHash,
     address proposer
   );
 
   event VersionVote(
     address indexed verifier,
     bytes32 indexed patchNodeId,
-    string location,
+    bytes32 packageLocationHash,
     bool approved
   );
 
   event VersionDecided(
     bytes32 indexed patchNodeId,
-    string location,
-    bool verified
+    bool indexed verified,
+    bytes32 packageLocationHash
   );
 
   struct ProposedVersion {
@@ -49,10 +49,10 @@ contract VotingMachine is OwnableUpgradeable {
     bytes32 majorNodeId;
     bytes32 minorNodeId;
     bytes32 patchNodeId;
+    bytes32 packageLocationHash;
     uint256 majorVersion;
     uint256 minorVersion;
     uint256 patchVersion;
-    string location;
     address proposer;
   }
 
@@ -79,11 +79,12 @@ contract VotingMachine is OwnableUpgradeable {
     bytes32 patchNodeId;
     bytes32 prevMinorNodeId;
     bytes32 nextMinorNodeId;
+    bytes32 packageLocationHash;
     bool approved;
   }
 
   address public registrar;
-  address public versionDecidedListener;
+  address public versionVerifiedListener;
 
   mapping(bytes32 => MajorVersionQueueContainer)
     public majorVersionQueueContainers;
@@ -107,11 +108,11 @@ contract VotingMachine is OwnableUpgradeable {
     registrar = _registrar;
   }
 
-  function updateVersionDecidedListener(address _versionDecidedListener)
+  function updateVersionVerifiedListener(address _versionVerifiedListener)
     public
     onlyOwner
   {
-    versionDecidedListener = _versionDecidedListener;
+    versionVerifiedListener = _versionVerifiedListener;
   }
 
   function authorizeVerifiers(address[] memory addresses) public onlyOwner {
@@ -137,7 +138,7 @@ contract VotingMachine is OwnableUpgradeable {
     uint256 majorVersion,
     uint256 minorVersion,
     uint256 patchVersion,
-    string memory location,
+    bytes32 packageLocationHash,
     address proposer
   ) public {
     assert(msg.sender == registrar);
@@ -164,7 +165,7 @@ contract VotingMachine is OwnableUpgradeable {
     proposedVersion.minorVersion = minorVersion;
     proposedVersion.patchVersion = patchVersion;
 
-    proposedVersion.location = location;
+    proposedVersion.packageLocationHash = packageLocationHash;
     proposedVersion.proposer = proposer;
 
     MajorVersionQueueContainer
@@ -198,7 +199,7 @@ contract VotingMachine is OwnableUpgradeable {
         majorVersion,
         minorVersion,
         patchVersion,
-        location,
+        packageLocationHash,
         proposer
       );
     }
@@ -209,7 +210,7 @@ contract VotingMachine is OwnableUpgradeable {
       majorVersion,
       minorVersion,
       patchVersion,
-      location,
+      packageLocationHash,
       proposer
     );
   }
@@ -228,9 +229,11 @@ contract VotingMachine is OwnableUpgradeable {
       ];
 
       require(proposedVersion.votingStarted, "Version is not yet proposed");
-
+      require(
+        proposedVersion.packageLocationHash == vote.packageLocationHash,
+        "A different package location is proposed"
+      );
       require(!proposedVersion.decided, "Voting for this version has ended");
-
       require(!proposedVersion.votedVerifiers[msg.sender], "You already voted");
 
       requireValidMinorVersionPlacement(
@@ -263,13 +266,8 @@ contract VotingMachine is OwnableUpgradeable {
           proposedVersion.majorNodeId,
           proposedVersion.minorNodeId,
           vote.patchNodeId,
-          proposedVersion.verified
-        );
-
-        emit VersionDecided(
-          proposedVersion.patchNodeId,
-          proposedVersion.location,
-          proposedVersion.verified
+          proposedVersion.verified,
+          proposedVersion.packageLocationHash
         );
       } else {
         //The version is rejected
@@ -283,20 +281,15 @@ contract VotingMachine is OwnableUpgradeable {
           proposedVersion.majorNodeId,
           proposedVersion.minorNodeId,
           vote.patchNodeId,
-          proposedVersion.verified
-        );
-
-        emit VersionDecided(
-          proposedVersion.patchNodeId,
-          proposedVersion.location,
-          proposedVersion.verified
+          proposedVersion.verified,
+          proposedVersion.packageLocationHash
         );
       }
 
       emit VersionVote(
         msg.sender,
         proposedVersion.patchNodeId,
-        proposedVersion.location,
+        proposedVersion.packageLocationHash,
         vote.approved
       );
     }
@@ -400,7 +393,8 @@ contract VotingMachine is OwnableUpgradeable {
     bytes32 majorNodeId,
     bytes32 minorNodeId,
     bytes32 patchNodeId,
-    bool verified
+    bool verified,
+    bytes32 packageLocationHash
   ) private {
     if (verified) {
       addToVersionTree(
@@ -411,17 +405,19 @@ contract VotingMachine is OwnableUpgradeable {
         minorNodeId,
         patchNodeId
       );
+
+      if (versionVerifiedListener != address(0)) {
+        IVersionVerifiedListener listener = IVersionVerifiedListener(
+          versionVerifiedListener
+        );
+
+        listener.onVersionVerified(patchNodeId, packageLocationHash);
+      }
     }
 
     dequeueNextVersion(majorNodeId);
 
-    if (versionDecidedListener != address(0)) {
-      IVersionDecidedListener listener = IVersionDecidedListener(
-        versionDecidedListener
-      );
-
-      listener.onVersionDecided(patchNodeId, verified);
-    }
+    emit VersionDecided(patchNodeId, verified, packageLocationHash);
   }
 
   function dequeueNextVersion(bytes32 majorNodeId) private {
@@ -456,7 +452,7 @@ contract VotingMachine is OwnableUpgradeable {
       nextVotingVersion.majorVersion,
       nextVotingVersion.minorVersion,
       nextVotingVersion.patchVersion,
-      nextVotingVersion.location,
+      nextVotingVersion.packageLocationHash,
       nextVotingVersion.proposer
     );
   }

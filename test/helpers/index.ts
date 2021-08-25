@@ -76,7 +76,7 @@ export const getEventArgs = async (tx: ContractTransaction, eventName: string): 
   const receivedArgs = event?.args;
 
   if (!receivedArgs) {
-    throw 'Received undefined arguments';
+    throw `Received undefined arguments: ${eventName}`;
   }
 
   return receivedArgs;

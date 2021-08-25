@@ -60,7 +60,7 @@ abstract contract Registrar is OwnableUpgradeable {
     uint256 majorVersion,
     uint256 minorVersion,
     uint256 patchVersion,
-    string memory location
+    bytes32 packageLocationHash
   ) public {
     VotingMachine votingMachineContract = VotingMachine(votingMachine);
 
@@ -69,7 +69,7 @@ abstract contract Registrar is OwnableUpgradeable {
       majorVersion,
       minorVersion,
       patchVersion,
-      location,
+      packageLocationHash,
       msg.sender
     );
   }
