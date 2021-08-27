@@ -7,6 +7,8 @@ import "@typechain/hardhat";
 import "@openzeppelin/hardhat-upgrades";
 import "@nomiclabs/hardhat-etherscan";
 import "solidity-coverage";
+import "@nomiclabs/hardhat-ethers";
+import "hardhat-deploy";
 
 task("accounts", "Prints the list of accounts", async (args, hre) => {
   const accounts = await hre.ethers.getSigners();
@@ -18,7 +20,13 @@ task("accounts", "Prints the list of accounts", async (args, hre) => {
 
 const config: HardhatUserConfig = {
   solidity: {
-    compilers: [{ version: "0.8.4", settings: {} }],
+    compilers: [{ version: "0.8.4", settings: { } }],
+  },
+  namedAccounts: {
+    deployer: {
+      default: 0,
+      rinkeby: '0xE9FFd2d4c1e3eAF13f6e17DfDCD615a66f357dF4'
+    }
   },
   paths: {
     sources: "./contracts",
@@ -44,8 +52,9 @@ const config: HardhatUserConfig = {
       url: "https://ropsten.infura.io/v3/77c3d733140f4c12a77699e24cb30c27",
     },
     rinkeby: {
-      accounts: { mnemonic: process.env.TESTNET_MNEMONIC || "" },
+      accounts: [`0x${process.env.DEPLOYER_KEY}`],
       url: "https://rinkeby.infura.io/v3/77c3d733140f4c12a77699e24cb30c27",
+
     },
     localhost: {
       gas: "auto",
