@@ -11,7 +11,7 @@ contract VotingMachine is OwnableUpgradeable {
     uint256 majorVersion,
     uint256 minorVersion,
     uint256 patchVersion,
-    bytes32 packageLocationHash,
+    string packageLocation,
     address proposer
   );
 
@@ -21,8 +21,9 @@ contract VotingMachine is OwnableUpgradeable {
     uint256 majorVersion,
     uint256 minorVersion,
     uint256 patchVersion,
-    bytes32 packageLocationHash,
-    address proposer
+    string packageLocation,
+    address proposer,
+    bool isPatch
   );
 
   event VersionVote(
@@ -49,7 +50,7 @@ contract VotingMachine is OwnableUpgradeable {
     bytes32 majorNodeId;
     bytes32 minorNodeId;
     bytes32 patchNodeId;
-    bytes32 packageLocationHash;
+    string packageLocation;
     uint256 majorVersion;
     uint256 minorVersion;
     uint256 patchVersion;
@@ -67,6 +68,10 @@ contract VotingMachine is OwnableUpgradeable {
     mapping(bytes32 => QueuedVersion) queuedVersions;
   }
 
+  struct VerifiedMajorVersion {
+    bytes32 lowestMinorNodeId;
+  }
+
   struct VerifiedMinorVersion {
     uint256 versionNumber;
     bytes32 nextMinorNodeId;
@@ -79,7 +84,6 @@ contract VotingMachine is OwnableUpgradeable {
     bytes32 patchNodeId;
     bytes32 prevMinorNodeId;
     bytes32 nextMinorNodeId;
-    bytes32 packageLocationHash;
     bool approved;
   }
 
@@ -90,6 +94,7 @@ contract VotingMachine is OwnableUpgradeable {
     public majorVersionQueueContainers;
   mapping(bytes32 => ProposedVersion) public proposedVersions;
   mapping(bytes32 => VerifiedMinorVersion) public verifiedMinorVersions;
+  mapping(bytes32 => VerifiedMajorVersion) public verifiedMajorVersions;
 
   mapping(address => bool) public authorizedVerifiers;
   uint256 public authorizedVerifierCount;
@@ -138,7 +143,7 @@ contract VotingMachine is OwnableUpgradeable {
     uint256 majorVersion,
     uint256 minorVersion,
     uint256 patchVersion,
-    bytes32 packageLocationHash,
+    string calldata packageLocation,
     address proposer
   ) public {
     assert(msg.sender == registrar);
@@ -165,7 +170,7 @@ contract VotingMachine is OwnableUpgradeable {
     proposedVersion.minorVersion = minorVersion;
     proposedVersion.patchVersion = patchVersion;
 
-    proposedVersion.packageLocationHash = packageLocationHash;
+    proposedVersion.packageLocation = packageLocation;
     proposedVersion.proposer = proposer;
 
     MajorVersionQueueContainer
@@ -191,17 +196,7 @@ contract VotingMachine is OwnableUpgradeable {
       majorVersionContainer.headVersionId = patchNodeId;
 
       //Since there is only one version in the queue, we can start voting for it
-      proposedVersion.votingStarted = true;
-
-      emit VersionVotingStarted(
-        packageId,
-        patchNodeId,
-        majorVersion,
-        minorVersion,
-        patchVersion,
-        packageLocationHash,
-        proposer
-      );
+      startVersionVoting(proposedVersion);
     }
 
     emit VersionProposed(
@@ -210,7 +205,7 @@ contract VotingMachine is OwnableUpgradeable {
       majorVersion,
       minorVersion,
       patchVersion,
-      packageLocationHash,
+      packageLocation,
       proposer
     );
   }
@@ -228,13 +223,7 @@ contract VotingMachine is OwnableUpgradeable {
         vote.patchNodeId
       ];
 
-      require(proposedVersion.votingStarted, "Version is not yet proposed");
-      require(
-        proposedVersion.packageLocationHash == vote.packageLocationHash,
-        "A different package location is proposed"
-      );
-      require(!proposedVersion.decided, "Voting for this version has ended");
-      require(!proposedVersion.votedVerifiers[msg.sender], "You already voted");
+      requireCanVoteOnVersion(proposedVersion);
 
       requireValidMinorVersionPlacement(
         vote.prevMinorNodeId,
@@ -267,7 +256,7 @@ contract VotingMachine is OwnableUpgradeable {
           proposedVersion.minorNodeId,
           vote.patchNodeId,
           proposedVersion.verified,
-          proposedVersion.packageLocationHash
+          proposedVersion.packageLocation
         );
       } else {
         //The version is rejected
@@ -282,17 +271,26 @@ contract VotingMachine is OwnableUpgradeable {
           proposedVersion.minorNodeId,
           vote.patchNodeId,
           proposedVersion.verified,
-          proposedVersion.packageLocationHash
+          proposedVersion.packageLocation
         );
       }
 
       emit VersionVote(
         msg.sender,
         proposedVersion.patchNodeId,
-        proposedVersion.packageLocationHash,
+        keccak256(abi.encodePacked(proposedVersion.packageLocation)),
         vote.approved
       );
     }
+  }
+
+  function requireCanVoteOnVersion(ProposedVersion storage proposedVersion)
+    private
+    view
+  {
+    require(proposedVersion.votingStarted, "Voting has not started");
+    require(!proposedVersion.decided, "Voting for this version has ended");
+    require(!proposedVersion.votedVerifiers[msg.sender], "You already voted");
   }
 
   function requireValidMinorVersionPlacement(
@@ -350,6 +348,25 @@ contract VotingMachine is OwnableUpgradeable {
     }
   }
 
+  function startVersionVoting(ProposedVersion storage proposedVersion) private {
+    proposedVersion.votingStarted = true;
+
+    VerifiedMinorVersion memory minorVersion = verifiedMinorVersions[
+      proposedVersion.minorNodeId
+    ];
+
+    emit VersionVotingStarted(
+      proposedVersion.packageId,
+      proposedVersion.patchNodeId,
+      proposedVersion.majorVersion,
+      proposedVersion.minorVersion,
+      proposedVersion.patchVersion,
+      proposedVersion.packageLocation,
+      proposedVersion.proposer,
+      minorVersion.patchNodeId != 0x0
+    );
+  }
+
   function addToVersionTree(
     bytes32 prevMinorNodeId,
     bytes32 nextMinorNodeId,
@@ -384,6 +401,8 @@ contract VotingMachine is OwnableUpgradeable {
       currentVersion.nextMinorNodeId = nextMinorNodeId;
       nextVersion.prevMinorNodeId = minorNodeId;
     }
+
+    if (prevVersion.patchNodeId == 0x0 && nextVersion.patchNodeId == 0x0) {}
   }
 
   function onVersionDecided(
@@ -394,8 +413,10 @@ contract VotingMachine is OwnableUpgradeable {
     bytes32 minorNodeId,
     bytes32 patchNodeId,
     bool verified,
-    bytes32 packageLocationHash
+    string memory packageLocation
   ) private {
+    bytes32 packageLocationHash = keccak256(abi.encodePacked(packageLocation));
+
     if (verified) {
       addToVersionTree(
         prevMinorNodeId,
@@ -444,16 +465,82 @@ contract VotingMachine is OwnableUpgradeable {
       majorVersionContainer.headVersionId = headVersion.nextQueuedVersionId;
     }
 
-    nextVotingVersion.votingStarted = true;
+    startVersionVoting(nextVotingVersion);
+  }
 
-    emit VersionVotingStarted(
-      nextVotingVersion.packageId,
-      nextVotingVersion.patchNodeId,
-      nextVotingVersion.majorVersion,
-      nextVotingVersion.minorVersion,
-      nextVotingVersion.patchVersion,
-      nextVotingVersion.packageLocationHash,
-      nextVotingVersion.proposer
+  function getPrevPatchPackageLocation(bytes32 patchNodeId)
+    external
+    view
+    returns (string memory prevPackageLocation)
+  {
+    ProposedVersion storage targetVersion = proposedVersions[patchNodeId];
+
+    requireCanVoteOnVersion(targetVersion);
+
+    VerifiedMinorVersion memory minorVersion = verifiedMinorVersions[
+      targetVersion.minorNodeId
+    ];
+
+    assert(minorVersion.patchNodeId != 0x0);
+
+    string memory prevPackageLocation = proposedVersions[
+      minorVersion.patchNodeId
+    ].packageLocation;
+
+    return prevPackageLocation;
+  }
+
+  function getPrevAndNextMinorPackageLocations(bytes32 patchNodeId)
+    external
+    view
+    returns (
+      bytes32 prevMinorNodeId,
+      string memory prevPackageLocation,
+      bytes32 nextMinorNodeId,
+      string memory nextPackageLocation
+    )
+  {
+    ProposedVersion storage targetVersion = proposedVersions[patchNodeId];
+
+    requireCanVoteOnVersion(targetVersion);
+
+    VerifiedMajorVersion memory currentMajorVersion = verifiedMajorVersions[
+      targetVersion.majorNodeId
+    ];
+
+    bytes32 currentMinorNodeId = currentMajorVersion.lowestMinorNodeId;
+    bytes32 nextMinorNodeId = currentMinorNodeId;
+    bytes32 prevMinorNodeId;
+
+    VerifiedMinorVersion memory nextVersion = verifiedMinorVersions[
+      currentMinorNodeId
+    ];
+
+    VerifiedMinorVersion memory prevVersion;
+    while (nextVersion.versionNumber < targetVersion.minorVersion) {
+      prevMinorNodeId = currentMinorNodeId;
+      prevVersion = nextVersion;
+      currentMinorNodeId = nextVersion.nextMinorNodeId;
+      nextVersion = verifiedMinorVersions[currentMinorNodeId];
+    }
+
+    string memory prevPackageLocation;
+    if (prevVersion.patchNodeId != 0x0) {
+      prevPackageLocation = proposedVersions[prevVersion.patchNodeId]
+        .packageLocation;
+    }
+
+    string memory nextPackageLocation;
+    if (nextVersion.patchNodeId != 0x0) {
+      nextPackageLocation = proposedVersions[nextVersion.patchNodeId]
+        .packageLocation;
+    }
+
+    return (
+      prevMinorNodeId,
+      prevPackageLocation,
+      nextMinorNodeId,
+      nextPackageLocation
     );
   }
 }

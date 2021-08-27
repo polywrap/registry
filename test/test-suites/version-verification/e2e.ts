@@ -232,7 +232,7 @@ describe("Voting", () => {
       const proposeTx = await registrar.proposeVersion(
         testDomain.packageId,
         major, minor, patch,
-        packageLocationHash
+        packageLocation
       );
 
       votingMachine = votingMachine.connect(verifier1);
@@ -240,7 +240,6 @@ describe("Voting", () => {
       const voteTx = await votingMachine.vote([
         {
           patchNodeId: patchNodeId,
-          packageLocationHash: packageLocationHash,
           nextMinorNodeId: nextMinorNodeId,
           prevMinorNodeId: prevMinorNodeId,
           approved: true
