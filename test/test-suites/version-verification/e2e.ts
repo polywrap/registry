@@ -110,8 +110,6 @@ describe("Voting", () => {
     const votingMachineFactory = await ethers.getContractFactory("VotingMachine");
     votingMachine = await votingMachineFactory.deploy(registrar.address);
 
-    await registrar.updateVotingMachine(votingMachine.address);
-
     const packageOwnershipManagerFactory = await ethers.getContractFactory("PackageOwnershipManager");
     packageOwnershipManagerL2 = await packageOwnershipManagerFactory.deploy(
       registryL2.address,
@@ -119,12 +117,8 @@ describe("Voting", () => {
       []
     );
 
-    await registryL2.updateOwnershipUpdater(packageOwnershipManagerL2.address);
-
     const verificationTreeManagerFactory = await ethers.getContractFactory("VerificationTreeManager");
     verificationTreeManager = await verificationTreeManagerFactory.deploy(registryL2.address, votingMachine.address);
-
-    await votingMachine.updateVersionVerifiedListener(verificationTreeManager.address);
 
     const ownershipBridgeLinkFactory = await ethers.getContractFactory("OwnershipBridgeLinkMock");
     ownershipBridgeLinkL2 = await ownershipBridgeLinkFactory.deploy(
@@ -145,11 +139,13 @@ describe("Voting", () => {
       1
     );
 
-    await verificationRootBridgeLinkL2.updateVersionVerificationManager(versionVerificationManagerL2.address);
-
     const verificationRootRelayerFactory = await ethers.getContractFactory("VerificationRootRelayer");
     verificationRootRelayer = await verificationRootRelayerFactory.deploy(versionVerificationManagerL2.address, 5);
 
+    await registrar.updateVotingMachine(votingMachine.address);
+    await registryL2.updateOwnershipUpdater(packageOwnershipManagerL2.address);
+    await votingMachine.updateVersionVerifiedListener(verificationTreeManager.address);
+    await verificationRootBridgeLinkL2.updateVersionVerificationManager(versionVerificationManagerL2.address);
     await registryL2.updateOwnershipUpdater(packageOwnershipManagerL2.address);
     await registryL2.updateVersionPublisher(versionVerificationManagerL2.address);
     await verificationTreeManager.updateVerificationRootRelayer(verificationRootRelayer.address);
