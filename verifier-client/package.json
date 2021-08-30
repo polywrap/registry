@@ -6,7 +6,8 @@
   "scripts": {
     "build": "tsc",
     "start": "yarn build && node ./bin/app.js",
-    "dev": "ts-node ./src/app.ts"
+    "dev": "ts-node ./src/app.ts",
+    "test": "jest"
   },
   "dependencies": {
     "@typechain/ethers-v5": "^7.0.1",
@@ -21,7 +22,9 @@
     "typescript": "^4.3.5"
   },
   "devDependencies": {
+    "@types/jest": "^27.0.1",
     "jest": "^27.1.0",
+    "ts-jest": "^27.0.5",
     "ts-node": "^10.2.0"
   }
 }
