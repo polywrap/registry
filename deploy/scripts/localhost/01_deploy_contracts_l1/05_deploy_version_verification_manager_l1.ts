@@ -6,13 +6,16 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deploy } = hre.deployments;
   const useProxy = !hre.network.live;
 
-  const registryL2 = await hre.deployments.get('PolywrapRegistryL2');
+  const registryL1 = await hre.deployments.get('PolywrapRegistryL1');
 
   await deploy(
-    'PolywrapRegistrar',
+    'VersionVerificationManagerL1',
     {
+      contract: 'VersionVerificationManager',
       from: deployer,
-      args: [registryL2.address],
+      args: [
+        registryL1.address,
+      ],
       log: true,
     }
   );
@@ -20,5 +23,5 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   return !useProxy;
 };
 export default func;
-func.id = 'deploy_registrar';
-func.tags = ['Registrar'];
+func.id = 'deploy_version_verification_manager_l1';
+func.tags = ['VersionVerificationManagerL1'];

@@ -1,21 +1,24 @@
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from 'hardhat-deploy/types';
+import { formatBytes32String } from "ethers/lib/utils";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deployer } = await hre.getNamedAccounts();
   const { deploy } = hre.deployments;
   const useProxy = !hre.network.live;
 
-  const registryL2 = await hre.deployments.get('PolywrapRegistryL2');
-  const votingMachine = await hre.deployments.get('VotingMachine');
+  const registryL1 = await hre.deployments.get('PolywrapRegistryL1');
+  const ensLinkL1 = await hre.deployments.get('EnsLinkL1');
 
   await deploy(
-    'VerificationTreeManager',
+    'PackageOwnershipManagerL1',
     {
+      contract: 'PackageOwnershipManager',
       from: deployer,
       args: [
-        registryL2.address,
-        votingMachine.address,
+        registryL1.address,
+        [formatBytes32String("ens")],
+        [ensLinkL1.address]
       ],
       log: true,
     }
@@ -24,5 +27,5 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   return !useProxy;
 };
 export default func;
-func.id = 'deploy_verification_tree_manager';
-func.tags = ['VerificationTreeManager'];
+func.id = 'deploy_package_ownership_manager_l1';
+func.tags = ['PackageOwnershipManagerL1'];

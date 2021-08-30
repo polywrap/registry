@@ -1,37 +1,22 @@
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { ethers } from "hardhat";
 import { TestENSRegistry, TestEthRegistrar, TestPublicResolver } from "../../../typechain";
 import { labelhash } from "../labelhash";
 import { POLYWRAP_OWNER_RECORD_NAME } from "../constants";
 import { EnsDomain } from "./EnsDomain";
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signers";
+import { Contract } from "ethers";
 
 const rootNode = ethers.utils.zeroPad([0], 32);
 
 export class EnsApi {
-  ensRegistry: TestENSRegistry | undefined;
-  ethRegistrar: TestEthRegistrar | undefined;
-  ensPublicResolver: TestPublicResolver | undefined;
+  ensRegistry: Contract | undefined;
+  ethRegistrar: Contract | undefined;
+  ensPublicResolver: Contract | undefined;
 
-  //ethController can set resolvers
-  async deploy(ethController: SignerWithAddress): Promise<void> {
-
-    const ensRegistryFactory = await ethers.getContractFactory("TestENSRegistry");
-
-    this.ensRegistry = await ensRegistryFactory.deploy();
-
-    const ethRegistrarFactory = await ethers.getContractFactory("TestEthRegistrar");
-
-    this.ethRegistrar = await ethRegistrarFactory.deploy(this.ensRegistry.address, ethers.utils.namehash(EnsDomain.TLD));
-
-    await this.ensRegistry.setSubnodeOwner(rootNode, labelhash(EnsDomain.TLD), this.ethRegistrar.address);
-    await this.ethRegistrar.addController(ethController.address);
-
-    const publicResolverFactory = await ethers.getContractFactory("TestPublicResolver");
-    this.ensPublicResolver = await publicResolverFactory.deploy(this.ensRegistry.address);
-
-    this.ethRegistrar = this.ethRegistrar.connect(ethController);
-
-    await this.ethRegistrar.setResolver(this.ensPublicResolver.address);
+  async loadContracts(): Promise<void> {
+    this.ensRegistry = await ethers.getContract('EnsRegistryL1');
+    this.ethRegistrar = await ethers.getContract('TestEthRegistrarL1');
+    this.ensPublicResolver = await ethers.getContract('TestPublicResolverL1');
   }
 
   async registerDomainName(domainOwner: SignerWithAddress, domain: EnsDomain): Promise<void> {

@@ -6,13 +6,13 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deploy } = hre.deployments;
   const useProxy = !hre.network.live;
 
-  const registryL2 = await hre.deployments.get('PolywrapRegistryL2');
+  const registrar = await hre.deployments.get('PolywrapRegistrar');
 
   await deploy(
-    'EnsLink',
+    'VotingMachine',
     {
       from: deployer,
-      args: [registryL2.address],
+      args: [registrar.address],
       log: true,
     }
   );
@@ -20,5 +20,5 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   return !useProxy;
 };
 export default func;
-func.id = 'deploy_ens_link';
-func.tags = ['EnsLink'];
+func.id = 'deploy_voting_machine';
+func.tags = ['VotingMachine'];

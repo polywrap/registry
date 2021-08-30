@@ -1,6 +1,5 @@
-import { ethers } from "hardhat";
+import { ethers, deployments, getNamedAccounts } from 'hardhat';
 import chai, { expect } from "chai";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { PackageOwnershipManager, PolywrapRegistry, VerificationRootRelayer, VerificationTreeManager, VersionVerificationManager, VotingMachine } from "../../../typechain";
 import { EnsApi } from "../../helpers/ens/EnsApi";
 import { EnsDomain } from "../../helpers/ens/EnsDomain";
@@ -10,10 +9,10 @@ import { VerificationRootBridgeLinkMock } from "../../../typechain/VerificationR
 import { OwnershipBridgeLinkMock } from "../../../typechain/OwnershipBridgeLinkMock";
 import { expectEvent } from "../../helpers";
 import { computeMerkleProof } from "../../helpers/merkle-tree/computeMerkleProof";
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signers';
 
 describe("Voting", () => {
   const testDomain = new EnsDomain("test-domain");
-  const blocksPerVotingPeriod = 5;
 
   let registryL1: PolywrapRegistry;
   let registryL2: PolywrapRegistry;
@@ -28,8 +27,9 @@ describe("Voting", () => {
   let ownershipBridgeLinkL2: OwnershipBridgeLinkMock;
   let versionVerificationManagerL1: VersionVerificationManager;
   let versionVerificationManagerL2: VersionVerificationManager;
+  let votingMachine: VotingMachine;
 
-  let ens: EnsApi;
+  let ens = new EnsApi();
 
   let owner: SignerWithAddress;
   let domainOwner: SignerWithAddress;
@@ -37,7 +37,6 @@ describe("Voting", () => {
   let verifier1: SignerWithAddress;
   let randomAcc: SignerWithAddress;
 
-  let votingMachine: VotingMachine;
 
   before(async () => {
     const [_owner, _domainOwner, _polywrapOwner, _verifier1, _randomAcc] = await ethers.getSigners();
@@ -48,136 +47,49 @@ describe("Voting", () => {
     randomAcc = _randomAcc;
   });
 
-  const deployEns = async () => {
-    ens = new EnsApi();
-    await ens.deploy(owner);
+  beforeEach(async () => {
+    await deployments.fixture(
+      [
+        'EnsL1',
+        'SetupEnsL1',
+        'PolywrapRegistryL1',
+        'EnsLinkL1',
+        'PackageOwnershipManagerL1',
+        'OwnershipBridgeLinkL1',
+        'VerificationRootBridgeLinkL1',
+        'VersionVerificationManagerL1',
+        'ConnectContracts',
+        'PolywrapRegistryL2',
+        'Registrar',
+        'VotingMachine',
+        'PackageOwnershipManagerL2',
+        'OwnershipBridgeLinkL2',
+        'VerificationTreeManager',
+        'VersionVerificationManagerL2',
+        'VerificationRootBridgeLinkL2',
+        'VerificationRootRelayer',
+        'ConnectContracts'
+      ]
+    );
 
+    registryL1 = await ethers.getContract('PolywrapRegistryL1');
+    registryL2 = await ethers.getContract('PolywrapRegistryL2');
+    registrar = await ethers.getContract('PolywrapRegistrar');
+    verificationTreeManager = await ethers.getContract('VerificationTreeManager');
+    verificationRootRelayer = await ethers.getContract('VerificationRootRelayer');
+    packageOwnershipManagerL1 = await ethers.getContract('PackageOwnershipManagerL1');
+    packageOwnershipManagerL2 = await ethers.getContract('PackageOwnershipManagerL2');
+    verificationRootBridgeLinkL1 = await ethers.getContract('VerificationRootBridgeLinkL1');
+    verificationRootBridgeLinkL2 = await ethers.getContract('VerificationRootBridgeLinkL2');
+    ownershipBridgeLinkL1 = await ethers.getContract('OwnershipBridgeLinkL1');
+    ownershipBridgeLinkL2 = await ethers.getContract('OwnershipBridgeLinkL2');
+    versionVerificationManagerL1 = await ethers.getContract('VersionVerificationManagerL1');
+    versionVerificationManagerL2 = await ethers.getContract('VersionVerificationManagerL2');
+    votingMachine = await ethers.getContract('VotingMachine');
+
+    await ens.loadContracts();
     await ens.registerDomainName(domainOwner, testDomain);
     await ens.setPolywrapOwner(domainOwner, testDomain, polywrapOwner.address);
-  };
-
-  const deployL1 = async () => {
-    await deployEns();
-
-    const registryFactory = await ethers.getContractFactory("PolywrapRegistry");
-    registryL1 = await registryFactory.deploy();
-
-    const ensLinkFactory = await ethers.getContractFactory("EnsLink");
-    const ensLink = await ensLinkFactory.deploy(ens.ensRegistry?.address!);
-
-    const packageOwnershipManagerFactory = await ethers.getContractFactory("PackageOwnershipManager");
-    packageOwnershipManagerL1 = await packageOwnershipManagerFactory.deploy(
-      registryL1.address,
-      [formatBytes32String("ens")],
-      [ensLink.address]
-    );
-
-    const ownershipBridgeLinkFactory = await ethers.getContractFactory("OwnershipBridgeLinkMock");
-    ownershipBridgeLinkL1 = await ownershipBridgeLinkFactory.deploy(
-      ethers.constants.AddressZero,
-      packageOwnershipManagerL1.address,
-      formatBytes32String("l2-chain-name"),
-      formatBytes32String("2"),
-      1
-    );
-
-    const verificationRootBridgeLinkFactory = await ethers.getContractFactory("VerificationRootBridgeLinkMock");
-    verificationRootBridgeLinkL1 = await verificationRootBridgeLinkFactory.deploy(
-      ethers.constants.AddressZero,
-      formatBytes32String("2"),
-      1
-    );
-
-    const versionVerificationManagerFactory = await ethers.getContractFactory("VersionVerificationManager");
-    versionVerificationManagerL1 = await versionVerificationManagerFactory.deploy(registryL1.address);
-
-    await verificationRootBridgeLinkL1.updateVersionVerificationManager(versionVerificationManagerL1.address);
-
-    await registryL1.updateOwnershipUpdater(packageOwnershipManagerL1.address);
-    await registryL1.updateVersionPublisher(versionVerificationManagerL1.address);
-    await versionVerificationManagerL1.updateVerificationRootUpdater(verificationRootBridgeLinkL1.address);
-    await packageOwnershipManagerL1.updateOutgoingBridgeLink(EnsDomain.RegistryBytes32, formatBytes32String("l2-chain-name"), ownershipBridgeLinkL1.address);
-    await packageOwnershipManagerL1.updateLocalDomainRegistryPermission(EnsDomain.RegistryBytes32, true);
-  };
-
-  const deployL2 = async () => {
-    const registryFactory = await ethers.getContractFactory("PolywrapRegistry");
-    registryL2 = await registryFactory.deploy();
-
-    const registrarFactory = await ethers.getContractFactory("PolywrapRegistrar");
-    registrar = await registrarFactory.deploy(registryL2.address);
-
-    const votingMachineFactory = await ethers.getContractFactory("VotingMachine");
-    votingMachine = await votingMachineFactory.deploy(registrar.address);
-
-    const packageOwnershipManagerFactory = await ethers.getContractFactory("PackageOwnershipManager");
-    packageOwnershipManagerL2 = await packageOwnershipManagerFactory.deploy(
-      registryL2.address,
-      [],
-      []
-    );
-
-    const verificationTreeManagerFactory = await ethers.getContractFactory("VerificationTreeManager");
-    verificationTreeManager = await verificationTreeManagerFactory.deploy(registryL2.address, votingMachine.address);
-
-    const ownershipBridgeLinkFactory = await ethers.getContractFactory("OwnershipBridgeLinkMock");
-    ownershipBridgeLinkL2 = await ownershipBridgeLinkFactory.deploy(
-      ethers.constants.AddressZero,
-      packageOwnershipManagerL2.address,
-      formatBytes32String("l1-chain-name"),
-      formatBytes32String("1"),
-      1
-    );
-
-    const versionVerificationManagerFactory = await ethers.getContractFactory("VersionVerificationManager");
-    versionVerificationManagerL2 = await versionVerificationManagerFactory.deploy(registryL2.address);
-
-    const verificationRootBridgeLinkFactory = await ethers.getContractFactory("VerificationRootBridgeLinkMock");
-    verificationRootBridgeLinkL2 = await verificationRootBridgeLinkFactory.deploy(
-      ethers.constants.AddressZero,
-      formatBytes32String("1"),
-      1
-    );
-
-    const verificationRootRelayerFactory = await ethers.getContractFactory("VerificationRootRelayer");
-    verificationRootRelayer = await verificationRootRelayerFactory.deploy(versionVerificationManagerL2.address, 5);
-
-    await registrar.updateVotingMachine(votingMachine.address);
-    await registryL2.updateOwnershipUpdater(packageOwnershipManagerL2.address);
-    await votingMachine.updateVersionVerifiedListener(verificationTreeManager.address);
-    await verificationRootBridgeLinkL2.updateVersionVerificationManager(versionVerificationManagerL2.address);
-    await registryL2.updateOwnershipUpdater(packageOwnershipManagerL2.address);
-    await registryL2.updateVersionPublisher(versionVerificationManagerL2.address);
-    await verificationTreeManager.updateVerificationRootRelayer(verificationRootRelayer.address);
-    await verificationRootBridgeLinkL2.updateVerificationRootRelayer(verificationRootRelayer.address);
-    await versionVerificationManagerL2.updateVerificationRootUpdater(verificationRootRelayer.address);
-    await verificationRootRelayer.updateBridgeLink(verificationRootBridgeLinkL2.address);
-    await verificationRootRelayer.updateVerificationTreeManager(verificationTreeManager.address);
-
-    await packageOwnershipManagerL2.updateIncomingBridgeLink(EnsDomain.RegistryBytes32, formatBytes32String("l1-chain-name"), ownershipBridgeLinkL2.address);
-  };
-
-  beforeEach(async () => {
-    await deployL1();
-    await deployL2();
-
-    await packageOwnershipManagerL1.updateOutgoingBridgeLink(
-      EnsDomain.RegistryBytes32,
-      formatBytes32String("l2-chain-name"),
-      ownershipBridgeLinkL1.address
-    );
-
-    await packageOwnershipManagerL2.updateIncomingBridgeLink(
-      EnsDomain.RegistryBytes32,
-      formatBytes32String("l1-chain-name"),
-      ownershipBridgeLinkL2.address
-    );
-
-    await ownershipBridgeLinkL1.updateBridgeLink(ownershipBridgeLinkL2.address);
-    await ownershipBridgeLinkL2.updateBridgeLink(ownershipBridgeLinkL1.address);
-
-    await verificationRootBridgeLinkL1.updateBridgeLink(verificationRootBridgeLinkL2.address);
-    await verificationRootBridgeLinkL2.updateBridgeLink(verificationRootBridgeLinkL1.address);
 
     await votingMachine.authorizeVerifiers([verifier1.address]);
   });

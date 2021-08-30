@@ -7,7 +7,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const useProxy = !hre.network.live;
 
   await deploy(
-    'PolywrapRegistryL2',
+    'PolywrapRegistryL1',
     {
       contract: 'PolywrapRegistry',
       from: deployer,
@@ -19,5 +19,5 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   return !useProxy;
 };
 export default func;
-func.id = 'deploy_registry_l2';
-func.tags = ['PolywrapRegistryL2'];
+func.id = 'deploy_registry_l1';
+func.tags = ['PolywrapRegistryL1'];
