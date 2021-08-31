@@ -9,7 +9,7 @@ import { VerificationRootBridgeLinkMock } from "../../../typechain/VerificationR
 import { OwnershipBridgeLinkMock } from "../../../typechain/OwnershipBridgeLinkMock";
 import { expectEvent } from "../../helpers";
 import { computeMerkleProof } from "../../helpers/merkle-tree/computeMerkleProof";
-import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signers';
+import { Signer } from 'ethers';
 
 describe("Voting", () => {
   const testDomain = new EnsDomain("test-domain");
@@ -31,11 +31,11 @@ describe("Voting", () => {
 
   let ens = new EnsApi();
 
-  let owner: SignerWithAddress;
-  let domainOwner: SignerWithAddress;
-  let polywrapOwner: SignerWithAddress;
-  let verifier1: SignerWithAddress;
-  let randomAcc: SignerWithAddress;
+  let owner: Signer;
+  let domainOwner: Signer;
+  let polywrapOwner: Signer;
+  let verifier1: Signer;
+  let randomAcc: Signer;
 
 
   before(async () => {
@@ -87,11 +87,11 @@ describe("Voting", () => {
     versionVerificationManagerL2 = await ethers.getContract('VersionVerificationManagerL2');
     votingMachine = await ethers.getContract('VotingMachine');
 
-    await ens.loadContracts();
+    await ens.init();
     await ens.registerDomainName(domainOwner, testDomain);
-    await ens.setPolywrapOwner(domainOwner, testDomain, polywrapOwner.address);
+    await ens.setPolywrapOwner(domainOwner, testDomain, await polywrapOwner.getAddress());
 
-    await votingMachine.authorizeVerifiers([verifier1.address]);
+    await votingMachine.authorizeVerifiers([await verifier1.getAddress()]);
   });
 
 
@@ -155,7 +155,7 @@ describe("Voting", () => {
       ]);
 
       await expectEvent(voteTx, "VersionVote", {
-        verifier: verifier1.address,
+        verifier: await verifier1.getAddress(),
         patchNodeId: patchNodeId,
         packageLocationHash: packageLocationHash,
         approved: true
