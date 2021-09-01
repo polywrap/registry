@@ -9,12 +9,10 @@ export const runVerifier = async () => {
 
   var provider = ethers.providers.getDefaultProvider(process.env.PROVIDER_NETWORK);
 
-  provider.getBlockNumber().then(r => console.log(r));
-  
   const signer = new ethers.Wallet(process.env.CLIENT_PRIVATE_KEY!, provider);
-  
+
   let votingMachine = VotingMachine__factory.connect(process.env.VOTING_MACHINE_CONTRACT_ADDRESS!, signer);
-  
+
   let verifierStateInfo: VerifierStateInfo = {
     lastProcessedBlock: -1,
     lastProcessedTransactionIndex: -1,
@@ -28,24 +26,23 @@ export const runVerifier = async () => {
 
   const topicId = ethers.utils.id('VersionVotingStarted(bytes32,bytes32,uint256,uint256,uint256,string,address,bool');
 
-  if(fs.existsSync('state-info.json')) {
-    verifierStateInfo = JSON.parse(fs.readFileSync(process.env.STATE_INFO_PATH!, {encoding:'utf8', flag:'r'}));
+  if (fs.existsSync('state-info.json')) {
+    verifierStateInfo = JSON.parse(fs.readFileSync(process.env.STATE_INFO_PATH!, { encoding: 'utf8', flag: 'r' }));
   }
 
-  while(true) {
+  while (true) {
     const proposedVersionEvents = await votingMachine.queryFilter({
       topics: [topicId]
     },
-    verifierStateInfo.currentlyProcessingBlock,
-    'latest');
+      verifierStateInfo.currentlyProcessingBlock,
+      'latest');
 
-    for(let event of proposedVersionEvents) {
+    for (let event of proposedVersionEvents) {
       console.log(`Found event`);
       //@ts-ignore
       await processProposedVersionEvent(votingMachine, client, verifierStateInfo, event);
 
       fs.writeFileSync(process.env.STATE_INFO_PATH!, JSON.stringify(verifierStateInfo, null, 2));
     }
-  } 
+  }
 };
-   

@@ -1,7 +1,7 @@
 import { BytesLike, ethers } from "ethers";
 import { create, IPFSHTTPClient } from "ipfs-http-client";
 import { getSchemaFileFromIpfs } from "../ipfs/getSchemaFileFromIpfs";
-import { areSchemasFunctionallyIdentical } from "../schema-comparison/areSchemasIdentical";
+import { areSchemasFunctionallyIdentical } from "../schema-comparison/areSchemasFunctionallyIdentical";
 import { VotingMachine } from "../typechain";
 import { verifyMinorVersion } from "./verifyMinorVersion";
 import { verifyPatchVersion } from "./verifyPatchVersion";
@@ -13,7 +13,7 @@ export const verifyVersion = async (
   patchNodeId: BytesLike,
   majorVersion: number,
   minorVersion: number,
-  patchVersion: number, 
+  patchVersion: number,
   packageLocation: string,
   isPatch: boolean
 ): Promise<{
@@ -29,17 +29,17 @@ export const verifyVersion = async (
   let prevMinorNodeId: BytesLike = ethers.constants.HashZero;
   let nextMinorNodeId: BytesLike = ethers.constants.HashZero;
 
-  if(isPatch) {
+  if (isPatch) {
     isVersionApproved = await verifyPatchVersion(
       votingMachine,
-      client, 
+      client,
       proposedVersionSchema,
       patchNodeId,
     );
   } else {
     const result = await verifyMinorVersion(
       votingMachine,
-      client, 
+      client,
       proposedVersionSchema,
       patchNodeId,
     );
@@ -53,4 +53,4 @@ export const verifyVersion = async (
     nextMinorNodeId,
     approved: isVersionApproved
   };
-}; 
+};

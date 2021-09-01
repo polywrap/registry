@@ -48,14 +48,6 @@ const config: HardhatUserConfig = {
       accounts: { mnemonic: process.env.TESTNET_MNEMONIC || "" },
       url: `https://kovan.infura.io/v3/0e6434f252a949719227b5d68caa2657`,
     },
-    ropsten: {
-      accounts: { mnemonic: process.env.TESTNET_MNEMONIC || "" },
-      url: "https://ropsten.infura.io/v3/77c3d733140f4c12a77699e24cb30c27",
-      deploy: ["./deploy/scripts/testnet/l1"],
-      companionNetworks: {
-        l2: 'rinkeby',
-      }
-    },
     rinkeby: {
       accounts: [`0x${process.env.DEPLOYER_KEY_RINKEBY}`],
       url: "https://rinkeby.infura.io/v3/77c3d733140f4c12a77699e24cb30c27",

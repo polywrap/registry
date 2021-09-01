@@ -1,0 +1,6 @@
+type Object {
+"""
+comment
+"""
+  prop1: Int!
+}
