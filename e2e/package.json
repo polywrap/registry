@@ -9,6 +9,7 @@
   "dependencies": {
     "@types/node": "^16.6.1",
     "dotenv": "^10.0.0",
+    "spawn-command": "^0.0.2-1",
     "typescript": "^4.3.5"
   },
   "devDependencies": {

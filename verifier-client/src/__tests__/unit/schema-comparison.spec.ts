@@ -1,6 +1,6 @@
 jest.setTimeout(200000);
 import * as fs from 'fs';
-import { areSchemasFunctionallyIdentical } from '../schema-comparison/areSchemasFunctionallyIdentical';
+import { areSchemasFunctionallyIdentical } from '../../schema-comparison/areSchemasFunctionallyIdentical';
 
 describe("Schema comparison", () => {
   beforeAll(async () => {

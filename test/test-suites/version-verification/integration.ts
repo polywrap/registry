@@ -102,12 +102,8 @@ describe("Voting", () => {
     versionVerificationManagerL1 = versionVerificationManagerL1.connect(polywrapOwner);
     versionVerificationManagerL2 = versionVerificationManagerL2.connect(polywrapOwner);
 
-    await registrar.updateRegistry(registryL2.address);
-
     packageOwnershipManagerL1.updateOwnership(EnsDomain.RegistryBytes32, testDomain.node);
     packageOwnershipManagerL1.relayOwnership(formatBytes32String("l2-chain-name"), EnsDomain.RegistryBytes32, testDomain.node);
-
-    const packageLocation = "test-location";
 
     const leaves: string[] = [];
 
@@ -129,12 +125,6 @@ describe("Voting", () => {
 
       leaves.push(verifiedVersionId);
 
-      await packageOwnershipManagerL1.relayOwnership(
-        formatBytes32String("l2-chain-name"),
-        EnsDomain.RegistryBytes32,
-        testDomain.node
-      );
-
       registrar = registrar.connect(polywrapOwner);
 
       const proposeTx = await registrar.proposeVersion(
@@ -142,6 +132,8 @@ describe("Voting", () => {
         major, minor, patch,
         packageLocation
       );
+
+      await proposeTx.wait();
 
       votingMachine = votingMachine.connect(verifier1);
 

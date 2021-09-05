@@ -26,6 +26,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   await registrar.updateVotingMachine(votingMachine.address);
   await registryL2.updateOwnershipUpdater(packageOwnershipManagerL2.address);
   await votingMachine.updateVersionVerifiedListener(verificationTreeManager.address);
+
   await verificationRootBridgeLinkL2.updateVersionVerificationManager(versionVerificationManager.address);
   await registryL2.updateOwnershipUpdater(packageOwnershipManagerL2.address);
   await registryL2.updateVersionPublisher(versionVerificationManager.address);

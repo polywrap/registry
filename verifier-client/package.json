@@ -7,7 +7,10 @@
     "build": "tsc",
     "start": "yarn build && node ./bin/app.js",
     "dev": "ts-node ./src/app.ts",
-    "test": "jest"
+    "test": "jest",
+    "up": "docker-compose up",
+    "reup": "docker-compose up --build",
+    "down": "docker-compose down"
   },
   "dependencies": {
     "@typechain/ethers-v5": "^7.0.1",

@@ -61,7 +61,7 @@ const config: HardhatUserConfig = {
       gasPrice: "auto",
       gasMultiplier: 1,
       url: "http://127.0.0.1:8545",
-      chainId: 1776,
+      chainId: 1337,
       accounts: {
         mnemonic: "test test test test test test test test test test test test",
       },
