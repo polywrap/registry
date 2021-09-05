@@ -7,9 +7,6 @@ artifacts
 typechain/
 .env
 
-#hardhat-deploy
-deployments
-
 # OpenZeppelin
 .openzeppelin/dev-*.json
 .openzeppelin/unknown-*.json
