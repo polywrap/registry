@@ -6,6 +6,7 @@ import { EnsApi } from "../ens/EnsApi";
 import { EnsDomain } from "../ens/EnsDomain";
 import { ethers } from "ethers";
 import { RegistryAuthority } from "../RegistryAuthority";
+import { create, IPFSHTTPClient } from "ipfs-http-client";
 
 dotenv.config();
 
@@ -27,14 +28,20 @@ describe("e2e", () => {
   });
 
   it("sanity", async () => {
+    const domain = new EnsDomain("test");
+    const l1ChainName = "l1-chain-name";
+    const l2ChainName = "l2-chain-name";
+
     var provider = ethers.providers.getDefaultProvider(process.env.PROVIDER_NETWORK);
+    const ipfsClient = create({
+      url: `http://localhost:${process.env.IPFS_PORT}/api/v0`
+    });
+
+    console.log(`http://localhost:${process.env.IPFS_PORT}/api/v0`);
 
     var packageOwner = new PackageOwner(provider, process.env.PACKAGE_OWNER_PRIVATE_KEY!);
     var authority = new RegistryAuthority(provider, process.env.REGISTRY_AUTHORITY_PRIVATE_KEY!);
     var ens = new EnsApi();
-
-    const domain = new EnsDomain("test");
-    const packageLocation = "location";
 
     const verifierSigner = new ethers.Wallet(process.env.VERIFIER_PRIVATE_KEY!, provider);
     await authority.authorizeVerifiers([await verifierSigner.getAddress()]);
@@ -43,14 +50,21 @@ describe("e2e", () => {
 
     await ens.registerDomainName(packageOwner.signer, domain);
     await ens.setPolywrapOwner(packageOwner.signer, domain);
+    const { cid } = await ipfsClient.add(`type Object {
+      """
+      comment
+      """
+        prop1: Int!
+      }
+      `);
+
+    const packageLocation = cid.toString();
 
     await packageOwner.updateOwnership(domain);
-    await packageOwner.relayOwnership(domain, "l2-chain-name");
+    await packageOwner.relayOwnership(domain, l2ChainName);
 
     await packageOwner.proposeVersion(domain, packageLocation, 1, 0, 0);
-
     await packageOwner.waitForVotingEnd(domain, packageLocation, 1, 0, 0);
-
     await packageOwner.publishVersion(domain, packageLocation, 1, 0, 0);
   });
 });

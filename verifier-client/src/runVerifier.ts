@@ -22,16 +22,14 @@ export const runVerifier = async () => {
   };
 
   const client = create({
-    url: process.env.IPFS_URI
+    url: `http://ipfs:${process.env.IPFS_PORT}/api/v0`
   });
 
-  const topicId = ethers.utils.id('VersionVotingStarted(bytes32,bytes32,uint256,uint256,uint256,string,address,bool)');
-
-  if (fs.existsSync('state-info.json')) {
+  if (fs.existsSync(process.env.STATE_INFO_PATH!)) {
     verifierStateInfo = JSON.parse(fs.readFileSync(process.env.STATE_INFO_PATH!, { encoding: 'utf8', flag: 'r' }));
   }
 
-  let a = 0;
+  let processedEventCnt = 0;
   while (true) {
     const proposedVersionEvents = await votingMachine.queryFilter(
       votingMachine.filters.VersionVotingStarted(),
@@ -39,13 +37,13 @@ export const runVerifier = async () => {
     );
 
     for (let event of proposedVersionEvents) {
-      a++;
       //@ts-ignore
       await processProposedVersionEvent(votingMachine, client, verifierStateInfo, event);
 
       fs.writeFileSync(process.env.STATE_INFO_PATH!, JSON.stringify(verifierStateInfo, null, 2));
+      processedEventCnt++;
     }
-    console.log(`Found event`, a);
+    console.log(`Processed ${processedEventCnt} events.`);
 
     await delay(+process.env.PAUSE_TIME!);
   }
