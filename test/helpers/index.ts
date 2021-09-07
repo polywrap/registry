@@ -1,4 +1,6 @@
-import { Contract, ContractTransaction, ethers, providers } from "ethers";
+import { expect } from "chai";
+import { BaseContract, Contract, ContractTransaction, ethers, providers } from "ethers";
+import { eventNames } from "process";
 
 export const getSubnodeHash = (
   parentHash: string,
@@ -57,3 +59,25 @@ export async function getEvent(
   const firstEvent = events[0];
   return firstEvent;
 }
+
+export const expectEvent = async (tx: ContractTransaction, eventName: string, args: Record<string, any>) => {
+  const receivedArgs = await getEventArgs(tx, eventName);
+
+  for (const arg of Object.keys(args)) {
+    expect(receivedArgs[arg]).to.equal(args[arg]);
+  }
+};
+
+export const getEventArgs = async (tx: ContractTransaction, eventName: string): Promise<Record<string, any>> => {
+  const result = await tx.wait();
+
+  const event = result.events?.find(x => x.event === eventName);
+
+  const receivedArgs = event?.args;
+
+  if (!receivedArgs) {
+    throw 'Received undefined arguments';
+  }
+
+  return receivedArgs;
+};
