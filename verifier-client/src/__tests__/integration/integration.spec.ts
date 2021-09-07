@@ -40,7 +40,6 @@ describe("Start local chain", () => {
     const ipfsClient = create({
       url: process.env.IPFS_URI
     });
-    console.log('IPFS:', process.env.IPFS_URI);
 
     var packageOwner = new PackageOwner(provider, process.env.PACKAGE_OWNER_PRIVATE_KEY!);
     var authority = new RegistryAuthority(provider, process.env.REGISTRY_AUTHORITY_PRIVATE_KEY!);
@@ -68,21 +67,21 @@ describe("Start local chain", () => {
 
     await packageOwner.proposeVersion(domain, packageLocation, 1, 0, 0);
 
-  var provider = ethers.providers.getDefaultProvider(`${process.env.PROVIDER_NETWORK}`);
+    var provider = ethers.providers.getDefaultProvider(`${process.env.PROVIDER_NETWORK}`);
 
-  const signer = new ethers.Wallet(process.env.CLIENT_PRIVATE_KEY!, provider);
+    const signer = new ethers.Wallet(process.env.CLIENT_PRIVATE_KEY!, provider);
 
     let votingMachine = VotingMachine__factory.connect(VotingMachine.address, signer);
 
+    let verifierStateInfo: VerifierStateInfo = {
+      lastProcessedBlock: -1,
+      lastProcessedTransactionIndex: -1,
+      lastProcessedLogIndex: -1,
+      currentlyProcessingBlock: 0
+    };
 
-  let verifierStateInfo: VerifierStateInfo = {
-    lastProcessedBlock: -1,
-    lastProcessedTransactionIndex: -1,
-    lastProcessedLogIndex: -1,
-    currentlyProcessingBlock: 0
-  };
     await queryAndVerifyVersions(votingMachine, ipfsClient, verifierStateInfo);
-  
+
     await packageOwner.waitForVotingEnd(domain, packageLocation, 1, 0, 0);
     await packageOwner.publishVersion(domain, packageLocation, 1, 0, 0);
   });
