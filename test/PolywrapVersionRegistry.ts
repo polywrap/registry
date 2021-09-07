@@ -9,6 +9,9 @@ import { EnsDomain } from "./helpers/ens/EnsDomain";
 import { EnsApi } from "./helpers/ens/EnsApi";
 import { getPackageLocation } from "./helpers/getPackageLocation";
 import { toUtf8Bytes, toUtf8String } from "ethers/lib/utils";
+import { EnsLink } from "../typechain/EnsLink";
+import { TestLink } from "../typechain/TestLink";
+import { CustomDomain } from "./helpers/ens/CustomDomain";
 
 
 describe("ENS registration", () => {
@@ -64,8 +67,93 @@ describe("ENS registration", () => {
   });
 });
 
+describe("Domain registrar links", () => {
+  const testDomain = new EnsDomain("test-domain");
+
+  let versionRegistry: PolywrapVersionRegistry;
+  let ens: EnsApi;
+
+  let owner: SignerWithAddress;
+  let domainOwner: SignerWithAddress;
+  let polywrapOwner: SignerWithAddress;
+  let randomAcc: SignerWithAddress;
+
+  let ensLink: EnsLink;
+  let testLink: TestLink;
+
+  before(async () => {
+    const [_owner, _domainOwner, _polywrapOwner, _randomAcc] = await ethers.getSigners();
+    owner = _owner;
+    domainOwner = _domainOwner;
+    polywrapOwner = _polywrapOwner;
+    randomAcc = _randomAcc;
+  });
+
+  beforeEach(async () => {
+    ens = new EnsApi();
+    await ens.deploy(owner);
+
+    const ensLinkFactory = await ethers.getContractFactory("EnsLink");
+    ensLink = await ensLinkFactory.deploy(ens.ensRegistry!.address);
+
+    const testLinkFactory = await ethers.getContractFactory("TestLink");
+    testLink = await testLinkFactory.deploy();
+  });
+
+  it("can deploy the version registry with domain registrar links", async () => {
+    const versionRegistryFactory = await ethers.getContractFactory("PolywrapVersionRegistry");
+    versionRegistry = await versionRegistryFactory.deploy([
+      EnsDomain.RegistrarBytes32,
+      CustomDomain.RegistrarBytes32
+    ], [
+      ensLink.address,
+      testLink.address
+    ]);
+
+    const ensAddress = await versionRegistry.domainRegistrarLinks(EnsDomain.RegistrarBytes32);
+    expect(ensAddress).to.equal(ensLink.address);
+
+    const testAddress = await versionRegistry.domainRegistrarLinks(CustomDomain.RegistrarBytes32);
+    expect(testAddress).to.equal(testLink.address);
+  });
+
+  it("can connect a new domain registrar link", async () => {
+    const versionRegistryFactory = await ethers.getContractFactory("PolywrapVersionRegistry");
+    versionRegistry = await versionRegistryFactory.deploy([
+      EnsDomain.RegistrarBytes32
+    ], [
+      ensLink.address
+    ]);
+
+    await versionRegistry.connectDomainRegistrarLink(CustomDomain.RegistrarBytes32, testLink.address);
+
+    const ensAddress = await versionRegistry.domainRegistrarLinks(EnsDomain.RegistrarBytes32);
+    expect(ensAddress).to.equal(ensLink.address);
+
+    const testAddress = await versionRegistry.domainRegistrarLinks(CustomDomain.RegistrarBytes32);
+    expect(testAddress).to.equal(testLink.address);
+  });
+
+
+  it("forbids non version registry owners to connect a new domain registrar link", async () => {
+    const versionRegistryFactory = await ethers.getContractFactory("PolywrapVersionRegistry");
+    versionRegistry = await versionRegistryFactory.deploy([
+      EnsDomain.RegistrarBytes32
+    ], [
+      ensLink.address
+    ]);
+
+    versionRegistry = versionRegistry.connect(randomAcc);
+
+    await expect(
+      versionRegistry.connectDomainRegistrarLink(CustomDomain.RegistrarBytes32, testLink.address)
+    ).to.revertedWith("Ownable: caller is not the owner");
+  });
+});
+
 describe("Package registration", () => {
   const testDomain = new EnsDomain("test-domain");
+  const testDomain2 = new CustomDomain("test-domain");
 
   let versionRegistry: PolywrapVersionRegistry;
   let ens: EnsApi;
@@ -87,22 +175,59 @@ describe("Package registration", () => {
     ens = new EnsApi();
     await ens.deploy(owner);
 
+    const ensLinkFactory = await ethers.getContractFactory("EnsLink");
+    const ensLink = await ensLinkFactory.deploy(ens.ensRegistry!.address);
+
     await ens.registerDomainName(domainOwner, testDomain);
     await ens.setPolywrapOwner(domainOwner, testDomain, polywrapOwner.address);
 
     const versionRegistryFactory = await ethers.getContractFactory("PolywrapVersionRegistry");
-    versionRegistry = await versionRegistryFactory.deploy(ens.ensRegistry!.address);
+    versionRegistry = await versionRegistryFactory.deploy([
+      EnsDomain.RegistrarBytes32
+    ], [
+      ensLink.address
+    ]);
+
     versionRegistry = versionRegistry.connect(polywrapOwner);
   });
 
   it("can register a new package", async () => {
-    const tx = await versionRegistry.updateOwnershipEns(testDomain.node);
+    const tx = await versionRegistry.updateOwnership(EnsDomain.RegistrarBytes32, testDomain.node);
 
     await expectEvent(tx, "OwnershipUpdated", {
       registrarNode: testDomain.node,
       packageId: testDomain.packageId,
-      registrar: ethers.utils.formatBytes32String("ens"),
+      registrar: EnsDomain.RegistrarBytes32,
       owner: polywrapOwner.address
+    });
+  });
+
+  it("can register a packages from different domain registrars", async () => {
+    const tx = await versionRegistry.updateOwnership(EnsDomain.RegistrarBytes32, testDomain.node);
+
+    await expectEvent(tx, "OwnershipUpdated", {
+      registrarNode: testDomain.node,
+      packageId: testDomain.packageId,
+      registrar: EnsDomain.RegistrarBytes32,
+      owner: polywrapOwner.address
+    });
+
+    versionRegistry = versionRegistry.connect(owner);
+
+    const testLinkFactory = await ethers.getContractFactory("TestLink");
+    const testLink = await testLinkFactory.deploy();
+
+    await versionRegistry.connectDomainRegistrarLink(CustomDomain.RegistrarBytes32, testLink.address);
+
+    versionRegistry = versionRegistry.connect(randomAcc);
+
+    const tx2 = await versionRegistry.updateOwnership(CustomDomain.RegistrarBytes32, testDomain2.node);
+
+    await expectEvent(tx2, "OwnershipUpdated", {
+      registrarNode: testDomain2.node,
+      packageId: testDomain2.packageId,
+      registrar: CustomDomain.RegistrarBytes32,
+      owner: randomAcc.address
     });
   });
 
@@ -113,24 +238,24 @@ describe("Package registration", () => {
     await ens.registerDomainName(domainOwner, package1);
     await ens.setPolywrapOwner(domainOwner, package1, polywrapOwner.address);
 
-    const tx1 = await versionRegistry.updateOwnershipEns(package1.node);
+    const tx1 = await versionRegistry.updateOwnership(EnsDomain.RegistrarBytes32, package1.node);
 
     await expectEvent(tx1, "OwnershipUpdated", {
       registrarNode: package1.node,
       packageId: package1.packageId,
-      registrar: ethers.utils.formatBytes32String("ens"),
+      registrar: EnsDomain.RegistrarBytes32,
       owner: polywrapOwner.address
     });
 
     await ens.registerDomainName(domainOwner, package2);
     await ens.setPolywrapOwner(domainOwner, package2, polywrapOwner.address);
 
-    const tx2 = await versionRegistry.updateOwnershipEns(package2.node);
+    const tx2 = await versionRegistry.updateOwnership(EnsDomain.RegistrarBytes32, package2.node);
 
     await expectEvent(tx2, "OwnershipUpdated", {
       registrarNode: package2.node,
       packageId: package2.packageId,
-      registrar: ethers.utils.formatBytes32String("ens"),
+      registrar: EnsDomain.RegistrarBytes32,
       owner: polywrapOwner.address
     });
   });
@@ -138,12 +263,12 @@ describe("Package registration", () => {
   it("allow anyone to register a package for the owner", async () => {
     versionRegistry = versionRegistry.connect(randomAcc);
 
-    const tx = await versionRegistry.updateOwnershipEns(testDomain.node);
+    const tx = await versionRegistry.updateOwnership(EnsDomain.RegistrarBytes32, testDomain.node);
 
     await expectEvent(tx, "OwnershipUpdated", {
       registrarNode: testDomain.node,
       packageId: testDomain.packageId,
-      registrar: ethers.utils.formatBytes32String("ens"),
+      registrar: EnsDomain.RegistrarBytes32,
       owner: polywrapOwner.address
     });
   });
@@ -154,6 +279,7 @@ describe("Version publish", function () {
 
   let versionRegistry: PolywrapVersionRegistry;
   let ens: EnsApi;
+  let ensLink: EnsLink;
 
   let owner: SignerWithAddress;
   let domainOwner: SignerWithAddress;
@@ -170,16 +296,24 @@ describe("Version publish", function () {
     ens = new EnsApi();
     await ens.deploy(owner);
 
+    const ensLinkFactory = await ethers.getContractFactory("EnsLink");
+    ensLink = await ensLinkFactory.deploy(ens.ensRegistry!.address);
+
     await ens.registerDomainName(domainOwner, testDomain);
     await ens.setPolywrapOwner(domainOwner, testDomain, polywrapOwner.address);
   });
 
   beforeEach(async () => {
     const versionRegistryFactory = await ethers.getContractFactory("PolywrapVersionRegistry");
-    versionRegistry = await versionRegistryFactory.deploy(ens.ensRegistry!.address);
+    versionRegistry = await versionRegistryFactory.deploy([
+      EnsDomain.RegistrarBytes32
+    ], [
+      ensLink.address
+    ]);
+
     versionRegistry = versionRegistry.connect(polywrapOwner);
 
-    await versionRegistry.updateOwnershipEns(testDomain.node);
+    await versionRegistry.updateOwnership(EnsDomain.RegistrarBytes32, testDomain.node);
   });
 
   it("can publish a new version", async function () {
@@ -301,6 +435,7 @@ describe("Package managers", function () {
 
   let versionRegistry: PolywrapVersionRegistry;
   let ens: EnsApi;
+  let ensLink: EnsLink;
 
   let owner: SignerWithAddress;
   let domainOwner: SignerWithAddress;
@@ -321,16 +456,24 @@ describe("Package managers", function () {
     ens = new EnsApi();
     await ens.deploy(owner);
 
+    const ensLinkFactory = await ethers.getContractFactory("EnsLink");
+    ensLink = await ensLinkFactory.deploy(ens.ensRegistry!.address);
+
     await ens.registerDomainName(domainOwner, testDomain);
     await ens.setPolywrapOwner(domainOwner, testDomain, polywrapOwner.address);
   });
 
   beforeEach(async () => {
     const versionRegistryFactory = await ethers.getContractFactory("PolywrapVersionRegistry");
-    versionRegistry = await versionRegistryFactory.deploy(ens.ensRegistry!.address);
+    versionRegistry = await versionRegistryFactory.deploy([
+      EnsDomain.RegistrarBytes32
+    ], [
+      ensLink.address
+    ]);
+
     versionRegistry = versionRegistry.connect(polywrapOwner);
 
-    await versionRegistry.updateOwnershipEns(testDomain.node);
+    await versionRegistry.updateOwnership(EnsDomain.RegistrarBytes32, testDomain.node);
   });
 
   it("can add an package manager", async function () {
@@ -435,6 +578,7 @@ describe("Changing ownership", function () {
 
   let versionRegistry: PolywrapVersionRegistry;
   let ens: EnsApi;
+  let ensLink: EnsLink;
 
   let owner: SignerWithAddress;
   let domainOwner: SignerWithAddress;
@@ -453,6 +597,9 @@ describe("Changing ownership", function () {
     ens = new EnsApi();
     await ens.deploy(owner);
 
+    const ensLinkFactory = await ethers.getContractFactory("EnsLink");
+    ensLink = await ensLinkFactory.deploy(ens.ensRegistry!.address);
+
     await ens.registerDomainName(domainOwner, testDomain);
   });
 
@@ -460,10 +607,15 @@ describe("Changing ownership", function () {
     await ens.setPolywrapOwner(domainOwner, testDomain, polywrapOwner.address);
 
     const versionRegistryFactory = await ethers.getContractFactory("PolywrapVersionRegistry");
-    versionRegistry = await versionRegistryFactory.deploy(ens.ensRegistry!.address);
+    versionRegistry = await versionRegistryFactory.deploy([
+      EnsDomain.RegistrarBytes32
+    ], [
+      ensLink.address
+    ]);
+
     versionRegistry = versionRegistry.connect(polywrapOwner);
 
-    await versionRegistry.updateOwnershipEns(testDomain.node);
+    await versionRegistry.updateOwnership(EnsDomain.RegistrarBytes32, testDomain.node);
   });
 
   it("can change ownership", async function () {
@@ -476,7 +628,7 @@ describe("Changing ownership", function () {
     await ens.setPolywrapOwner(domainOwner, testDomain, polywrapOwner2.address);
 
     versionRegistry = versionRegistry.connect(polywrapOwner2);
-    await versionRegistry.updateOwnershipEns(testDomain.node);
+    await versionRegistry.updateOwnership(EnsDomain.RegistrarBytes32, testDomain.node);
 
     isAuthorized = await versionRegistry.isAuthorized(testDomain.packageId, polywrapOwner2.address);
     expect(isAuthorized).to.be.true;
@@ -495,7 +647,7 @@ describe("Changing ownership", function () {
     await ens.setPolywrapOwner(domainOwner, testDomain, polywrapOwner2.address);
 
     versionRegistry = versionRegistry.connect(randomAcc);
-    await versionRegistry.updateOwnershipEns(testDomain.node);
+    await versionRegistry.updateOwnership(EnsDomain.RegistrarBytes32, testDomain.node);
 
     isAuthorized = await versionRegistry.isAuthorized(testDomain.packageId, polywrapOwner2.address);
     expect(isAuthorized).to.be.true;

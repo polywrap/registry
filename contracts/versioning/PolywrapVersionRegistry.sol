@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import "@ensdomains/ens-contracts/contracts/registry/ENS.sol";
-import "./OwnableVersionRegistry.sol";
+import "./VersionManager.sol";
 
-contract PolywrapVersionRegistry is OwnableVersionRegistry {
-  constructor(ENS _ens) public VersionRegistry(_ens) {}
+contract PolywrapVersionRegistry is VersionManager {
+  constructor(
+    bytes32[] memory domainRegistrars,
+    address[] memory domainRegistrarAddresses
+  ) VersionRegistry(domainRegistrars, domainRegistrarAddresses) {}
 }
