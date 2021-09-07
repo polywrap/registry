@@ -2,7 +2,7 @@ node_modules
 bin
 
 #Hardhat deploy
-deployments/localhost
+deployments/localhost/
 
 #Hardhat files
 cache
