@@ -1,7 +1,5 @@
 import path from "path";
 import { exec, ExecException } from "child_process";
-import { authorizeVerifier } from "./authorizeVerifier";
-import { queryAndVerifyVersions, runVerifier } from "../../runVerifier";
 import { EnsDomain } from "./ens/EnsDomain";
 import { ethers } from "ethers";
 import { create } from "ipfs-http-client";
@@ -11,7 +9,7 @@ import { EnsApi } from "./ens/EnsApi";
 import { VotingMachine__factory } from "../../typechain";
 
 import * as VotingMachine from "../../deployments/localhost/VotingMachine.json"
-import { VerifierStateInfo } from "../../version-processing/VerifierStateInfo";
+import { VerifierStateInfo } from "../../VerifierStateInfo";
 require('custom-env').env('local');
 
 jest.setTimeout(200000);
@@ -80,7 +78,7 @@ describe("Start local chain", () => {
       currentlyProcessingBlock: 0
     };
 
-    await queryAndVerifyVersions(votingMachine, ipfsClient, verifierStateInfo);
+    await verifierClient.queryAndVerifyVersions(votingMachine, ipfsClient, verifierStateInfo);
 
     await packageOwner.waitForVotingEnd(domain, packageLocation, 1, 0, 0);
     await packageOwner.publishVersion(domain, packageLocation, 1, 0, 0);
