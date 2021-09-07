@@ -1,9 +1,6 @@
 node_modules
 bin
 
-#Hardhat deploy
-deployments/localhost/
-
 #Hardhat files
 cache
 artifacts
