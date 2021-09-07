@@ -6,6 +6,8 @@ cache
 artifacts
 typechain/
 .env
+.env.docker
+.env.local
 
 # OpenZeppelin
 .openzeppelin/dev-*.json

@@ -64,7 +64,7 @@ export const expectEvent = async (tx: ContractTransaction, eventName: string, ar
   const receivedArgs = await getEventArgs(tx, eventName);
 
   for (const arg of Object.keys(args)) {
-    expect(receivedArgs[arg]).to.equal(args[arg]);
+    expect(receivedArgs[arg]).to.equal(args[arg], `${arg}`);
   }
 };
 
@@ -76,7 +76,7 @@ export const getEventArgs = async (tx: ContractTransaction, eventName: string): 
   const receivedArgs = event?.args;
 
   if (!receivedArgs) {
-    throw 'Received undefined arguments';
+    throw `Received undefined arguments: ${eventName}`;
   }
 
   return receivedArgs;
