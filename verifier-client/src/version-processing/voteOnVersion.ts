@@ -19,7 +19,7 @@ export const voteOnVersion = async (
     gasLimit: 200000
   });
 
-  const receipt = await voteTx.wait();
+  const receipt = await voteTx.wait(+process.env.NUM_OF_CONFIRMATIONS_TO_WAIT!);
 
   console.log(`Voted on proposed version ${patchNodeId}, approved: ${approved}`);
 };

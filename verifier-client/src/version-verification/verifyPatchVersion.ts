@@ -11,7 +11,8 @@ export const verifyPatchVersion = async (
   proposedVersionSchema: string,
   patchNodeId: BytesLike,
 ): Promise<boolean> => {
-  return true;
+  // return true;
+
   const minorVersionSchema = await getMinorVersionSchema(
     votingMachine,
     client,

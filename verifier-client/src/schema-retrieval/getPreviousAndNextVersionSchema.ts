@@ -9,14 +9,19 @@ export const getPreviousAndNextVersionSchema = async (
   patchNodeId: BytesLike,
 ): Promise<{
   prevMinorNodeId: BytesLike, 
-  prevSchema: string,
+  prevSchema: string | undefined,
   nextMinorNodeId: BytesLike, 
-  nextSchema: string
+  nextSchema: string | undefined
 }> => {
   const { prevMinorNodeId, prevPackageLocation, nextMinorNodeId, nextPackageLocation } = await votingMachine.getPrevAndNextMinorPackageLocations(patchNodeId);
  
-  const prevSchema = await getSchemaFileFromIpfs(client, prevPackageLocation);
-  const nextSchema = await getSchemaFileFromIpfs(client, nextPackageLocation);
+  const prevSchema = prevPackageLocation
+    ? await getSchemaFileFromIpfs(client, prevPackageLocation)
+    : undefined;
+
+  const nextSchema = nextPackageLocation
+    ? await getSchemaFileFromIpfs(client, nextPackageLocation)
+    : undefined;
 
   return {
     prevMinorNodeId, 

@@ -30,7 +30,7 @@ export const processProposedVersion = async (
   } = await verifyVersion(
     votingMachine,
     client,
-    packageId, 
+    packageId,
     patchNodeId,
     majorVersion,
     minorVersion,

@@ -44,6 +44,7 @@ export const verifyVersion = async (
       patchNodeId,
     );
 
+    isVersionApproved = result.approved;
     prevMinorNodeId = result.prevMinorNodeId;
     nextMinorNodeId = result.nextMinorNodeId;
   }

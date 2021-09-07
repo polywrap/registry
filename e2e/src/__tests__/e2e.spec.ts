@@ -19,12 +19,12 @@ describe("e2e", () => {
   });
 
   beforeEach(async () => {
-    // await runCommand('docker-compose up -d', !shouldLog, `${__dirname}/../../../verifier-client`);
+    await runCommand('yarn docker:full -d', !shouldLog, `${__dirname}/../../../verifier-client`);
     await runCommand('yarn hardhat deploy --network localhost', !shouldLog, `${__dirname}/../../../`);
   });
 
   afterEach(async () => {
-    // await runCommand('docker-compose down', !shouldLog, `${__dirname}/../../../verifier-client`);
+    await runCommand('docker-compose down', !shouldLog, `${__dirname}/../../../verifier-client`);
   });
 
   it("sanity", async () => {

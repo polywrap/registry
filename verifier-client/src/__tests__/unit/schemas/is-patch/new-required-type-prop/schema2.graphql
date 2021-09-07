@@ -1,7 +1,0 @@
-type Object {
-"""
-comment
-"""
-  prop1: Int!
-  prop2: Int!
-}

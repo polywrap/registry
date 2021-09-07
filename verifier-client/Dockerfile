@@ -14,4 +14,4 @@ RUN apk --no-cache --virtual build-dependencies add \
   && yarn \
   && yarn build
 
-ENTRYPOINT yarn start run
+ENTRYPOINT yarn start:docker

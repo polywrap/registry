@@ -1,7 +1,6 @@
-import * as dotenv from "dotenv";
 import { runVerifier } from "./runVerifier";
 
-dotenv.config();
+require('custom-env').env();
 
 var argv = require('minimist')(process.argv.slice(2));
 
