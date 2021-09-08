@@ -4,21 +4,21 @@ import { VotingMachine } from "../typechain";
 
 export class SchemaRetrievalService {
   private votingMachine: VotingMachine;
-  private web3ApiClient: Web3ApiClient;
+  private polywrapClient: Web3ApiClient;
 
   constructor(deps: {
     votingMachine: VotingMachine;
-    ipfsClient: Web3ApiClient;
+    polywrapClient: Web3ApiClient;
   }) {
     this.votingMachine = deps.votingMachine;
-    this.web3ApiClient = deps.ipfsClient;
+    this.polywrapClient = deps.polywrapClient;
   }
 
   getMinorVersionSchema = async (patchNodeId: BytesLike): Promise<string> => {
     const location = await this.votingMachine.getPrevPatchPackageLocation(
       patchNodeId
     );
-    const minorVersionSchema = await this.web3ApiClient.getSchema(location);
+    const minorVersionSchema = await this.polywrapClient.getSchema(location);
     return minorVersionSchema;
   };
 
@@ -40,11 +40,11 @@ export class SchemaRetrievalService {
     );
 
     const prevSchema = prevPackageLocation
-      ? await this.web3ApiClient.getSchema(prevPackageLocation)
+      ? await this.polywrapClient.getSchema(prevPackageLocation)
       : undefined;
 
     const nextSchema = nextPackageLocation
-      ? await this.web3ApiClient.getSchema(nextPackageLocation)
+      ? await this.polywrapClient.getSchema(nextPackageLocation)
       : undefined;
 
     return {

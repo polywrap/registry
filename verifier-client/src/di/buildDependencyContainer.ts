@@ -21,7 +21,7 @@ export const buildDependencyContainer = (): awilix.AwilixContainer<any> => {
     ethersProvider: awilix.asFunction(() => {
       return ethers.providers.getDefaultProvider(`${process.env.PROVIDER_NETWORK}`);
     }),
-    web3ApiClient: awilix.asFunction(({ ethersProvider }) => {
+    polywrapClient: awilix.asFunction(({ ethersProvider }) => {
       return setupWeb3ApiClient(ethersProvider);
     }),
     verifierSigner: awilix.asFunction(({ ethersProvider }) => {

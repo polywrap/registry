@@ -4,16 +4,16 @@ import { SchemaComparisonService } from "./SchemaComparisonService";
 import { SchemaRetrievalService } from "./SchemaRetrievalService";
 
 export class VersionVerifierService {
-  private web3ApiClient: Web3ApiClient;
+  private polywrapClient: Web3ApiClient;
   private schemaRetrievalService: SchemaRetrievalService;
   private schemaComparisonService: SchemaComparisonService;
 
   constructor(deps: {
-    web3ApiClient: Web3ApiClient;
+    polywrapClient: Web3ApiClient;
     schemaRetrievalService: SchemaRetrievalService;
     schemaComparisonService: SchemaComparisonService;
   }) {
-    this.web3ApiClient = deps.web3ApiClient;
+    this.polywrapClient = deps.polywrapClient;
     this.schemaRetrievalService = deps.schemaRetrievalService;
     this.schemaComparisonService = deps.schemaComparisonService;
   }
@@ -35,7 +35,7 @@ export class VersionVerifierService {
       `Verifying proposed version: ${packageId}, v${majorVersion}.${minorVersion}.${patchVersion}`
     );
 
-    const proposedVersionSchema = await this.web3ApiClient.getSchema(
+    const proposedVersionSchema = await this.polywrapClient.getSchema(
       packageLocation
     );
 
