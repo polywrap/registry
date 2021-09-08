@@ -19,7 +19,7 @@ export const buildDependencyContainer = (): awilix.AwilixContainer<any> => {
   container.register({
     ipfsClient: awilix.asFunction(() => {
       return create({
-        url: `http://ipfs:${process.env.IPFS_PORT}/api/v0`
+        url: process.env.IPFS_URI
       });
     }),
     ethersProvider: awilix.asFunction(() => {

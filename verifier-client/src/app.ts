@@ -2,8 +2,8 @@ import { buildDependencyContainer } from './di/buildDependencyContainer';
 
 require('custom-env').env();
 
-const container = buildDependencyContainer();
-const verifierClient = container.cradle.verifierClient;
+const dependencyContainer = buildDependencyContainer();
+const verifierClient = dependencyContainer.cradle.verifierClient;
 
 var argv = require('minimist')(process.argv.slice(2));
 
