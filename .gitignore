@@ -1,6 +1,11 @@
 node_modules
 bin
 
+#Hardhat deploy
+deployments/localhost
+e2e/src/deployments/localhost
+verifier-client/src/deployments/localhost
+
 #Hardhat files
 cache
 artifacts

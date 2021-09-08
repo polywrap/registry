@@ -1,6 +1,9 @@
-import { runVerifier } from "./runVerifier";
+import { buildDependencyContainer } from './di/buildDependencyContainer';
 
 require('custom-env').env();
+
+const dependencyContainer = buildDependencyContainer();
+const verifierClient = dependencyContainer.cradle.verifierClient;
 
 var argv = require('minimist')(process.argv.slice(2));
 
@@ -10,7 +13,7 @@ if (argv._ && argv._.length !== 0) {
   (async () => {
     switch (command) {
       case 'run':
-        await runVerifier();
+        await verifierClient.run();
         break;
       default:
         console.log(`Command not found: ${command}.`)
