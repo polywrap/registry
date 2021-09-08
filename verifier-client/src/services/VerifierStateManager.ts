@@ -16,9 +16,9 @@ export class VerifierStateManager {
       currentlyProcessingBlock: 0
     };
 
-    if (fs.existsSync(process.env.STATE_INFO_PATH!)) {
-      verifierStateInfo = JSON.parse(fs.readFileSync(process.env.STATE_INFO_PATH!, { encoding: 'utf8', flag: 'r' }));
-    }
+    // if (fs.existsSync(process.env.STATE_INFO_PATH!)) {
+    //   verifierStateInfo = JSON.parse(fs.readFileSync(process.env.STATE_INFO_PATH!, { encoding: 'utf8', flag: 'r' }));
+    // }
 
     return verifierStateInfo;
   }

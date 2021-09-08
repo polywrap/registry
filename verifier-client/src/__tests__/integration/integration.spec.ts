@@ -14,7 +14,7 @@ import { VerifierClient } from "../../services/VerifierClient";
 
 require('custom-env').env('local');
 
-jest.setTimeout(60000);
+jest.setTimeout(200000);
 
 const shouldLog = process.env.LOG_TESTS === "true";
 
@@ -70,13 +70,6 @@ describe("Start local chain", () => {
     await packageOwner.relayOwnership(domain, l2ChainName);
 
     await packageOwner.proposeVersion(domain, packageLocation, 1, 0, 0);
-
-    // let verifierStateInfo: VerifierStateInfo = {
-    //   lastProcessedBlock: -1,
-    //   lastProcessedTransactionIndex: -1,
-    //   lastProcessedLogIndex: -1,
-    //   currentlyProcessingBlock: 0
-    // };
 
     await verifierClient.queryAndVerifyVersions();
 
