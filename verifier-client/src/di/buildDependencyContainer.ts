@@ -2,7 +2,7 @@ import * as awilix from 'awilix';
 import { ethers } from 'ethers';
 import { VotingMachine__factory } from "../typechain";
 import * as VotingMachine from "../deployments/localhost/VotingMachine.json"
-import { create } from "ipfs-http-client";
+import { Web3ApiClient } from "@web3api/client-js";
 import { SchemaComparisonService } from '../services/SchemaComparisonService';
 import { VersionVerifierService } from '../services/VersionVerifierService';
 import { VersionProcessingService } from '../services/VersionProcessingService';
@@ -17,10 +17,8 @@ export const buildDependencyContainer = (): awilix.AwilixContainer<any> => {
   });
 
   container.register({
-    ipfsClient: awilix.asFunction(() => {
-      return create({
-        url: process.env.IPFS_URI
-      });
+    web3ApiClient: awilix.asFunction(() => {
+      return new Web3ApiClient();
     }),
     ethersProvider: awilix.asFunction(() => {
       return ethers.providers.getDefaultProvider(`${process.env.PROVIDER_NETWORK}`);
