@@ -1,6 +1,8 @@
 import { VotingMachine } from "../typechain";
 import { VersionProcessingService } from "./VersionProcessingService";
 import { VerifierStateManager } from "./VerifierStateManager";
+import { VersionVerifierService } from "./VersionVerifierService";
+import { ProposedVersionEventArgs } from "../events/ProposedVersionEventArgs";
 
 function delay(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -42,7 +44,14 @@ export class VerifierClient {
 
     for (let event of proposedVersionEvents) {
       //@ts-ignore
-      await this.versionProcessingService.processProposedVersionEvent(votingMachine, client, verifierStateInfo, event, verifierService);
+      const typedEvent: {
+        blockNumber: number,
+        transactionIndex: number,
+        logIndex: number,
+        args: ProposedVersionEventArgs
+      } = event;
+
+      await this.versionProcessingService.processProposedVersionEvent(this.verifierStateManager.state, typedEvent);
 
       this.verifierStateManager.save();
     }
