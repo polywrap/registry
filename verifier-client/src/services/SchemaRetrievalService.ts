@@ -14,22 +14,20 @@ export class SchemaRetrievalService {
     this.polywrapClient = deps.polywrapClient;
   }
 
-  getMinorVersionSchema = async (patchNodeId: BytesLike): Promise<string> => {
+  async getMinorVersionSchema(patchNodeId: BytesLike): Promise<string> {
     const location = await this.votingMachine.getPrevPatchPackageLocation(
       patchNodeId
     );
     const minorVersionSchema = await this.polywrapClient.getSchema(location);
     return minorVersionSchema;
-  };
+  }
 
-  getPreviousAndNextVersionSchema = async (
-    patchNodeId: BytesLike
-  ): Promise<{
+  async getPreviousAndNextVersionSchema(patchNodeId: BytesLike): Promise<{
     prevMinorNodeId: BytesLike;
     prevSchema: string | undefined;
     nextMinorNodeId: BytesLike;
     nextSchema: string | undefined;
-  }> => {
+  }> {
     const {
       prevMinorNodeId,
       prevPackageLocation,
@@ -53,5 +51,5 @@ export class SchemaRetrievalService {
       nextMinorNodeId,
       nextSchema,
     };
-  };
+  }
 }
