@@ -1,18 +1,20 @@
 import { Web3ApiClient, PluginRegistration } from "@web3api/client-js";
 import { ensPlugin } from "@web3api/ens-plugin-js";
-import { ethereumPlugin } from "@web3api/ethereum-plugin-js";
+import { ethereumPlugin, EthereumProvider } from "@web3api/ethereum-plugin-js";
 import { ipfsPlugin } from "@web3api/ipfs-plugin-js";
 
-export async function setupWeb3ApiClient({
-  ethersProvider,
-}): Promise<Web3ApiClient> {
+interface Web3APiOptions {
+  ethersProvider: EthereumProvider;
+}
+
+export function setupWeb3ApiClient(options: Web3APiOptions): Web3ApiClient {
   const plugins: PluginRegistration[] = [
     {
       uri: "w3://ens/ethereum.web3api.eth",
       plugin: ethereumPlugin({
         networks: {
           rinkeby: {
-            provider: ethersProvider,
+            provider: options.ethersProvider,
           },
         },
       }),
