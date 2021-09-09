@@ -36,7 +36,7 @@ export class VersionVerifierService {
     );
 
     const proposedVersionSchema = await this.polywrapClient.getSchema(
-      packageLocation
+      `ipfs/${packageLocation}`
     );
 
     let isVersionApproved = false;

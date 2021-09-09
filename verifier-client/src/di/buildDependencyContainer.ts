@@ -10,9 +10,10 @@ import { VotingService } from '../services/VotingService';
 import { SchemaRetrievalService } from '../services/SchemaRetrievalService';
 import { VerifierStateManager } from '../services/VerifierStateManager';
 import { VerifierClient } from '../services/VerifierClient';
+import { NameAndRegistrationPair } from 'awilix';
 import { setupWeb3ApiClient } from '../web3Api/setupClient';
 
-export const buildDependencyContainer = (): awilix.AwilixContainer<any> => {
+export const buildDependencyContainer = (extensionsAndOverrides?: NameAndRegistrationPair<any>): awilix.AwilixContainer<any> => {
   const container = awilix.createContainer({
     injectionMode: awilix.InjectionMode.PROXY
   });
@@ -39,7 +40,8 @@ export const buildDependencyContainer = (): awilix.AwilixContainer<any> => {
     versionVerifierService: awilix.asClass(VersionVerifierService),
     votingService: awilix.asClass(VotingService),
     schemaRetrievalService: awilix.asClass(SchemaRetrievalService),
-    schemaComparisonService: awilix.asClass(SchemaComparisonService)
+    schemaComparisonService: awilix.asClass(SchemaComparisonService),
+    ...extensionsAndOverrides
   });
 
   return container;
