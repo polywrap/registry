@@ -1,52 +1,55 @@
 import { BytesLike } from "ethers";
-import { IPFSHTTPClient } from "ipfs-http-client";
-import { getSchemaFileFromIpfs } from "../ipfs/getSchemaFileFromIpfs";
+import { Web3ApiClient } from "@web3api/client-js";
 import { VotingMachine } from "../typechain";
 
 export class SchemaRetrievalService {
   private votingMachine: VotingMachine;
-  private ipfsClient: IPFSHTTPClient;
+  private polywrapClient: Web3ApiClient;
 
   constructor(deps: {
-    votingMachine: VotingMachine,
-    ipfsClient: IPFSHTTPClient
+    votingMachine: VotingMachine;
+    polywrapClient: Web3ApiClient;
   }) {
     this.votingMachine = deps.votingMachine;
-    this.ipfsClient = deps.ipfsClient;
+    this.polywrapClient = deps.polywrapClient;
   }
 
-  getMinorVersionSchema = async (
-    patchNodeId: BytesLike,
-  ): Promise<string> => {
-    const location = await this.votingMachine.getPrevPatchPackageLocation(patchNodeId);
-    const minorVersionSchema = await getSchemaFileFromIpfs(this.ipfsClient, location);
-
+  async getMinorVersionSchema(patchNodeId: BytesLike): Promise<string> {
+    const location = await this.votingMachine.getPrevPatchPackageLocation(
+      patchNodeId
+    );
+    const minorVersionSchema = await this.polywrapClient.getSchema(location);
     return minorVersionSchema;
   }
 
-  getPreviousAndNextVersionSchema = async (
-    patchNodeId: BytesLike,
-  ): Promise<{
-    prevMinorNodeId: BytesLike,
-    prevSchema: string | undefined,
-    nextMinorNodeId: BytesLike,
-    nextSchema: string | undefined
-  }> => {
-    const { prevMinorNodeId, prevPackageLocation, nextMinorNodeId, nextPackageLocation } = await this.votingMachine.getPrevAndNextMinorPackageLocations(patchNodeId);
+  async getPreviousAndNextVersionSchema(patchNodeId: BytesLike): Promise<{
+    prevMinorNodeId: BytesLike;
+    prevSchema: string | undefined;
+    nextMinorNodeId: BytesLike;
+    nextSchema: string | undefined;
+  }> {
+    const {
+      prevMinorNodeId,
+      prevPackageLocation,
+      nextMinorNodeId,
+      nextPackageLocation,
+    } = await this.votingMachine.getPrevAndNextMinorPackageLocations(
+      patchNodeId
+    );
 
     const prevSchema = prevPackageLocation
-      ? await getSchemaFileFromIpfs(this.ipfsClient, prevPackageLocation)
+      ? await this.polywrapClient.getSchema(prevPackageLocation)
       : undefined;
 
     const nextSchema = nextPackageLocation
-      ? await getSchemaFileFromIpfs(this.ipfsClient, nextPackageLocation)
+      ? await this.polywrapClient.getSchema(nextPackageLocation)
       : undefined;
 
     return {
       prevMinorNodeId,
       prevSchema,
       nextMinorNodeId,
-      nextSchema
+      nextSchema,
     };
   }
 }

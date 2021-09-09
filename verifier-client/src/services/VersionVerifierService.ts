@@ -1,20 +1,19 @@
 import { BytesLike, ethers } from "ethers";
-import { create, IPFSHTTPClient } from "ipfs-http-client";
-import { getSchemaFileFromIpfs } from "../ipfs/getSchemaFileFromIpfs";
+import { Web3ApiClient } from "@web3api/client-js";
 import { SchemaComparisonService } from "./SchemaComparisonService";
 import { SchemaRetrievalService } from "./SchemaRetrievalService";
 
 export class VersionVerifierService {
-  private ipfsClient: IPFSHTTPClient;
+  private polywrapClient: Web3ApiClient;
   private schemaRetrievalService: SchemaRetrievalService;
-  private schemaComparisonService: SchemaComparisonService
+  private schemaComparisonService: SchemaComparisonService;
 
   constructor(deps: {
-    ipfsClient: IPFSHTTPClient
-    schemaRetrievalService: SchemaRetrievalService,
-    schemaComparisonService: SchemaComparisonService
+    polywrapClient: Web3ApiClient;
+    schemaRetrievalService: SchemaRetrievalService;
+    schemaComparisonService: SchemaComparisonService;
   }) {
-    this.ipfsClient = deps.ipfsClient;
+    this.polywrapClient = deps.polywrapClient;
     this.schemaRetrievalService = deps.schemaRetrievalService;
     this.schemaComparisonService = deps.schemaComparisonService;
   }
@@ -28,13 +27,17 @@ export class VersionVerifierService {
     packageLocation: string,
     isPatch: boolean
   ): Promise<{
-    prevMinorNodeId: BytesLike,
-    nextMinorNodeId: BytesLike,
-    approved: boolean
+    prevMinorNodeId: BytesLike;
+    nextMinorNodeId: BytesLike;
+    approved: boolean;
   }> {
-    console.log(`Verifying proposed version: ${packageId}, v${majorVersion}.${minorVersion}.${patchVersion}`);
+    console.log(
+      `Verifying proposed version: ${packageId}, v${majorVersion}.${minorVersion}.${patchVersion}`
+    );
 
-    const proposedVersionSchema = await getSchemaFileFromIpfs(this.ipfsClient, packageLocation);
+    const proposedVersionSchema = await this.polywrapClient.getSchema(
+      packageLocation
+    );
 
     let isVersionApproved = false;
     let prevMinorNodeId: BytesLike = ethers.constants.HashZero;
@@ -43,12 +46,12 @@ export class VersionVerifierService {
     if (isPatch) {
       isVersionApproved = await this.verifyPatchVersion(
         proposedVersionSchema,
-        patchNodeId,
+        patchNodeId
       );
     } else {
       const result = await this.verifyMinorVersion(
         proposedVersionSchema,
-        patchNodeId,
+        patchNodeId
       );
 
       isVersionApproved = result.approved;
@@ -59,7 +62,7 @@ export class VersionVerifierService {
     return {
       prevMinorNodeId,
       nextMinorNodeId,
-      approved: isVersionApproved
+      approved: isVersionApproved,
     };
   }
 
@@ -67,18 +70,19 @@ export class VersionVerifierService {
     proposedVersionSchema: string,
     patchNodeId: BytesLike
   ): Promise<{
-    prevMinorNodeId: BytesLike,
-    nextMinorNodeId: BytesLike,
-    approved: boolean
+    prevMinorNodeId: BytesLike;
+    nextMinorNodeId: BytesLike;
+    approved: boolean;
   }> {
-    const { prevMinorNodeId, prevSchema, nextMinorNodeId, nextSchema } = await this.schemaRetrievalService.getPreviousAndNextVersionSchema(
-      patchNodeId
-    );
+    const { prevMinorNodeId, prevSchema, nextMinorNodeId, nextSchema } =
+      await this.schemaRetrievalService.getPreviousAndNextVersionSchema(
+        patchNodeId
+      );
 
     return {
       prevMinorNodeId,
       nextMinorNodeId,
-      approved: true
+      approved: true,
       // approved: areSchemasBacwardCompatible(prevSchema, proposedVersionSchema) &&
       //   areSchemasBacwardCompatible(proposedVersionSchema, nextSchema)
     };
@@ -86,14 +90,16 @@ export class VersionVerifierService {
 
   private async verifyPatchVersion(
     proposedVersionSchema: string,
-    patchNodeId: BytesLike,
+    patchNodeId: BytesLike
   ): Promise<boolean> {
     // return true;
 
-    const minorVersionSchema = await this.schemaRetrievalService.getMinorVersionSchema(
-      patchNodeId,
-    );
+    const minorVersionSchema =
+      await this.schemaRetrievalService.getMinorVersionSchema(patchNodeId);
 
-    return this.schemaComparisonService.areSchemasFunctionallyIdentical(proposedVersionSchema, minorVersionSchema);
+    return this.schemaComparisonService.areSchemasFunctionallyIdentical(
+      proposedVersionSchema,
+      minorVersionSchema
+    );
   }
 }
