@@ -39,6 +39,7 @@
     "postinstall": "hardhat typechain",
     "typechain": "hardhat typechain",
     "build": "yarn run clean && yarn run compile",
+    "postbuild": "node ./cli/postbuild.js",
     "clean": "hardhat clean",
     "compile": "hardhat compile",
     "hardhat": "hardhat",
