@@ -4,9 +4,15 @@ import { NameAndRegistrationPair } from 'awilix';
 import { PackageOwner } from './PackageOwner';
 import { RegistryAuthority } from './RegistryAuthority';
 import { EnsApi } from './ens/EnsApi';
+import { create } from 'ipfs-http-client';
 
 export const buildHelpersDependencyExtensions = (): NameAndRegistrationPair<any> => {
   return {
+    ipfsClient: awilix.asFunction(() => {
+      return create({
+        url: process.env.IPFS_URI
+      });
+    }),
     verifierSigner: awilix.asFunction(({ ethersProvider }) => {
       return new ethers.Wallet(process.env.VERIFIER_PRIVATE_KEY!, ethersProvider);
     }),

@@ -18,7 +18,7 @@ export class SchemaRetrievalService {
     const location = await this.votingMachine.getPrevPatchPackageLocation(
       patchNodeId
     );
-    const minorVersionSchema = await this.polywrapClient.getSchema(location);
+    const minorVersionSchema = await this.polywrapClient.getSchema(`ipfs/${location}`);
     return minorVersionSchema;
   }
 
@@ -38,11 +38,11 @@ export class SchemaRetrievalService {
     );
 
     const prevSchema = prevPackageLocation
-      ? await this.polywrapClient.getSchema(prevPackageLocation)
+      ? await this.polywrapClient.getSchema(`ipfs/${prevPackageLocation}`)
       : undefined;
 
     const nextSchema = nextPackageLocation
-      ? await this.polywrapClient.getSchema(nextPackageLocation)
+      ? await this.polywrapClient.getSchema(`ipfs/${nextPackageLocation}`)
       : undefined;
 
     return {

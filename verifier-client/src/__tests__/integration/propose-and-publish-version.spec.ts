@@ -1,6 +1,6 @@
 import { exec, ExecException } from "child_process";
 import { ethers, Wallet } from "ethers";
-import { create } from "ipfs-http-client";
+import { create, IPFSHTTPClient } from "ipfs-http-client";
 import { buildDependencyContainer } from "../../di/buildDependencyContainer";
 import { VerifierClient } from "../../services/VerifierClient";
 import { EnsDomain } from "../../EnsDomain";
@@ -22,15 +22,17 @@ describe("Start local chain", () => {
   let authority: RegistryAuthority;
   let ensApi: EnsApi;
   let verifierSigner: Wallet;
+  let ipfsClient: IPFSHTTPClient;
 
   beforeAll(async () => {
-    const mainDependencyContainer = buildDependencyContainer(buildHelpersDependencyExtensions());
-    verifierClient = mainDependencyContainer.cradle.verifierClient;
+    const dependencyContainer = buildDependencyContainer(buildHelpersDependencyExtensions());
+    verifierClient = dependencyContainer.cradle.verifierClient;
 
-    packageOwner = mainDependencyContainer.cradle.packageOwner;
-    authority = mainDependencyContainer.cradle.authority;
-    ensApi = mainDependencyContainer.cradle.ensApi;
-    verifierSigner = mainDependencyContainer.cradle.verifierSigner;
+    packageOwner = dependencyContainer.cradle.packageOwner;
+    authority = dependencyContainer.cradle.authority;
+    ensApi = dependencyContainer.cradle.ensApi;
+    verifierSigner = dependencyContainer.cradle.verifierSigner;
+    ipfsClient = dependencyContainer.cradle.ipfsClient;
   });
 
   beforeEach(async () => {
@@ -46,11 +48,6 @@ describe("Start local chain", () => {
     const domain = new EnsDomain("test");
     const l1ChainName = "l1-chain-name";
     const l2ChainName = "l2-chain-name";
-
-    var provider = ethers.providers.getDefaultProvider(process.env.PROVIDER_NETWORK);
-    const ipfsClient = create({
-      url: process.env.IPFS_URI
-    });
 
     await authority.authorizeVerifiers([await verifierSigner.getAddress()]);
 
