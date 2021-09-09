@@ -13,7 +13,7 @@ import { VerifierClient } from '../services/VerifierClient';
 import { NameAndRegistrationPair } from 'awilix';
 import { setupWeb3ApiClient } from '../web3Api/setupClient';
 
-export const buildDependencyContainer = (extensions?: NameAndRegistrationPair<any>): awilix.AwilixContainer<any> => {
+export const buildDependencyContainer = (extensionsAndOverrides?: NameAndRegistrationPair<any>): awilix.AwilixContainer<any> => {
   const container = awilix.createContainer({
     injectionMode: awilix.InjectionMode.PROXY
   });
@@ -41,7 +41,7 @@ export const buildDependencyContainer = (extensions?: NameAndRegistrationPair<an
     votingService: awilix.asClass(VotingService),
     schemaRetrievalService: awilix.asClass(SchemaRetrievalService),
     schemaComparisonService: awilix.asClass(SchemaComparisonService),
-    ...extensions
+    ...extensionsAndOverrides
   });
 
   return container;
