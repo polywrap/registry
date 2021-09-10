@@ -4,22 +4,23 @@ import { solidityKeccak256 } from "ethers/lib/utils";
 export const computeMerkleProof = (leaves: string[], index: number): [string[], boolean[]] => {
   var path = index;
 
-  let leavess = leaves.map(x => x);
+  //Copy to local var so we don't accidentally modify the leaves arg
+  let _leaves = [...leaves];
   var proof = [];
   let sides: boolean[] = [];
-  while (leavess.length > 1) {
+  while (_leaves.length > 1) {
     if ((path % 2) == 1) {
-      proof.push(leavess[path - 1])
+      proof.push(_leaves[path - 1])
       sides.push(true);
     } else {
-      if (path + 1 < leavess.length) {
-        proof.push(leavess[path + 1]);
+      if (path + 1 < _leaves.length) {
+        proof.push(_leaves[path + 1]);
         sides.push(false);
       }
     }
 
     // Reduce the merkle tree one level
-    leavess = reduceMerkleBranches(leavess);
+    _leaves = reduceMerkleBranches(_leaves);
 
     // Move up
     path = Math.floor(path / 2);
@@ -28,16 +29,16 @@ export const computeMerkleProof = (leaves: string[], index: number): [string[], 
   return [proof, sides];
 }
 
-function reduceMerkleBranches(leavess: string[]) {
+function reduceMerkleBranches(leaves: string[]) {
   var output: string[] = [];
 
-  while (leavess.length) {
-    var left = leavess.shift()!;
-    if (leavess.length === 0) {
+  while (leaves.length) {
+    var left = leaves.shift()!;
+    if (leaves.length === 0) {
       output.push(left);
       break;
     }
-    var right = (leavess.length === 0) ? ethers.constants.HashZero : leavess.shift();
+    var right = (leaves.length === 0) ? ethers.constants.HashZero : leaves.shift();
 
     const leaf = solidityKeccak256(["bytes32", "bytes32"], [left, right]);
     output.push(leaf);
