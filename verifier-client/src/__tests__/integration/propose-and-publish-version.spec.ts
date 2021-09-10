@@ -51,8 +51,6 @@ describe("Start local chain", () => {
 
     await authority.authorizeVerifiers([await verifierSigner.getAddress()]);
 
-    await ensApi.init();
-
     await ensApi.registerDomainName(packageOwner.signer, domain);
     await ensApi.setPolywrapOwner(packageOwner.signer, domain);
     const { cid } = await ipfsClient.add(`type Object {
