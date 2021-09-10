@@ -1,6 +1,6 @@
 import { ethers } from "ethers";
-import { VotingMachine__factory } from "../../typechain";
-import * as VotingMachine from "../../deployments/localhost/VotingMachine.json"
+import { VotingMachine__factory } from "../../../typechain";
+import * as VotingMachine from "../../../deployments/localhost/VotingMachine.json"
 
 export class RegistryAuthority {
   constructor(provider: ethers.providers.Provider, privateKey: string) {

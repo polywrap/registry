@@ -2,7 +2,7 @@ import * as awilix from 'awilix';
 import { ethers } from 'ethers';
 import { VotingMachine__factory } from "../typechain";
 import * as VotingMachine from "../deployments/localhost/VotingMachine.json"
-import { create } from "ipfs-http-client";
+import { Web3ApiClient } from "@web3api/client-js";
 import { SchemaComparisonService } from '../services/SchemaComparisonService';
 import { VersionVerifierService } from '../services/VersionVerifierService';
 import { VersionProcessingService } from '../services/VersionProcessingService';
@@ -10,20 +10,20 @@ import { VotingService } from '../services/VotingService';
 import { SchemaRetrievalService } from '../services/SchemaRetrievalService';
 import { VerifierStateManager } from '../services/VerifierStateManager';
 import { VerifierClient } from '../services/VerifierClient';
+import { NameAndRegistrationPair } from 'awilix';
+import { setupWeb3ApiClient } from '../web3Api/setupClient';
 
-export const buildDependencyContainer = (): awilix.AwilixContainer<any> => {
+export const buildDependencyContainer = (extensionsAndOverrides?: NameAndRegistrationPair<any>): awilix.AwilixContainer<any> => {
   const container = awilix.createContainer({
     injectionMode: awilix.InjectionMode.PROXY
   });
 
   container.register({
-    ipfsClient: awilix.asFunction(() => {
-      return create({
-        url: process.env.IPFS_URI
-      });
-    }),
     ethersProvider: awilix.asFunction(() => {
       return ethers.providers.getDefaultProvider(`${process.env.PROVIDER_NETWORK}`);
+    }),
+    polywrapClient: awilix.asFunction(({ ethersProvider }) => {
+      return setupWeb3ApiClient(ethersProvider);
     }),
     verifierSigner: awilix.asFunction(({ ethersProvider }) => {
       return new ethers.Wallet(process.env.CLIENT_PRIVATE_KEY!, ethersProvider);
@@ -40,7 +40,8 @@ export const buildDependencyContainer = (): awilix.AwilixContainer<any> => {
     versionVerifierService: awilix.asClass(VersionVerifierService),
     votingService: awilix.asClass(VotingService),
     schemaRetrievalService: awilix.asClass(SchemaRetrievalService),
-    schemaComparisonService: awilix.asClass(SchemaComparisonService)
+    schemaComparisonService: awilix.asClass(SchemaComparisonService),
+    ...extensionsAndOverrides
   });
 
   return container;
