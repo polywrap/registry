@@ -8,7 +8,7 @@
     "start:local": "NODE_ENV=local yarn build && node ./bin/app.js",
     "start:docker": "NODE_ENV=docker yarn build && node ./bin/app.js",
     "dev": "NODE_ENV=local ts-node ./src/app.ts",
-    "test": "jest",
+    "test": "jest --passWithNoTests --runInBand --verbose",
     "docker:full": "docker-compose -f docker-compose-with-client.yml up",
     "docker:base": "docker-compose -f docker-compose.yml up",
     "docker:down": "docker-compose down"
