@@ -1,5 +1,5 @@
+import { ethers } from "ethers";
 import { solidityKeccak256 } from "ethers/lib/utils";
-import { ethers } from "hardhat";
 
 export const computeMerkleProof = (leaves: string[], index: number): [string[], boolean[]] => {
   var path = index;

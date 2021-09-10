@@ -64,6 +64,7 @@ describe("Start local chain", () => {
       `);
 
     const packageLocation = cid.toString();
+    shouldLog && console.log("Package location", packageLocation);
 
     await packageOwner.updateOwnership(domain);
     await packageOwner.relayOwnership(domain, l2ChainName);
