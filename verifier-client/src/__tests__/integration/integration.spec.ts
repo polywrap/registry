@@ -11,6 +11,9 @@ import * as VotingMachine from "../../deployments/localhost/VotingMachine.json";
 import { VerifierStateInfo } from "../../VerifierStateInfo";
 import { buildDependencyContainer } from "../../di/buildDependencyContainer";
 import { VerifierClient } from "../../services/VerifierClient";
+import runCommand from "./runCommand";
+import { up, down } from "./testEnv";
+import { publishToIPFS } from "./ipfs-publisher";
 
 require("custom-env").env("local");
 
@@ -27,13 +30,7 @@ describe("Start local chain", () => {
   });
 
   beforeEach(async () => {
-    const sleep = (ms: number) => new Promise((res) => setTimeout(res, ms));
-    await runCommand(
-      "docker-compose up -d",
-      !shouldLog,
-      `${__dirname}/../../../`
-    );
-    await sleep(10000);
+    await up(`${__dirname}/../../..`);
     await runCommand(
       "yarn hardhat deploy --network localhost",
       !shouldLog,
@@ -42,11 +39,7 @@ describe("Start local chain", () => {
   });
 
   afterEach(async () => {
-    await runCommand(
-      "docker-compose down",
-      !shouldLog,
-      `${__dirname}/../../../`
-    );
+    await down(`${__dirname}/../../../`);
   });
 
   it("start", async () => {
@@ -54,22 +47,22 @@ describe("Start local chain", () => {
     const l1ChainName = "l1-chain-name";
     const l2ChainName = "l2-chain-name";
 
-    var provider = ethers.providers.getDefaultProvider(
+    const provider = ethers.providers.getDefaultProvider(
       process.env.PROVIDER_NETWORK
     );
     const ipfsClient = create({
       url: process.env.IPFS_URI,
     });
 
-    var packageOwner = new PackageOwner(
+    const packageOwner = new PackageOwner(
       provider,
       process.env.PACKAGE_OWNER_PRIVATE_KEY!
     );
-    var authority = new RegistryAuthority(
+    const authority = new RegistryAuthority(
       provider,
       process.env.REGISTRY_AUTHORITY_PRIVATE_KEY!
     );
-    var ens = new EnsApi();
+    const ens = new EnsApi();
 
     const verifierSigner = new ethers.Wallet(
       process.env.VERIFIER_PRIVATE_KEY!,
@@ -81,15 +74,10 @@ describe("Start local chain", () => {
 
     await ens.registerDomainName(packageOwner.signer, domain);
     await ens.setPolywrapOwner(packageOwner.signer, domain);
-    const { cid } = await ipfsClient.add(`type Object {
-      """
-      comment
-      """
-        prop1: Int!
-      }
-      `);
 
-    const packageLocation = cid.toString();
+    const cid = await publishToIPFS(`${__dirname}/test-build`, ipfsClient);
+
+    const packageLocation = `ipfs/${cid}`;
 
     await packageOwner.updateOwnership(domain);
     await packageOwner.relayOwnership(domain, l2ChainName);
@@ -102,32 +90,3 @@ describe("Start local chain", () => {
     await packageOwner.publishVersion(domain, packageLocation, 1, 0, 0);
   });
 });
-
-async function runCommand(command: string, quiet: boolean, cwd: string) {
-  if (!quiet) {
-    console.log(`> ${command}`);
-  }
-
-  return new Promise((resolve, reject) => {
-    const callback = (
-      err: ExecException | null,
-      stdout: string,
-      stderr: string
-    ) => {
-      if (err) {
-        console.error(err);
-        reject(err);
-      } else {
-        if (!quiet) {
-          // the *entire* stdout and stderr (buffered)
-          console.log(`stdout: ${stdout}`);
-          console.log(`stderr: ${stderr}`);
-        }
-
-        resolve(null);
-      }
-    };
-
-    exec(command, { cwd: cwd }, callback);
-  });
-}
