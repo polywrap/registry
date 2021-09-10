@@ -1,12 +1,12 @@
 import { ethers } from "ethers";
 import { BytesLike, formatBytes32String, hexZeroPad, solidityKeccak256 } from "ethers/lib/utils";
 import { EnsDomain } from "./ens/EnsDomain";
-import * as PackageOwnershipManagerL1 from "../../deployments/localhost/PackageOwnershipManagerL1.json"
-import * as PolywrapRegistrar from "../../deployments/localhost/PolywrapRegistrar.json"
-import * as VotingMachine from "../../deployments/localhost/VotingMachine.json"
-import * as VerificationTreeManager from "../../deployments/localhost/VerificationTreeManager.json"
-import * as VersionVerificationManagerL2 from "../../deployments/localhost/VersionVerificationManagerL2.json"
-import { PackageOwnershipManager__factory, Registrar__factory, VersionVerificationManager__factory, VerificationTreeManager__factory, VotingMachine__factory } from "../../typechain";
+import * as PackageOwnershipManagerL1 from "./deployments/localhost/PackageOwnershipManagerL1.json"
+import * as PolywrapRegistrar from "./deployments/localhost/PolywrapRegistrar.json"
+import * as VotingMachine from "./deployments/localhost/VotingMachine.json"
+import * as VerificationTreeManager from "./deployments/localhost/VerificationTreeManager.json"
+import * as VersionVerificationManagerL2 from "./deployments/localhost/VersionVerificationManagerL2.json"
+import { PackageOwnershipManager__factory, Registrar__factory, VersionVerificationManager__factory, VerificationTreeManager__factory, VotingMachine__factory } from "./typechain";
 
 export type BlockchainsWithRegistry = "l2-chain-name" | "ethereum" | "xdai";
 
