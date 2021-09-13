@@ -1,6 +1,10 @@
-import { ExecException, exec } from "child_process"
+import { exec, ExecException } from "child_process";
 
-export const runCommand = async (command: string, quiet: boolean, cwd: string) => {
+export default async function runCommand(
+  command: string,
+  quiet: boolean,
+  cwd: string
+): Promise<void> {
   if (!quiet) {
     console.log(`> ${command}`);
   }
@@ -21,10 +25,10 @@ export const runCommand = async (command: string, quiet: boolean, cwd: string) =
           console.log(`stderr: ${stderr}`);
         }
 
-        resolve(null);
+        resolve();
       }
     };
 
     exec(command, { cwd: cwd }, callback);
   });
-};
+}

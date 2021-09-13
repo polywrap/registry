@@ -1,43 +1,50 @@
-import { ethers } from "ethers";
+import { BigNumber, ethers, Wallet } from "ethers";
 import { BytesLike, formatBytes32String, hexZeroPad, solidityKeccak256 } from "ethers/lib/utils";
 import { EnsDomain } from "./ens/EnsDomain";
-import * as PackageOwnershipManagerL1 from "../../../deployments/localhost/PackageOwnershipManagerL1.json"
-import * as PolywrapRegistrar from "../../../deployments/localhost/PolywrapRegistrar.json"
 import * as VotingMachine from "../../../deployments/localhost/VotingMachine.json"
-import * as VerificationTreeManager from "../../../deployments/localhost/VerificationTreeManager.json"
-import * as VersionVerificationManagerL2 from "../../../deployments/localhost/VersionVerificationManagerL2.json"
-import { PackageOwnershipManager__factory, Registrar__factory, VersionVerificationManager__factory, VerificationTreeManager__factory, VotingMachine__factory } from "../../../typechain";
+import { computeMerkleProof } from "./merkle-tree/computeMerkleProof";
+import { PackageOwnershipManager, PolywrapRegistrar, Registrar__factory, VerificationTreeManager, VerificationTreeManager__factory, VersionVerificationManager, VotingMachine__factory } from "../../../typechain";
 
 export type BlockchainsWithRegistry = "l2-chain-name" | "ethereum" | "xdai";
 
+interface PackageOwnerDependencies {
+  packageOwnerSigner: Wallet;
+  versionVerificationManagerL2: VersionVerificationManager;
+  packageOwnershipManagerL1: PackageOwnershipManager;
+  registrar: PolywrapRegistrar;
+  verificationTreeManager: VerificationTreeManager;
+}
+
 export class PackageOwner {
-  constructor(provider: ethers.providers.Provider, privateKey: string) {
-    this.signer = new ethers.Wallet(privateKey, provider);
+  constructor(deps: PackageOwnerDependencies) {
+    this.signer = deps.packageOwnerSigner;
+    this.versionVerificationManagerL2 = deps.versionVerificationManagerL2;
+    this.packageOwnershipManagerL1 = deps.packageOwnershipManagerL1;
+    this.registrar = deps.registrar;
+    this.verificationTreeManager = deps.verificationTreeManager;
   }
 
-  signer: ethers.Wallet;
+  public signer: ethers.Wallet;
+  private versionVerificationManagerL2: VersionVerificationManager;
+  private packageOwnershipManagerL1: PackageOwnershipManager;
+  private registrar: PolywrapRegistrar;
+  private verificationTreeManager: VerificationTreeManager;
 
   async updateOwnership(domain: EnsDomain) {
 
-    let packageOwnershipManagerL1 = PackageOwnershipManager__factory.connect(PackageOwnershipManagerL1.address, this.signer);
-
-    const tx = await packageOwnershipManagerL1.updateOwnership(EnsDomain.RegistryBytes32, domain.node);
+    const tx = await this.packageOwnershipManagerL1.updateOwnership(EnsDomain.RegistryBytes32, domain.node);
 
     await tx.wait();
   }
 
   async relayOwnership(domain: EnsDomain, chainName: BlockchainsWithRegistry) {
-    let packageOwnershipManagerL1 = PackageOwnershipManager__factory.connect(PackageOwnershipManagerL1.address, this.signer);
-
-    const tx = await packageOwnershipManagerL1.relayOwnership(formatBytes32String(chainName), EnsDomain.RegistryBytes32, domain.node);
+    const tx = await this.packageOwnershipManagerL1.relayOwnership(formatBytes32String(chainName), EnsDomain.RegistryBytes32, domain.node);
 
     await tx.wait();
   }
 
   async proposeVersion(domain: EnsDomain, packageLocation: string, major: number, minor: number, patch: number) {
-    let registrar = Registrar__factory.connect(PolywrapRegistrar.address, this.signer);
-
-    const proposeTx = await registrar.proposeVersion(
+    const proposeTx = await this.registrar.proposeVersion(
       domain.packageId,
       major, minor, patch,
       packageLocation
@@ -57,16 +64,12 @@ export class PackageOwner {
   }
 
   async getVerificationRoot(): Promise<BytesLike> {
-    let versionVerificationManagerL2 = VersionVerificationManager__factory.connect(VersionVerificationManagerL2.address, this.signer);
-
-    return await versionVerificationManagerL2.verificationRoot();
+    return await this.versionVerificationManagerL2.verificationRoot();
   }
 
   async getLeafCountForRoot(verificationRoot: BytesLike): Promise<number> {
-    let verificationTreeManager = VerificationTreeManager__factory.connect(VerificationTreeManager.address, this.signer);
-
     const topicId = ethers.utils.id('VerificationRootCalculated(bytes32,uint256)');
-    const rootCalculatedEvents = await verificationTreeManager.queryFilter(
+    const rootCalculatedEvents = await this.verificationTreeManager.queryFilter(
       {
         topics: [
           topicId,
@@ -82,35 +85,52 @@ export class PackageOwner {
   }
 
   async publishVersion(domain: EnsDomain, packageLocation: string, major: number, minor: number, patch: number) {
-    let verificationTreeManager = VerificationTreeManager__factory.connect(VerificationTreeManager.address, this.signer);
-
     const verificationRoot = await this.getVerificationRoot();
     const leafCountForRoot = await this.getLeafCountForRoot(verificationRoot);
 
-    const topicId = ethers.utils.id('VersionVerified(bytes32,bytes32,uint256');
-    const verifiedVersionEvents = await verificationTreeManager.queryFilter(
-      {
-        topics: [topicId]
-      },
+    const verifiedVersionEvents = await this.verificationTreeManager.queryFilter(
+      this.verificationTreeManager.filters.VersionVerified(),
       0,
       'latest'
     );
 
-    const leaves: BytesLike[] = [];
+    const leaves: string[] = [];
+    let currentVerifiedVersionIndex: BigNumber;
+    const currentPatchNodeId = this.calculatePatchNodeId(domain, major, minor, patch);
 
     for (const event of verifiedVersionEvents) {
       //@ts-ignore
-      const { patchNodeId, packageLocationHash, verifiedVersionCount } = event.args;
+      const { patchNodeId, packageLocationHash, verifiedVersionIndex } = event.args;
+      const verifiedVersionId = solidityKeccak256(["bytes32", "bytes32"], [patchNodeId, packageLocationHash]);
+
+      leaves.push(verifiedVersionId);
+
+      if (patchNodeId === currentPatchNodeId) {
+        currentVerifiedVersionIndex = verifiedVersionIndex;
+      }
+
+      if (leaves.length === leafCountForRoot) {
+        break;
+      }
     }
+
+    const [proof, sides] = computeMerkleProof(leaves, currentVerifiedVersionIndex!.toNumber());
+    const publishTx = await this.versionVerificationManagerL2.publishVersion(
+      domain.packageId,
+      currentPatchNodeId,
+      major, minor, patch,
+      packageLocation,
+      proof,
+      sides,
+    );
+
+    const receipt = await publishTx.wait(+process.env.NUM_OF_CONFIRMATIONS_TO_WAIT!);
   }
 
   async waitForVotingEnd(domain: EnsDomain, packageLocation: string, major: number, minor: number, patch: number) {
     let votingMachine = VotingMachine__factory.connect(VotingMachine.address, this.signer);
 
-    const majorNodeId = solidityKeccak256(["bytes32", "uint256"], [domain.packageId, major]);
-    const minorNodeId = solidityKeccak256(["bytes32", "uint256"], [majorNodeId, minor]);
-    const patchNodeId = solidityKeccak256(["bytes32", "uint256"], [minorNodeId, patch]);
-
+    const patchNodeId = this.calculatePatchNodeId(domain, major, minor, patch);
     const packageLocationHash = solidityKeccak256(["string"], [packageLocation]);
 
     return new Promise(async (resolve, reject) => {
@@ -132,5 +152,13 @@ export class PackageOwner {
           });
         });
     });
+  }
+
+  calculatePatchNodeId(domain: EnsDomain, major: number, minor: number, patch: number): BytesLike {
+    const majorNodeId = solidityKeccak256(["bytes32", "uint256"], [domain.packageId, major]);
+    const minorNodeId = solidityKeccak256(["bytes32", "uint256"], [majorNodeId, minor]);
+    const patchNodeId = solidityKeccak256(["bytes32", "uint256"], [minorNodeId, patch]);
+
+    return patchNodeId;
   }
 }

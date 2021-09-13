@@ -8,9 +8,11 @@ import { EnsApi } from "./helpers/ens/EnsApi";
 import { PackageOwner } from "./helpers/PackageOwner";
 import { RegistryAuthority } from "./helpers/RegistryAuthority";
 import { buildHelpersDependencyExtensions } from "./helpers/buildHelpersDependencyExtensions";
-import { runCommand } from "./helpers/runCommand";
+import { down, up } from "./helpers/testEnv";
+import runCommand from "./helpers/runCommand";
+import publishToIPFS from "./helpers/publishToIPFS";
 
-require('custom-env').env('local');
+require("custom-env").env("local");
 
 jest.setTimeout(200000);
 
@@ -25,7 +27,9 @@ describe("Start local chain", () => {
   let ipfsClient: IPFSHTTPClient;
 
   beforeAll(async () => {
-    const dependencyContainer = buildDependencyContainer(buildHelpersDependencyExtensions());
+    const dependencyContainer = buildDependencyContainer(
+      buildHelpersDependencyExtensions()
+    );
     verifierClient = dependencyContainer.cradle.verifierClient;
 
     packageOwner = dependencyContainer.cradle.packageOwner;
@@ -36,12 +40,16 @@ describe("Start local chain", () => {
   });
 
   beforeEach(async () => {
-    await runCommand('docker-compose up -d', !shouldLog, `${__dirname}/../../../`);
-    await runCommand('yarn hardhat deploy --network localhost', !shouldLog, `${__dirname}/../../../../`);
+    await up(`${__dirname}/../../..`);
+    await runCommand(
+      "yarn hardhat deploy --network localhost",
+      !shouldLog,
+      `${__dirname}/../../../../`
+    );
   });
 
   afterEach(async () => {
-    await runCommand('docker-compose down', !shouldLog, `${__dirname}/../../../`);
+    await down(`${__dirname}/../../../`);
   });
 
   it("start", async () => {
@@ -55,15 +63,10 @@ describe("Start local chain", () => {
 
     await ensApi.registerDomainName(packageOwner.signer, domain);
     await ensApi.setPolywrapOwner(packageOwner.signer, domain);
-    const { cid } = await ipfsClient.add(`type Object {
-      """
-      comment
-      """
-        prop1: Int!
-      }
-      `);
 
-    const packageLocation = cid.toString();
+    const cid = await publishToIPFS(`${__dirname}/test-build`, ipfsClient);
+
+    const packageLocation = cid;
 
     await packageOwner.updateOwnership(domain);
     await packageOwner.relayOwnership(domain, l2ChainName);
