@@ -75,7 +75,7 @@ describe("Start local chain", () => {
     const cid = await publishToIPFS(`${__dirname}/test-build`, ipfsClient);
 
     const packageLocation = cid;
-    console.log('packageLocation', cid);
+    console.log("packageLocation", cid);
 
     await packageOwner.updateOwnership(domain);
     await packageOwner.relayOwnership(domain, l2ChainName);
