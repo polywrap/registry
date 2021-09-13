@@ -1,7 +1,7 @@
 import { BigNumber, BigNumberish } from "ethers";
 import { concat, hexZeroPad, keccak256 } from "ethers/lib/utils";
+import { EnsDomain } from "registry-js";
 import { PolywrapRegistry } from "../../typechain";
-import { EnsDomain } from "./ens/EnsDomain";
 
 export const getPackageLocation = async (
   registryContract: PolywrapRegistry,

@@ -1,8 +1,8 @@
 import { ethers } from "hardhat";
-import { POLYWRAP_OWNER_RECORD_NAME } from "../constants";
-import { EnsDomain } from "./EnsDomain";
 import { Contract, Signer } from "ethers";
+import { EnsDomain } from "registry-js";
 
+export const POLYWRAP_OWNER_RECORD_NAME = "polywrap-owner";
 const rootNode = ethers.utils.zeroPad([0], 32);
 
 export class EnsApi {
