@@ -11,6 +11,10 @@ import { buildHelpersDependencyExtensions } from "./helpers/buildHelpersDependen
 import { down, up } from "./helpers/testEnv";
 import runCommand from "./helpers/runCommand";
 import publishToIPFS from "./helpers/publishToIPFS";
+import { Web3ApiClient } from "@web3api/client-js";
+import { EthereumProvider } from "@web3api/ethereum-plugin-js";
+import { setupWeb3ApiClient } from "../../web3Api/setupClient";
+import { JsonRpcProvider } from "@web3api/client-js/build/pluginConfigs/Ethereum";
 
 require("custom-env").env("local");
 
@@ -25,6 +29,8 @@ describe("Start local chain", () => {
   let ensApi: EnsApi;
   let verifierSigner: Wallet;
   let ipfsClient: IPFSHTTPClient;
+  let polywrapClient: Web3ApiClient;
+  let ethersProv: JsonRpcProvider;
 
   beforeAll(async () => {
     const dependencyContainer = buildDependencyContainer(
@@ -37,6 +43,8 @@ describe("Start local chain", () => {
     ensApi = dependencyContainer.cradle.ensApi;
     verifierSigner = dependencyContainer.cradle.verifierSigner;
     ipfsClient = dependencyContainer.cradle.ipfsClient;
+    polywrapClient = dependencyContainer.cradle.polywrapClient;
+    ethersProv = dependencyContainer.cradle.ethersProvider;
   });
 
   beforeEach(async () => {
@@ -67,6 +75,7 @@ describe("Start local chain", () => {
     const cid = await publishToIPFS(`${__dirname}/test-build`, ipfsClient);
 
     const packageLocation = cid;
+    console.log('packageLocation', cid);
 
     await packageOwner.updateOwnership(domain);
     await packageOwner.relayOwnership(domain, l2ChainName);

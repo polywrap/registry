@@ -12,6 +12,7 @@ import { VerifierStateManager } from "../services/VerifierStateManager";
 import { VerifierClient } from "../services/VerifierClient";
 import { NameAndRegistrationPair } from "awilix";
 import { setupWeb3ApiClient } from "../web3Api/setupClient";
+import { create } from "ipfs-http-client";
 
 export const buildDependencyContainer = (
   extensionsAndOverrides?: NameAndRegistrationPair<any>

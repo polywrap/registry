@@ -20,33 +20,16 @@ import { setupWeb3ApiClient } from "../../../web3Api/setupClient";
 export const buildHelpersDependencyExtensions =
   (): NameAndRegistrationPair<any> => {
     return {
-      ethersProvider: awilix.asFunction(() => {
-        return ethers.providers.getDefaultProvider(
-          `${process.env.PROVIDER_NETWORK}`
-        );
-      }),
-      polywrapClient: awilix.asFunction(({ ethersProvider }) => {
-        return setupWeb3ApiClient({
-          ethersProvider: ethersProvider,
-          ipfsProvider: process.env.IPFS_URI as string,
-        });
-      }),
-      ipfsClient: awilix.asFunction(() => {
-        return create({
-          url: process.env.IPFS_URI,
-        });
-      }),
-      verifierSigner: awilix.asFunction(({ ethersProvider }) => {
-        return new ethers.Wallet(
-          process.env.VERIFIER_PRIVATE_KEY!,
-          ethersProvider
-        );
-      }),
       authority: awilix.asFunction(({ ethersProvider }) => {
         return new RegistryAuthority(
           ethersProvider,
           process.env.REGISTRY_AUTHORITY_PRIVATE_KEY!
         );
+      }),
+      ipfsClient: awilix.asFunction(() => {
+        return create({
+          url: process.env.IPFS_URI,
+        });
       }),
       ensApi: awilix.asClass(EnsApi),
       packageOwner: awilix.asClass(PackageOwner),
