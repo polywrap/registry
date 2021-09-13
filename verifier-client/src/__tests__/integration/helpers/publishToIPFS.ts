@@ -1,6 +1,6 @@
 import { globSource, IPFSHTTPClient } from "ipfs-http-client";
 
-export async function publishToIPFS(
+export default async function publishToIPFS(
   buildPath: string,
   client: IPFSHTTPClient
 ): Promise<string> {

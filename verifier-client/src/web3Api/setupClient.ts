@@ -21,7 +21,7 @@ export function setupWeb3ApiClient(options: Web3APiOptions): Web3ApiClient {
     },
     {
       uri: "w3://ens/ipfs.web3api.eth",
-      plugin: ipfsPlugin({ provider: "https://ipfs.io" }),
+      plugin: ipfsPlugin({ provider: process.env.IPFS_URI as string }),
     },
     {
       uri: "w3://ens/ens.web3api.eth",
