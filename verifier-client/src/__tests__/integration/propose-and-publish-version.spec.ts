@@ -1,14 +1,13 @@
-import { exec, ExecException } from "child_process";
-import { ethers, Wallet } from "ethers";
-import { create, IPFSHTTPClient } from "ipfs-http-client";
+import { Wallet } from "ethers";
+import { IPFSHTTPClient } from "ipfs-http-client";
 import { buildDependencyContainer } from "../../di/buildDependencyContainer";
 import { VerifierClient } from "../../services/VerifierClient";
 import { EnsDomain } from "../../EnsDomain";
 import { EnsApi } from "./helpers/ens/EnsApi";
-import { PackageOwner } from "./helpers/PackageOwner";
 import { RegistryAuthority } from "./helpers/RegistryAuthority";
 import { buildHelpersDependencyExtensions } from "./helpers/buildHelpersDependencyExtensions";
 import { runCommand } from "./helpers/runCommand";
+import { PackageOwner } from "registry-js";
 
 require('custom-env').env('local');
 

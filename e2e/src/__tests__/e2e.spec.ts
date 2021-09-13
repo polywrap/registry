@@ -1,21 +1,34 @@
-import path from "path";
-import { exec, ExecException } from "child_process";
 import * as dotenv from "dotenv";
-import { PackageOwner } from "../PackageOwner";
 import { EnsApi } from "../ens/EnsApi";
-import { EnsDomain } from "../ens/EnsDomain";
-import { ethers } from "ethers";
 import { RegistryAuthority } from "../RegistryAuthority";
-import { create, IPFSHTTPClient } from "ipfs-http-client";
+import { IPFSHTTPClient } from "ipfs-http-client";
+import { EnsDomain, PackageOwner } from "registry-js";
+import { runCommand } from "./helpers/runCommand";
+import { buildDependencyContainer } from "../di/buildDependencyContainer";
+import { buildHelpersDependencyExtensions } from "./helpers/buildHelpersDependencyExtensions";
+import { Wallet } from "@ethersproject/wallet";
 
-dotenv.config();
+require('custom-env').env();
 
 jest.setTimeout(200000);
 
 const shouldLog = process.env.LOG_TESTS === "true";
 
 describe("e2e", () => {
+  let packageOwner: PackageOwner;
+  let authority: RegistryAuthority;
+  let ensApi: EnsApi;
+  let ipfsClient: IPFSHTTPClient;
+  let verifierSigner: Wallet;
+
   beforeAll(async () => {
+    const dependencyContainer = buildDependencyContainer(buildHelpersDependencyExtensions());
+
+    packageOwner = dependencyContainer.cradle.packageOwner;
+    authority = dependencyContainer.cradle.authority;
+    ensApi = dependencyContainer.cradle.ensApi;
+    ipfsClient = dependencyContainer.cradle.ipfsClient;
+    verifierSigner = dependencyContainer.cradle.verifierSigner;
   });
 
   beforeEach(async () => {
@@ -32,24 +45,10 @@ describe("e2e", () => {
     const l1ChainName = "l1-chain-name";
     const l2ChainName = "l2-chain-name";
 
-    var provider = ethers.providers.getDefaultProvider(process.env.PROVIDER_NETWORK);
-    const ipfsClient = create({
-      url: `http://localhost:${process.env.IPFS_PORT}/api/v0`
-    });
-
-    console.log(`http://localhost:${process.env.IPFS_PORT}/api/v0`);
-
-    var packageOwner = new PackageOwner(provider, process.env.PACKAGE_OWNER_PRIVATE_KEY!);
-    var authority = new RegistryAuthority(provider, process.env.REGISTRY_AUTHORITY_PRIVATE_KEY!);
-    var ens = new EnsApi();
-
-    const verifierSigner = new ethers.Wallet(process.env.VERIFIER_PRIVATE_KEY!, provider);
     await authority.authorizeVerifiers([await verifierSigner.getAddress()]);
 
-    await ens.init(provider);
-
-    await ens.registerDomainName(packageOwner.signer, domain);
-    await ens.setPolywrapOwner(packageOwner.signer, domain);
+    await ensApi.registerDomainName(packageOwner.signer, domain);
+    await ensApi.setPolywrapOwner(packageOwner.signer, domain);
     const { cid } = await ipfsClient.add(`type Object {
       """
       comment
@@ -59,38 +58,14 @@ describe("e2e", () => {
       `);
 
     const packageLocation = cid.toString();
+    shouldLog && console.log("Package location", packageLocation);
 
     await packageOwner.updateOwnership(domain);
     await packageOwner.relayOwnership(domain, l2ChainName);
 
     await packageOwner.proposeVersion(domain, packageLocation, 1, 0, 0);
+
     await packageOwner.waitForVotingEnd(domain, packageLocation, 1, 0, 0);
     await packageOwner.publishVersion(domain, packageLocation, 1, 0, 0);
   });
 });
-
-async function runCommand(command: string, quiet: boolean, cwd: string) {
-
-  if (!quiet) {
-    console.log(`> ${command}`)
-  }
-
-  return new Promise((resolve, reject) => {
-    const callback = (err: ExecException | null, stdout: string, stderr: string) => {
-      if (err) {
-        console.error(err)
-        reject(err)
-      } else {
-        if (!quiet) {
-          // the *entire* stdout and stderr (buffered)
-          console.log(`stdout: ${stdout}`)
-          console.log(`stderr: ${stderr}`)
-        }
-
-        resolve(null);
-      }
-    }
-
-    exec(command, { cwd: cwd }, callback)
-  })
-}

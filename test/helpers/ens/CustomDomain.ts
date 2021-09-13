@@ -1,5 +1,5 @@
 import { formatBytes32String, keccak256, namehash, solidityKeccak256 } from "ethers/lib/utils";
-import { labelhash } from "./labelhash";
+import { labelhash } from "registry-js";
 
 export class CustomDomain {
   constructor(label: string) {
