@@ -5,6 +5,7 @@ import { ipfsPlugin } from "@web3api/ipfs-plugin-js";
 
 interface Web3APiOptions {
   ethersProvider: EthereumProvider;
+  ipfsProvider: string;
 }
 
 export function setupWeb3ApiClient(options: Web3APiOptions): Web3ApiClient {
@@ -21,7 +22,7 @@ export function setupWeb3ApiClient(options: Web3APiOptions): Web3ApiClient {
     },
     {
       uri: "w3://ens/ipfs.web3api.eth",
-      plugin: ipfsPlugin({ provider: process.env.IPFS_URI as string }),
+      plugin: ipfsPlugin({ provider: options.ipfsProvider }),
     },
     {
       uri: "w3://ens/ens.web3api.eth",
