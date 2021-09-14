@@ -8562,7 +8562,7 @@ regexpu-core@^2.0.0:
     regjsgen "^0.2.0"
     regjsparser "^0.1.4"
 
-registry-js@./packages/registry-js:
+"registry-js@file:./packages/registry-js":
   version "1.0.0"
   dependencies:
     "@typechain/ethers-v5" "^7.0.1"

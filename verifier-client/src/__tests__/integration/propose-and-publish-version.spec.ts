@@ -6,10 +6,17 @@ import { EnsDomain } from "../../EnsDomain";
 import { EnsApi } from "./helpers/ens/EnsApi";
 import { RegistryAuthority } from "./helpers/RegistryAuthority";
 import { buildHelpersDependencyExtensions } from "./helpers/buildHelpersDependencyExtensions";
-import { runCommand } from "./helpers/runCommand";
+
+import { down, up } from "./helpers/testEnv";
+import runCommand from "./helpers/runCommand";
+import publishToIPFS from "./helpers/publishToIPFS";
+import { Web3ApiClient } from "@web3api/client-js";
+import { EthereumProvider } from "@web3api/ethereum-plugin-js";
+import { setupWeb3ApiClient } from "../../web3Api/setupClient";
+import { JsonRpcProvider } from "@web3api/client-js/build/pluginConfigs/Ethereum";
 import { PackageOwner } from "registry-js";
 
-require('custom-env').env('local');
+require("custom-env").env("local");
 
 jest.setTimeout(200000);
 
@@ -22,9 +29,13 @@ describe("Start local chain", () => {
   let ensApi: EnsApi;
   let verifierSigner: Wallet;
   let ipfsClient: IPFSHTTPClient;
+  let polywrapClient: Web3ApiClient;
+  let ethersProv: JsonRpcProvider;
 
   beforeAll(async () => {
-    const dependencyContainer = buildDependencyContainer(buildHelpersDependencyExtensions());
+    const dependencyContainer = buildDependencyContainer(
+      buildHelpersDependencyExtensions()
+    );
     verifierClient = dependencyContainer.cradle.verifierClient;
 
     packageOwner = dependencyContainer.cradle.packageOwner;
@@ -32,15 +43,21 @@ describe("Start local chain", () => {
     ensApi = dependencyContainer.cradle.ensApi;
     verifierSigner = dependencyContainer.cradle.verifierSigner;
     ipfsClient = dependencyContainer.cradle.ipfsClient;
+    polywrapClient = dependencyContainer.cradle.polywrapClient;
+    ethersProv = dependencyContainer.cradle.ethersProvider;
   });
 
   beforeEach(async () => {
-    await runCommand('docker-compose up -d', !shouldLog, `${__dirname}/../../../`);
-    await runCommand('yarn hardhat deploy --network localhost', !shouldLog, `${__dirname}/../../../../`);
+    await up(`${__dirname}/../../..`);
+    await runCommand(
+      "yarn hardhat deploy --network localhost",
+      !shouldLog,
+      `${__dirname}/../../../../`
+    );
   });
 
   afterEach(async () => {
-    await runCommand('docker-compose down', !shouldLog, `${__dirname}/../../../`);
+    await down(`${__dirname}/../../../`);
   });
 
   it("start", async () => {
@@ -52,16 +69,11 @@ describe("Start local chain", () => {
 
     await ensApi.registerDomainName(packageOwner.signer, domain);
     await ensApi.setPolywrapOwner(packageOwner.signer, domain);
-    const { cid } = await ipfsClient.add(`type Object {
-      """
-      comment
-      """
-        prop1: Int!
-      }
-      `);
 
-    const packageLocation = cid.toString();
-    shouldLog && console.log("Package location", packageLocation);
+    const cid = await publishToIPFS(`${__dirname}/test-build`, ipfsClient);
+
+    const packageLocation = cid;
+    console.log("packageLocation", cid);
 
     await packageOwner.updateOwnership(domain);
     await packageOwner.relayOwnership(domain, l2ChainName);
