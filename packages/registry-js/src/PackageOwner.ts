@@ -1,9 +1,8 @@
 import { BigNumber, ethers, Wallet } from "ethers";
 import { BytesLike, formatBytes32String, hexZeroPad, solidityKeccak256 } from "ethers/lib/utils";
 import { EnsDomain } from "./ens/EnsDomain";
-import * as VotingMachine from "./deployments/localhost/VotingMachine.json"
 import { computeMerkleProof } from "./merkle-tree/computeMerkleProof";
-import { VotingMachine as VotingMachineContract, PackageOwnershipManager, PolywrapRegistrar, Registrar__factory, VerificationTreeManager, VerificationTreeManager__factory, VersionVerificationManager, VotingMachine__factory, Registry, PolywrapRegistry } from "./typechain";
+import { VotingMachine as VotingMachineContract, PackageOwnershipManager, PolywrapRegistrar, VerificationTreeManager, VersionVerificationManager, PolywrapRegistry } from "./typechain";
 
 export type BlockchainsWithRegistry = "l2-chain-name" | "ethereum" | "xdai";
 
@@ -57,16 +56,6 @@ export class PackageOwner {
     );
 
     await proposeTx.wait(+process.env.NUM_OF_CONFIRMATIONS_TO_WAIT!);
-
-    const majorNodeId = solidityKeccak256(["bytes32", "uint256"], [domain.packageId, major]);
-    const minorNodeId = solidityKeccak256(["bytes32", "uint256"], [majorNodeId, minor]);
-    const patchNodeId = solidityKeccak256(["bytes32", "uint256"], [minorNodeId, patch]);
-
-    const packageLocationHash = solidityKeccak256(["string"], [packageLocation]);
-
-
-    console.log('patchNodeId', patchNodeId);
-    console.log('packageLocationHash', packageLocationHash);
   }
 
   async getVerificationRoot(): Promise<BytesLike> {
@@ -74,15 +63,12 @@ export class PackageOwner {
   }
 
   async getLeafCountForRoot(verificationRoot: BytesLike): Promise<number> {
-    const filter = this.verificationTreeManager.filters.VerificationRootCalculated(verificationRoot);
-
     const rootCalculatedEvents = await this.verificationTreeManager.queryFilter(
-      filter,
+      this.verificationTreeManager.filters.VerificationRootCalculated(verificationRoot),
       0,
       'latest'
     );
 
-    //@ts-ignore
     return rootCalculatedEvents[0].args.verifiedVersionCount.toNumber();
   }
 
@@ -177,8 +163,6 @@ export class PackageOwner {
     verified: boolean,
     packageLocationHash: string
   }> {
-    let votingMachine = VotingMachine__factory.connect(VotingMachine.address, this.signer);
-
     const patchNodeId = this.calculatePatchNodeId(domain, major, minor, patch);
     const packageLocationHash = solidityKeccak256(["string"], [packageLocation]);
 
@@ -192,7 +176,7 @@ export class PackageOwner {
           return;
         }
 
-        votingMachine.off('VersionDecided', listener);
+        this.votingMachine.off('VersionDecided', listener);
 
         resolve({
           patchNodeId,
@@ -201,7 +185,7 @@ export class PackageOwner {
         });
       };
 
-      votingMachine.on('VersionDecided', listener);
+      this.votingMachine.on('VersionDecided', listener);
     });
   }
 
