@@ -1,9 +1,20 @@
 import { BigNumber, ethers, Wallet } from "ethers";
-import { BytesLike, formatBytes32String, hexZeroPad, solidityKeccak256 } from "ethers/lib/utils";
-import { EnsDomain } from "./ens/EnsDomain";
-import * as VotingMachine from "../../../deployments/localhost/VotingMachine.json"
+import {
+  BytesLike,
+  formatBytes32String,
+  hexZeroPad,
+  solidityKeccak256,
+} from "ethers/lib/utils";
 import { computeMerkleProof } from "./merkle-tree/computeMerkleProof";
 import { VotingMachine as VotingMachineContract, PackageOwnershipManager, PolywrapRegistrar, Registrar__factory, VerificationTreeManager, VerificationTreeManager__factory, VersionVerificationManager, VotingMachine__factory, Registry, PolywrapRegistry } from "../../../typechain";
+import { EnsDomain } from "./ens";
+import {
+  PackageOwnershipManager,
+  PolywrapRegistrar,
+  VerificationTreeManager,
+  VersionVerificationManager,
+  VotingMachine,
+} from "./typechain";
 
 export type BlockchainsWithRegistry = "l2-chain-name" | "ethereum" | "xdai";
 
@@ -14,6 +25,7 @@ interface PackageOwnerDependencies {
   registrar: PolywrapRegistrar;
   verificationTreeManager: VerificationTreeManager;
   votingMachine: VotingMachineContract;
+  votingMachine: VotingMachine;
   registryL2: PolywrapRegistry;
 }
 
@@ -34,39 +46,44 @@ export class PackageOwner {
   private registrar: PolywrapRegistrar;
   private verificationTreeManager: VerificationTreeManager;
   private votingMachine: VotingMachineContract;
+  private votingMachine: VotingMachine;
   private registryL2: PolywrapRegistry;
 
   async updateOwnership(domain: EnsDomain) {
-
-    const tx = await this.packageOwnershipManagerL1.updateOwnership(EnsDomain.RegistryBytes32, domain.node);
+    const tx = await this.packageOwnershipManagerL1.updateOwnership(
+      EnsDomain.RegistryBytes32,
+      domain.node
+    );
 
     await tx.wait(+process.env.NUM_OF_CONFIRMATIONS_TO_WAIT!);
   }
 
   async relayOwnership(domain: EnsDomain, chainName: BlockchainsWithRegistry) {
-    const tx = await this.packageOwnershipManagerL1.relayOwnership(formatBytes32String(chainName), EnsDomain.RegistryBytes32, domain.node);
+    const tx = await this.packageOwnershipManagerL1.relayOwnership(
+      formatBytes32String(chainName),
+      EnsDomain.RegistryBytes32,
+      domain.node
+    );
 
     await tx.wait(+process.env.NUM_OF_CONFIRMATIONS_TO_WAIT!);
   }
 
-  async proposeVersion(domain: EnsDomain, major: number, minor: number, patch: number, packageLocation: string) {
+  async proposeVersion(
+    domain: EnsDomain,
+    packageLocation: string,
+    major: number,
+    minor: number,
+    patch: number
+  ) {
     const proposeTx = await this.registrar.proposeVersion(
       domain.packageId,
-      major, minor, patch,
+      major,
+      minor,
+      patch,
       packageLocation
     );
 
     await proposeTx.wait(+process.env.NUM_OF_CONFIRMATIONS_TO_WAIT!);
-
-    const majorNodeId = solidityKeccak256(["bytes32", "uint256"], [domain.packageId, major]);
-    const minorNodeId = solidityKeccak256(["bytes32", "uint256"], [majorNodeId, minor]);
-    const patchNodeId = solidityKeccak256(["bytes32", "uint256"], [minorNodeId, patch]);
-
-    const packageLocationHash = solidityKeccak256(["string"], [packageLocation]);
-
-
-    console.log('patchNodeId', patchNodeId);
-    console.log('packageLocationHash', packageLocationHash);
   }
 
   async getVerificationRoot(): Promise<BytesLike> {
@@ -74,36 +91,54 @@ export class PackageOwner {
   }
 
   async getLeafCountForRoot(verificationRoot: BytesLike): Promise<number> {
-    const filter = this.verificationTreeManager.filters.VerificationRootCalculated();
-
+    const topicId = ethers.utils.id(
+      "VerificationRootCalculated(bytes32,uint256)"
+    );
     const rootCalculatedEvents = await this.verificationTreeManager.queryFilter(
       filter,
+        topics: [topicId, hexZeroPad(verificationRoot, 32)],
       0,
-      'latest'
+      "latest"
     );
 
     //@ts-ignore
     return rootCalculatedEvents[0].args.verifiedVersionCount.toNumber();
   }
 
-  async publishVersion(domain: EnsDomain, packageLocation: string, major: number, minor: number, patch: number) {
+  async publishVersion(
+    domain: EnsDomain,
+    packageLocation: string,
+    major: number,
+    minor: number,
+    patch: number
+  ) {
     const verificationRoot = await this.getVerificationRoot();
     const leafCountForRoot = await this.getLeafCountForRoot(verificationRoot);
 
-    const verifiedVersionEvents = await this.verificationTreeManager.queryFilter(
-      this.verificationTreeManager.filters.VersionVerified(),
-      0,
-      'latest'
-    );
+    const verifiedVersionEvents =
+      await this.verificationTreeManager.queryFilter(
+        this.verificationTreeManager.filters.VersionVerified(),
+        0,
+        "latest"
+      );
 
     const leaves: string[] = [];
     let currentVerifiedVersionIndex: BigNumber;
-    const currentPatchNodeId = this.calculatePatchNodeId(domain, major, minor, patch);
+    const currentPatchNodeId = this.calculatePatchNodeId(
+      domain,
+      major,
+      minor,
+      patch
+    );
 
     for (const event of verifiedVersionEvents) {
       //@ts-ignore
-      const { patchNodeId, packageLocationHash, verifiedVersionIndex } = event.args;
-      const verifiedVersionId = solidityKeccak256(["bytes32", "bytes32"], [patchNodeId, packageLocationHash]);
+      const { patchNodeId, packageLocationHash, verifiedVersionIndex } =
+        event.args;
+      const verifiedVersionId = solidityKeccak256(
+        ["bytes32", "bytes32"],
+        [patchNodeId, packageLocationHash]
+      );
 
       leaves.push(verifiedVersionId);
 
@@ -116,26 +151,31 @@ export class PackageOwner {
       }
     }
 
-    const [proof, sides] = computeMerkleProof(leaves, currentVerifiedVersionIndex!.toNumber());
+    const [proof, sides] = computeMerkleProof(
+      leaves,
+      currentVerifiedVersionIndex!.toNumber()
+    );
     const publishTx = await this.versionVerificationManagerL2.publishVersion(
       domain.packageId,
       currentPatchNodeId,
-      major, minor, patch,
+      major,
+      minor,
+      patch,
       packageLocation,
       proof,
-      sides,
+      sides
     );
 
-    const receipt = await publishTx.wait(+process.env.NUM_OF_CONFIRMATIONS_TO_WAIT!);
+    await publishTx.wait(+process.env.NUM_OF_CONFIRMATIONS_TO_WAIT!);
   }
 
-  async getPackageLocation(nodeId: BytesLike): Promise<string> {
-    return await this.registryL2.getPackageLocation(nodeId);
-  }
-
-  async resolveToPackageLocation(domain: EnsDomain,
+  async waitForVotingEnd(
+    domain: EnsDomain,
+    packageLocation: string,
     major: number,
     minor: number,
+    patch: number
+  ) {
     patch: number
   ): Promise<string> {
     const patchNodeId = this.calculatePatchNodeId(domain, major, minor, patch);
@@ -177,18 +217,23 @@ export class PackageOwner {
     verified: boolean,
     packageLocationHash: string
   }> {
-    let votingMachine = VotingMachine__factory.connect(VotingMachine.address, this.signer);
-
     const patchNodeId = this.calculatePatchNodeId(domain, major, minor, patch);
-    const packageLocationHash = solidityKeccak256(["string"], [packageLocation]);
+    const packageLocationHash = solidityKeccak256(
+      ["string"],
+      [packageLocation]
+    );
 
     return new Promise((resolve, reject) => {
-      const listener = (
+      await this.votingMachine.on(
+        "VersionDecided",
         decidedPatchNodeId: BytesLike,
         verified: boolean,
         decidedPackageLocationHash: BytesLike
       ) => {
-        if (decidedPatchNodeId !== patchNodeId || decidedPackageLocationHash != packageLocationHash) {
+          if (
+            decidedPatchNodeId !== patchNodeId ||
+            decidedPackageLocationHash != packageLocationHash
+          ) {
           return;
         }
 
@@ -197,18 +242,32 @@ export class PackageOwner {
         resolve({
           patchNodeId,
           verified,
-          packageLocationHash
+            packageLocationHash,
         });
-      };
-
+        }
+      );
       votingMachine.on('VersionDecided', listener);
     });
   }
 
-  calculatePatchNodeId(domain: EnsDomain, major: number, minor: number, patch: number): BytesLike {
-    const majorNodeId = solidityKeccak256(["bytes32", "uint256"], [domain.packageId, major]);
-    const minorNodeId = solidityKeccak256(["bytes32", "uint256"], [majorNodeId, minor]);
-    const patchNodeId = solidityKeccak256(["bytes32", "uint256"], [minorNodeId, patch]);
+  calculatePatchNodeId(
+    domain: EnsDomain,
+    major: number,
+    minor: number,
+    patch: number
+  ): BytesLike {
+    const majorNodeId = solidityKeccak256(
+      ["bytes32", "uint256"],
+      [domain.packageId, major]
+    );
+    const minorNodeId = solidityKeccak256(
+      ["bytes32", "uint256"],
+      [majorNodeId, minor]
+    );
+    const patchNodeId = solidityKeccak256(
+      ["bytes32", "uint256"],
+      [minorNodeId, patch]
+    );
 
     return patchNodeId;
   }

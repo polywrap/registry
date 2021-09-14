@@ -1,11 +1,11 @@
-import { EnsDomain } from "./EnsDomain";
 import { Contract, ethers, Signer } from "ethers";
 import { ENSRegistry, ENSRegistry__factory, PackageOwnershipManager__factory, TestEthRegistrar, TestEthRegistrar__factory, TestPublicResolver, TestPublicResolver__factory } from "../typechain";
 import * as EnsRegistryL1 from "../deployments/localhost/EnsRegistryL1.json"
 import * as TestEthRegistrarL1 from "../deployments/localhost/TestEthRegistrarL1.json"
 import * as TestPublicResolverL1 from "../deployments/localhost/TestPublicResolverL1.json"
-import { POLYWRAP_OWNER_RECORD_NAME } from "../constants";
+import { EnsDomain } from "registry-js";
 
+export const POLYWRAP_OWNER_RECORD_NAME = "polywrap-owner";
 const rootNode = ethers.utils.zeroPad([0], 32);
 
 export class EnsApi {

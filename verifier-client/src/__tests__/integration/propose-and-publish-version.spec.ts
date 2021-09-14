@@ -1,13 +1,12 @@
-import { exec, ExecException } from "child_process";
-import { ethers, Wallet } from "ethers";
-import { create, IPFSHTTPClient } from "ipfs-http-client";
+import { Wallet } from "ethers";
+import { IPFSHTTPClient } from "ipfs-http-client";
 import { buildDependencyContainer } from "../../di/buildDependencyContainer";
 import { VerifierClient } from "../../services/VerifierClient";
 import { EnsDomain } from "../../EnsDomain";
 import { EnsApi } from "./helpers/ens/EnsApi";
-import { PackageOwner } from "./helpers/PackageOwner";
 import { RegistryAuthority } from "./helpers/RegistryAuthority";
 import { buildHelpersDependencyExtensions } from "./helpers/buildHelpersDependencyExtensions";
+
 import { down, up } from "./helpers/testEnv";
 import publishToIPFS from "./helpers/publishToIPFS";
 import { Web3ApiClient } from "@web3api/client-js";
@@ -15,6 +14,7 @@ import { EthereumProvider } from "@web3api/ethereum-plugin-js";
 import { setupWeb3ApiClient } from "../../web3Api/setupClient";
 import { JsonRpcProvider } from "@web3api/client-js/build/pluginConfigs/Ethereum";
 import runCommand from "./helpers/runCommand";
+import { PackageOwner } from "registry-js";
 import { VotingService } from "../../services/VotingService";
 
 require("custom-env").env("local");

@@ -2,14 +2,13 @@ import { ethers, deployments, getNamedAccounts } from 'hardhat';
 import chai, { expect } from "chai";
 import { PackageOwnershipManager, PolywrapRegistry, VerificationRootRelayer, VerificationTreeManager, VersionVerificationManager, VotingMachine } from "../../../typechain";
 import { EnsApi } from "../../helpers/ens/EnsApi";
-import { EnsDomain } from "../../helpers/ens/EnsDomain";
 import { PolywrapRegistrar } from "../../../typechain/PolywrapRegistrar";
 import { formatBytes32String, keccak256, solidityKeccak256 } from "ethers/lib/utils";
 import { VerificationRootBridgeLinkMock } from "../../../typechain/VerificationRootBridgeLinkMock";
 import { OwnershipBridgeLinkMock } from "../../../typechain/OwnershipBridgeLinkMock";
 import { expectEvent } from "../../helpers";
-import { computeMerkleProof } from "../../helpers/merkle-tree/computeMerkleProof";
 import { Signer } from 'ethers';
+import { computeMerkleProof, EnsDomain } from 'registry-js';
 
 describe("Voting", () => {
   const testDomain = new EnsDomain("test-domain");
