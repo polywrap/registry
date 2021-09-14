@@ -1,6 +1,6 @@
 import { ethers } from "ethers";
 import { VotingMachine__factory } from "./typechain";
-import * as VotingMachine from "./deployments/localhost/VotingMachine.json"
+import * as VotingMachine from "./deployments/localhost/VotingMachine.json";
 
 export class RegistryAuthority {
   constructor(provider: ethers.providers.Provider, privateKey: string) {
@@ -10,7 +10,10 @@ export class RegistryAuthority {
   signer: ethers.Wallet;
 
   async authorizeVerifiers(verifierAddresses: string[]) {
-    let votingMachine = VotingMachine__factory.connect(VotingMachine.address, this.signer);
+    const votingMachine = VotingMachine__factory.connect(
+      VotingMachine.address,
+      this.signer
+    );
 
     const receipt = await votingMachine.authorizeVerifiers(verifierAddresses);
 
