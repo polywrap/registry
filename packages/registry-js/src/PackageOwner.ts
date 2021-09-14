@@ -74,7 +74,7 @@ export class PackageOwner {
   }
 
   async getLeafCountForRoot(verificationRoot: BytesLike): Promise<number> {
-    const filter = this.verificationTreeManager.filters.VerificationRootCalculated();
+    const filter = this.verificationTreeManager.filters.VerificationRootCalculated(verificationRoot);
 
     const rootCalculatedEvents = await this.verificationTreeManager.queryFilter(
       filter,
