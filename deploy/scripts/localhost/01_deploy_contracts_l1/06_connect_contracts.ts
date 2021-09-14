@@ -1,8 +1,8 @@
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from 'hardhat-deploy/types';
 import { ethers } from "hardhat";
-import { EnsDomain } from "../../../../test/helpers/ens/EnsDomain";
 import { formatBytes32String } from "ethers/lib/utils";
+import { EnsDomain } from "registry-js";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deployer } = await hre.getNamedAccounts();

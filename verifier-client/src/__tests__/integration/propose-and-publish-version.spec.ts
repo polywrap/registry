@@ -1,13 +1,12 @@
-import { exec, ExecException } from "child_process";
-import { ethers, Wallet } from "ethers";
-import { create, IPFSHTTPClient } from "ipfs-http-client";
+import { Wallet } from "ethers";
+import { IPFSHTTPClient } from "ipfs-http-client";
 import { buildDependencyContainer } from "../../di/buildDependencyContainer";
 import { VerifierClient } from "../../services/VerifierClient";
 import { EnsDomain } from "../../EnsDomain";
 import { EnsApi } from "./helpers/ens/EnsApi";
-import { PackageOwner } from "./helpers/PackageOwner";
 import { RegistryAuthority } from "./helpers/RegistryAuthority";
 import { buildHelpersDependencyExtensions } from "./helpers/buildHelpersDependencyExtensions";
+
 import { down, up } from "./helpers/testEnv";
 import runCommand from "./helpers/runCommand";
 import publishToIPFS from "./helpers/publishToIPFS";
@@ -15,6 +14,7 @@ import { Web3ApiClient } from "@web3api/client-js";
 import { EthereumProvider } from "@web3api/ethereum-plugin-js";
 import { setupWeb3ApiClient } from "../../web3Api/setupClient";
 import { JsonRpcProvider } from "@web3api/client-js/build/pluginConfigs/Ethereum";
+import { PackageOwner } from "registry-js";
 
 require("custom-env").env("local");
 
@@ -66,8 +66,6 @@ describe("Start local chain", () => {
     const l2ChainName = "l2-chain-name";
 
     await authority.authorizeVerifiers([await verifierSigner.getAddress()]);
-
-    await ensApi.init();
 
     await ensApi.registerDomainName(packageOwner.signer, domain);
     await ensApi.setPolywrapOwner(packageOwner.signer, domain);

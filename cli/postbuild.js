@@ -17,4 +17,12 @@ if (fs.existsSync('./typechain')) {
       console.log('Copied ./typechain to ./e2e/src/typechain');
     }
   });
+
+  fse.copy('./typechain', './packages/registry-js/src/typechain', function (err) {
+    if (err) {
+      console.error(err);
+    } else {
+      console.log('Copied ./typechain to ./packages/registry-js/src/typechain');
+    }
+  });
 }
