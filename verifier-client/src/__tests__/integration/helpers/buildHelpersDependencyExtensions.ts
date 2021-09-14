@@ -25,7 +25,6 @@ import * as EnsRegistryL1 from "../../../deployments/localhost/EnsRegistryL1.jso
 import * as TestEthRegistrarL1 from "../../../deployments/localhost/TestEthRegistrarL1.json";
 import * as TestPublicResolverL1 from "../../../deployments/localhost/TestPublicResolverL1.json";
 import { PackageOwner } from "registry-js";
-import { setupWeb3ApiClient } from "../../../web3Api/setupClient";
 
 export const buildHelpersDependencyExtensions =
   (): NameAndRegistrationPair<any> => ({
@@ -104,4 +103,10 @@ export const buildHelpersDependencyExtensions =
         registryAutoritySigner
       );
     }),
+    registryL2: awilix.asFunction(({ packageOwnerSigner }) => {
+      return PolywrapRegistry__factory.connect(
+        PolywrapRegistryL2.address,
+        packageOwnerSigner
+      );
+    })
   });

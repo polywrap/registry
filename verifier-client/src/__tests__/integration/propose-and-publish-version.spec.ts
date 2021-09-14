@@ -6,16 +6,10 @@ import { EnsDomain } from "../../EnsDomain";
 import { EnsApi } from "./helpers/ens/EnsApi";
 import { RegistryAuthority } from "./helpers/RegistryAuthority";
 import { buildHelpersDependencyExtensions } from "./helpers/buildHelpersDependencyExtensions";
-
 import { down, up } from "./helpers/testEnv";
 import publishToIPFS from "./helpers/publishToIPFS";
-import { Web3ApiClient } from "@web3api/client-js";
-import { EthereumProvider } from "@web3api/ethereum-plugin-js";
-import { setupWeb3ApiClient } from "../../web3Api/setupClient";
-import { JsonRpcProvider } from "@web3api/client-js/build/pluginConfigs/Ethereum";
 import runCommand from "./helpers/runCommand";
 import { PackageOwner } from "registry-js";
-import { VotingService } from "../../services/VotingService";
 
 require("custom-env").env("local");
 
@@ -30,12 +24,8 @@ describe("Start local chain", () => {
   let ensApi: EnsApi;
   let verifierSigner: Wallet;
   let ipfsClient: IPFSHTTPClient;
-  let polywrapClient: Web3ApiClient;
-  let ethersProv: JsonRpcProvider;
-  let votingService: VotingService;
 
   const configureDomainForPolywrap = async (domain: EnsDomain) => {
-    await ensApi.init();
     await ensApi.registerDomainName(packageOwner.signer, domain);
     await ensApi.setPolywrapOwner(packageOwner.signer, domain);
   };
@@ -65,9 +55,6 @@ describe("Start local chain", () => {
     ensApi = dependencyContainer.cradle.ensApi;
     verifierSigner = dependencyContainer.cradle.verifierSigner;
     ipfsClient = dependencyContainer.cradle.ipfsClient;
-    polywrapClient = dependencyContainer.cradle.polywrapClient;
-    ethersProv = dependencyContainer.cradle.ethersProvider;
-    votingService = dependencyContainer.cradle.votingService;
   });
 
   beforeEach(async () => {
