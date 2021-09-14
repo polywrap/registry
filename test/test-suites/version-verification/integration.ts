@@ -107,7 +107,7 @@ describe("Voting", () => {
 
     const leaves: string[] = [];
 
-    for (let i = 0; i < 20; i++) {
+    for (let i = 0; i < 1; i++) {
       const major = 1;
       const minor = 0;
       const patch = i;
