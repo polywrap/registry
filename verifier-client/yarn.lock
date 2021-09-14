@@ -2701,6 +2701,15 @@ ipfs-core-types@^0.7.0:
     multiaddr "^10.0.0"
     multiformats "^9.4.1"
 
+ipfs-core-types@^0.7.1:
+  version "0.7.1"
+  resolved "https://registry.yarnpkg.com/ipfs-core-types/-/ipfs-core-types-0.7.1.tgz#08504d3b2b65fb910516f310049a0b022759ad21"
+  integrity sha512-vG3cX+mLjULYAKlGF/3P3uqr6GxhWZRrg+LQrUUZmf9kjBI5ikIuNnhtPqX6sbTNHLQFqTZb7NhCxFFNOud75g==
+  dependencies:
+    interface-datastore "^5.0.0"
+    multiaddr "^10.0.0"
+    multiformats "^9.4.1"
+
 ipfs-core-utils@^0.10.1:
   version "0.10.1"
   resolved "https://registry.yarnpkg.com/ipfs-core-utils/-/ipfs-core-utils-0.10.1.tgz#d28d68d7fe663283c3ab613d6c1d60daaf64cf59"
@@ -2722,6 +2731,28 @@ ipfs-core-utils@^0.10.1:
     parse-duration "^1.0.0"
     timeout-abort-controller "^1.1.1"
     uint8arrays "^2.1.6"
+
+ipfs-core-utils@^0.10.3:
+  version "0.10.3"
+  resolved "https://registry.yarnpkg.com/ipfs-core-utils/-/ipfs-core-utils-0.10.3.tgz#bbc2d19bdb2fd5f1a5b047645923b3436d9e4879"
+  integrity sha512-3LnoycWyJGbdZIDKhzbGmoGnIJWTJznNP3Z7Xvc7n9GyJYeBGqNIVVlnY0EmppiDEg92rAyT7GVF0/G9dKpAlg==
+  dependencies:
+    any-signal "^2.1.2"
+    blob-to-it "^1.0.1"
+    browser-readablestream-to-it "^1.0.1"
+    err-code "^3.0.1"
+    ipfs-core-types "^0.7.1"
+    ipfs-unixfs "^6.0.3"
+    ipfs-utils "^8.1.4"
+    it-all "^1.0.4"
+    it-map "^1.0.4"
+    it-peekable "^1.0.2"
+    multiaddr "^10.0.0"
+    multiaddr-to-uri "^8.0.0"
+    multiformats "^9.4.1"
+    parse-duration "^1.0.0"
+    timeout-abort-controller "^1.1.1"
+    uint8arrays "^3.0.0"
 
 ipfs-http-client@^52.0.1:
   version "52.0.1"
@@ -2750,10 +2781,45 @@ ipfs-http-client@^52.0.1:
     stream-to-it "^0.2.2"
     uint8arrays "^2.1.6"
 
+ipfs-http-client@^52.0.3:
+  version "52.0.3"
+  resolved "https://registry.yarnpkg.com/ipfs-http-client/-/ipfs-http-client-52.0.3.tgz#359ff558adf4d92421cfb0e9e58f3b934ed124f5"
+  integrity sha512-pMLDTz54MIUQk+9N4huSzMBfp+Gg33sk69nm6uaHfyO91InbFSlerwXL31CplpqRXW9vIjk8Jl4X1ZgMLnfs+w==
+  dependencies:
+    "@ipld/dag-cbor" "^6.0.5"
+    "@ipld/dag-pb" "^2.1.3"
+    abort-controller "^3.0.0"
+    any-signal "^2.1.2"
+    debug "^4.1.1"
+    err-code "^3.0.1"
+    form-data "^4.0.0"
+    ipfs-core-types "^0.7.1"
+    ipfs-core-utils "^0.10.3"
+    ipfs-utils "^8.1.4"
+    it-first "^1.0.6"
+    it-last "^1.0.4"
+    it-to-stream "^1.0.0"
+    merge-options "^3.0.4"
+    multiaddr "^10.0.0"
+    multiformats "^9.4.1"
+    nanoid "^3.1.12"
+    native-abort-controller "^1.0.3"
+    parse-duration "^1.0.0"
+    stream-to-it "^0.2.2"
+    uint8arrays "^3.0.0"
+
 ipfs-unixfs@^5.0.0:
   version "5.0.0"
   resolved "https://registry.yarnpkg.com/ipfs-unixfs/-/ipfs-unixfs-5.0.0.tgz#f4019050a9c1722615edae9e9ef91a5383f0123b"
   integrity sha512-6FpBtsxB/9R7o7LGmSMaIoYkWO/cK+JYcj22QYIZaiA5dlk28Dvqme18bA43A7UKEc0M8I7mwD92ZXrlhJ/C7Q==
+  dependencies:
+    err-code "^3.0.1"
+    protobufjs "^6.10.2"
+
+ipfs-unixfs@^6.0.3:
+  version "6.0.6"
+  resolved "https://registry.yarnpkg.com/ipfs-unixfs/-/ipfs-unixfs-6.0.6.tgz#c44881c1bcd6a474c665e67108cbf31e54c63eec"
+  integrity sha512-gTkjYKXuHnqIf6EFfS+ESaYEl3I3aaQQ0UX8MhpNzreMLEuMnuqpoI/uLLllTZa31WRplKixabbpRTSmTYRNwA==
   dependencies:
     err-code "^3.0.1"
     protobufjs "^6.10.2"
@@ -4085,6 +4151,16 @@ receptacle@^1.3.2:
   dependencies:
     "@typechain/ethers-v5" "^7.0.1"
     ethers "^5.4.6"
+    typechain "^5.1.2"
+    typescript "^4.4.2"
+
+"registry-test-utils@file:./../packages/registry-test-utils":
+  version "1.0.0"
+  dependencies:
+    "@typechain/ethers-v5" "^7.0.1"
+    awilix "^5.0.1"
+    ethers "^5.4.6"
+    ipfs-http-client "^52.0.3"
     typechain "^5.1.2"
     typescript "^4.4.2"
 

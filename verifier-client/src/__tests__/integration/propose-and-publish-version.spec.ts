@@ -2,12 +2,12 @@ import { Wallet } from "ethers";
 import { IPFSHTTPClient } from "ipfs-http-client";
 import { buildDependencyContainer } from "../../di/buildDependencyContainer";
 import { VerifierClient } from "../../services/VerifierClient";
-import { EnsDomain } from "../../EnsDomain";
-import { EnsApi } from "./helpers/ens/EnsApi";
-import { RegistryAuthority } from "./helpers/RegistryAuthority";
-import { buildHelpersDependencyExtensions } from "./helpers/buildHelpersDependencyExtensions";
+import { EnsDomain } from "registry-js";
+import { EnsApi } from "registry-test-utils";
+import { RegistryAuthority } from "registry-test-utils";
+import { buildHelpersDependencyExtensions } from "registry-test-utils";
 
-import { down, up } from "./helpers/testEnv";
+import { down, up } from "registry-test-utils";
 import runCommand from "./helpers/runCommand";
 import publishToIPFS from "./helpers/publishToIPFS";
 import { Web3ApiClient } from "@web3api/client-js";

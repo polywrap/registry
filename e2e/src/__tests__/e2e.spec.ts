@@ -1,14 +1,14 @@
 import * as dotenv from "dotenv";
-import { EnsApi } from "../ens/EnsApi";
-import { RegistryAuthority } from "../RegistryAuthority";
+import { EnsApi } from "./helpers/ens/EnsApi";
+import { RegistryAuthority } from "registry-test-utils";
 import { IPFSHTTPClient } from "ipfs-http-client";
 import { EnsDomain, PackageOwner } from "registry-js";
-import { runCommand } from "./helpers/runCommand";
+import { runCommand } from "registry-test-utils";
 import { buildDependencyContainer } from "../di/buildDependencyContainer";
-import { buildHelpersDependencyExtensions } from "./helpers/buildHelpersDependencyExtensions";
+import { buildHelpersDependencyExtensions } from "registry-test-utils";
 import { Wallet } from "@ethersproject/wallet";
 
-require('custom-env').env();
+require("custom-env").env();
 
 jest.setTimeout(200000);
 
@@ -22,7 +22,9 @@ describe("e2e", () => {
   let verifierSigner: Wallet;
 
   beforeAll(async () => {
-    const dependencyContainer = buildDependencyContainer(buildHelpersDependencyExtensions());
+    const dependencyContainer = buildDependencyContainer(
+      buildHelpersDependencyExtensions()
+    );
 
     packageOwner = dependencyContainer.cradle.packageOwner;
     authority = dependencyContainer.cradle.authority;
@@ -32,12 +34,24 @@ describe("e2e", () => {
   });
 
   beforeEach(async () => {
-    await runCommand('yarn docker:full -d', !shouldLog, `${__dirname}/../../../verifier-client`);
-    await runCommand('yarn hardhat deploy --network localhost', !shouldLog, `${__dirname}/../../../`);
+    await runCommand(
+      "yarn docker:full -d",
+      !shouldLog,
+      `${__dirname}/../../../verifier-client`
+    );
+    await runCommand(
+      "yarn hardhat deploy --network localhost",
+      !shouldLog,
+      `${__dirname}/../../../`
+    );
   });
 
   afterEach(async () => {
-    await runCommand('docker-compose down', !shouldLog, `${__dirname}/../../../verifier-client`);
+    await runCommand(
+      "docker-compose down",
+      !shouldLog,
+      `${__dirname}/../../../verifier-client`
+    );
   });
 
   it("sanity", async () => {

@@ -13,6 +13,7 @@
     "dotenv": "^10.0.0",
     "ipfs-http-client": "^52.0.3",
     "registry-js": "file:./../packages/registry-js",
+    "registry-test-utils": "file:./../packages/registry-test-utils",
     "spawn-command": "^0.0.2-1",
     "typescript": "^4.3.5"
   },
