@@ -8,13 +8,15 @@ import { create } from "ipfs-http-client";
 import {
   PackageOwnershipManager__factory,
   PolywrapRegistrar__factory,
+  PolywrapRegistry__factory,
   VerificationTreeManager__factory,
   VersionVerificationManager__factory,
 } from "../../../typechain";
 import * as VersionVerificationManagerL2 from "../../../deployments/localhost/VersionVerificationManagerL2.json";
 import * as PackageOwnershipManagerL1 from "../../../deployments/localhost/PackageOwnershipManagerL1.json";
 import * as PolywrapRegistrar from "../../../deployments/localhost/PolywrapRegistrar.json";
-import * as VerificationTreeManager from "../../../deployments/localhost/PolywrapRegistrar.json";
+import * as VerificationTreeManager from "../../../deployments/localhost/VerificationTreeManager.json";
+import * as PolywrapRegistryL2 from "../../../deployments/localhost/PolywrapRegistryL2.json";
 import { setupWeb3ApiClient } from "../../../web3Api/setupClient";
 
 export const buildHelpersDependencyExtensions =
@@ -65,5 +67,11 @@ export const buildHelpersDependencyExtensions =
           packageOwnerSigner
         );
       }),
+      registryL2: awilix.asFunction(({ packageOwnerSigner }) => {
+        return PolywrapRegistry__factory.connect(
+          PolywrapRegistryL2.address,
+          packageOwnerSigner
+        );
+      })
     };
   };
