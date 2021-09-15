@@ -18,11 +18,15 @@ export class SchemaRetrievalService {
     const location = await this.votingMachine.getPrevPatchPackageLocation(
       patchNodeId
     );
-    const minorVersionSchema = await this.polywrapClient.getSchema(`ipfs/${location}`);
+    const minorVersionSchema = await this.polywrapClient.getSchema(
+      `ipfs/${location}`
+    );
     return minorVersionSchema;
   }
 
-  async getPreviousAndNextVersionSchema(patchNodeId: BytesLike): Promise<{
+  async getPreviousAndNextVersionSchema(
+    patchNodeId: BytesLike
+  ): Promise<{
     prevMinorNodeId: BytesLike;
     prevSchema: string | undefined;
     nextMinorNodeId: BytesLike;

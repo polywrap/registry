@@ -1,5 +1,5 @@
-import * as fs from 'fs';
-import { VerifierStateInfo } from '../VerifierStateInfo';
+import * as fs from "fs";
+import { VerifierStateInfo } from "../VerifierStateInfo";
 
 export class VerifierStateManager {
   public state: VerifierStateInfo;
@@ -9,11 +9,11 @@ export class VerifierStateManager {
   }
 
   static load(): VerifierStateInfo {
-    let verifierStateInfo: VerifierStateInfo = {
+    const verifierStateInfo: VerifierStateInfo = {
       lastProcessedBlock: -1,
       lastProcessedTransactionIndex: -1,
       lastProcessedLogIndex: -1,
-      currentlyProcessingBlock: 0
+      currentlyProcessingBlock: 0,
     };
 
     // if (fs.existsSync(process.env.STATE_INFO_PATH!)) {
@@ -24,6 +24,9 @@ export class VerifierStateManager {
   }
 
   save(): void {
-    fs.writeFileSync(process.env.STATE_INFO_PATH!, JSON.stringify(this.state, null, 2));
+    fs.writeFileSync(
+      process.env.STATE_INFO_PATH!,
+      JSON.stringify(this.state, null, 2)
+    );
   }
 }

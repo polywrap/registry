@@ -20,13 +20,13 @@ task("accounts", "Prints the list of accounts", async (args, hre) => {
 
 const config: HardhatUserConfig = {
   solidity: {
-    compilers: [{ version: "0.8.4", settings: { } }],
+    compilers: [{ version: "0.8.4", settings: {} }],
   },
   namedAccounts: {
     deployer: {
       default: 0,
-      rinkeby: process.env.DEPLOYER_ADDRESS_RINKEBY!
-    }
+      rinkeby: process.env.DEPLOYER_ADDRESS_RINKEBY!,
+    },
   },
   paths: {
     sources: "./contracts",
@@ -42,7 +42,7 @@ const config: HardhatUserConfig = {
           "https://eth-mainnet.alchemyapi.io/v2/MnO3SuHlzuCydPWE1XhsYZM_pHZP8_ix",
         blockNumber: 11845661,
       },
-      deploy: ["./deploy/scripts/localhost"]
+      deploy: ["./deploy/scripts/localhost"],
     },
     kovan: {
       accounts: { mnemonic: process.env.TESTNET_MNEMONIC || "" },
@@ -53,8 +53,8 @@ const config: HardhatUserConfig = {
       url: "https://rinkeby.infura.io/v3/77c3d733140f4c12a77699e24cb30c27",
       deploy: ["./deploy/scripts/testnet/l2"],
       companionNetworks: {
-        l1: 'ropsten',
-      }
+        l1: "ropsten",
+      },
     },
     localhost: {
       gas: "auto",
@@ -65,8 +65,8 @@ const config: HardhatUserConfig = {
       accounts: {
         mnemonic: "test test test test test test test test test test test test",
       },
-      deploy: ["./deploy/scripts/localhost"]
-    }
+      deploy: ["./deploy/scripts/localhost"],
+    },
   },
   etherscan: {
     apiKey: "FZ1ANB251FC8ISFDXFGFCUDCANSJNWPF9Q",

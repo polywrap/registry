@@ -15,4 +15,4 @@ export const getDeployedContract = async (
   contract = contract.connect(signer);
 
   return contract;
-}
+};

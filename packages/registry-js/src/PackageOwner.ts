@@ -5,8 +5,8 @@ import {
   hexZeroPad,
   solidityKeccak256,
 } from "ethers/lib/utils";
-import { computeMerkleProof } from "./merkle-tree/computeMerkleProof";
-import { EnsDomain } from "./ens";
+import { computeMerkleProof } from "registry-core-js";
+import { EnsDomain } from "registry-core-js";
 import {
   PackageOwnershipManager,
   PolywrapRegistrar,
@@ -96,8 +96,10 @@ export class PackageOwner {
       "latest"
     );
 
-    //@ts-ignore
-    return rootCalculatedEvents[0].args.verifiedVersionCount;
+    const rootCalculatedEventArgs = (rootCalculatedEvents[0]
+      .args as unknown) as Record<string, any>;
+
+    return rootCalculatedEventArgs["verifiedVersionCount"];
   }
 
   async publishVersion(
@@ -110,12 +112,11 @@ export class PackageOwner {
     const verificationRoot = await this.getVerificationRoot();
     const leafCountForRoot = await this.getLeafCountForRoot(verificationRoot);
 
-    const verifiedVersionEvents =
-      await this.verificationTreeManager.queryFilter(
-        this.verificationTreeManager.filters.VersionVerified(),
-        0,
-        "latest"
-      );
+    const verifiedVersionEvents = await this.verificationTreeManager.queryFilter(
+      this.verificationTreeManager.filters.VersionVerified(),
+      0,
+      "latest"
+    );
 
     const leaves: string[] = [];
     let currentVerifiedVersionIndex: BigNumber;
@@ -127,9 +128,11 @@ export class PackageOwner {
     );
 
     for (const event of verifiedVersionEvents) {
-      //@ts-ignore
-      const { patchNodeId, packageLocationHash, verifiedVersionIndex } =
-        event.args;
+      const {
+        patchNodeId,
+        packageLocationHash,
+        verifiedVersionIndex,
+      } = event.args;
       const verifiedVersionId = solidityKeccak256(
         ["bytes32", "bytes32"],
         [patchNodeId, packageLocationHash]
@@ -177,6 +180,7 @@ export class PackageOwner {
       [packageLocation]
     );
 
+    // eslint-disable-next-line no-async-promise-executor
     return new Promise(async (resolve, reject) => {
       await this.votingMachine.on(
         "VersionDecided",

@@ -8,6 +8,13 @@ function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+interface TypedEvent {
+  blockNumber: number;
+  transactionIndex: number;
+  logIndex: number;
+  args: ProposedVersionEventArgs;
+}
+
 export class VerifierClient {
   private versionProcessingService: VersionProcessingService;
   private votingMachine: VotingMachine;
@@ -26,6 +33,7 @@ export class VerifierClient {
   async run(): Promise<void> {
     let processedEventCnt = 0;
 
+    // eslint-disable-next-line no-constant-condition
     while (true) {
       processedEventCnt = await this.queryAndVerifyVersions();
 
@@ -41,14 +49,8 @@ export class VerifierClient {
       this.verifierStateManager.state.currentlyProcessingBlock
     );
 
-    for (let event of proposedVersionEvents) {
-      //@ts-ignore
-      const typedEvent: {
-        blockNumber: number;
-        transactionIndex: number;
-        logIndex: number;
-        args: ProposedVersionEventArgs;
-      } = event;
+    for (const event of proposedVersionEvents) {
+      const typedEvent: TypedEvent = (event as unknown) as TypedEvent;
 
       await this.versionProcessingService.processProposedVersionEvent(
         this.verifierStateManager.state,

@@ -16,6 +16,7 @@ import { setupWeb3ApiClient } from "../../web3Api/setupClient";
 import { JsonRpcProvider } from "@web3api/client-js/build/pluginConfigs/Ethereum";
 import { PackageOwner } from "registry-js";
 
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 require("custom-env").env("local");
 
 jest.setTimeout(200000);

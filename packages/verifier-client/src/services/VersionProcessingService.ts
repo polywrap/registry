@@ -8,8 +8,8 @@ export class VersionProcessingService {
   private versionVerifierService: VersionVerifierService;
 
   constructor(deps: {
-    votingService: VotingService,
-    versionVerifierService: VersionVerifierService,
+    votingService: VotingService;
+    versionVerifierService: VersionVerifierService;
   }) {
     this.votingService = deps.votingService;
     this.versionVerifierService = deps.versionVerifierService;
@@ -18,30 +18,28 @@ export class VersionProcessingService {
   async processProposedVersionEvent(
     stateInfo: VerifierStateInfo,
     event: {
-      blockNumber: number,
-      transactionIndex: number,
-      logIndex: number,
-      args: ProposedVersionEventArgs
+      blockNumber: number;
+      transactionIndex: number;
+      logIndex: number;
+      args: ProposedVersionEventArgs;
     }
   ): Promise<void> {
     if (event.blockNumber < stateInfo.currentlyProcessingBlock) {
       return;
-    }
-    else if (event.blockNumber > stateInfo.currentlyProcessingBlock) {
+    } else if (event.blockNumber > stateInfo.currentlyProcessingBlock) {
       stateInfo.lastProcessedBlock = stateInfo.currentlyProcessingBlock;
       stateInfo.currentlyProcessingBlock = event.blockNumber;
 
       stateInfo.lastProcessedTransactionIndex = -1;
       stateInfo.lastProcessedLogIndex = -1;
-    }
-    else {
+    } else {
       if (event.transactionIndex < stateInfo.lastProcessedTransactionIndex) {
         return;
-      }
-      else if (event.transactionIndex > stateInfo.lastProcessedTransactionIndex) {
+      } else if (
+        event.transactionIndex > stateInfo.lastProcessedTransactionIndex
+      ) {
         stateInfo.lastProcessedLogIndex = -1;
-      }
-      else {
+      } else {
         if (event.logIndex <= stateInfo.lastProcessedLogIndex) {
           return;
         }
@@ -54,9 +52,7 @@ export class VersionProcessingService {
     stateInfo.lastProcessedLogIndex = event.logIndex;
   }
 
-  async processProposedVersion(
-    proposedVersion: ProposedVersionEventArgs
-  ) {
+  async processProposedVersion(proposedVersion: ProposedVersionEventArgs) {
     const {
       packageId,
       patchNodeId,
@@ -65,15 +61,17 @@ export class VersionProcessingService {
       patchVersion,
       packageLocation,
       proposer,
-      isPatch
+      isPatch,
     } = proposedVersion;
 
-    console.log(`Version proposed: ${patchNodeId}, ${majorVersion}, ${minorVersion}, ${patchVersion}`);
+    console.log(
+      `Version proposed: ${patchNodeId}, ${majorVersion}, ${minorVersion}, ${patchVersion}`
+    );
 
     const {
       prevMinorNodeId,
       nextMinorNodeId,
-      approved
+      approved,
     } = await this.versionVerifierService.verifyVersion(
       packageId,
       patchNodeId,
@@ -81,8 +79,14 @@ export class VersionProcessingService {
       minorVersion,
       patchVersion,
       packageLocation,
-      isPatch);
+      isPatch
+    );
 
-    await this.votingService.voteOnVersion(patchNodeId, prevMinorNodeId, nextMinorNodeId, approved);
+    await this.votingService.voteOnVersion(
+      patchNodeId,
+      prevMinorNodeId,
+      nextMinorNodeId,
+      approved
+    );
   }
 }

@@ -1,5 +1,11 @@
 import { expect } from "chai";
-import { BaseContract, Contract, ContractTransaction, ethers, providers } from "ethers";
+import {
+  BaseContract,
+  Contract,
+  ContractTransaction,
+  ethers,
+  providers,
+} from "ethers";
 import { eventNames } from "process";
 
 export const getSubnodeHash = (
@@ -60,7 +66,11 @@ export async function getEvent(
   return firstEvent;
 }
 
-export const expectEvent = async (tx: ContractTransaction, eventName: string, args: Record<string, any>) => {
+export const expectEvent = async (
+  tx: ContractTransaction,
+  eventName: string,
+  args: Record<string, any>
+) => {
   const receivedArgs = await getEventArgs(tx, eventName);
 
   for (const arg of Object.keys(args)) {
@@ -68,10 +78,13 @@ export const expectEvent = async (tx: ContractTransaction, eventName: string, ar
   }
 };
 
-export const getEventArgs = async (tx: ContractTransaction, eventName: string): Promise<Record<string, any>> => {
+export const getEventArgs = async (
+  tx: ContractTransaction,
+  eventName: string
+): Promise<Record<string, any>> => {
   const result = await tx.wait();
 
-  const event = result.events?.find(x => x.event === eventName);
+  const event = result.events?.find((x) => x.event === eventName);
 
   const receivedArgs = event?.args;
 
