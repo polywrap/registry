@@ -37,5 +37,9 @@ jobs:
       - name: Lint
         run: yarn lint
 
-      - name: Build
-        run: yarn build
+      - name: Styling format check
+        run: yarn check
+
+      # TODO: Add build and test once stable
+      # - name: Build
+      #   run: yarn build
