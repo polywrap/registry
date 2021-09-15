@@ -23,9 +23,7 @@ export class VotingService {
         patchNodeId,
         approved: approved
       }
-    ], {
-      gasLimit: 200000
-    });
+    ]);
 
     const receipt = await voteTx.wait(+process.env.NUM_OF_CONFIRMATIONS_TO_WAIT!);
 

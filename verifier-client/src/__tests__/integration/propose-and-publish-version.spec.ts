@@ -6,14 +6,9 @@ import { EnsDomain } from "../../EnsDomain";
 import { EnsApi } from "./helpers/ens/EnsApi";
 import { RegistryAuthority } from "./helpers/RegistryAuthority";
 import { buildHelpersDependencyExtensions } from "./helpers/buildHelpersDependencyExtensions";
-
 import { down, up } from "./helpers/testEnv";
-import runCommand from "./helpers/runCommand";
 import publishToIPFS from "./helpers/publishToIPFS";
-import { Web3ApiClient } from "@web3api/client-js";
-import { EthereumProvider } from "@web3api/ethereum-plugin-js";
-import { setupWeb3ApiClient } from "../../web3Api/setupClient";
-import { JsonRpcProvider } from "@web3api/client-js/build/pluginConfigs/Ethereum";
+import runCommand from "./helpers/runCommand";
 import { PackageOwner } from "registry-js";
 
 require("custom-env").env("local");
@@ -29,8 +24,25 @@ describe("Start local chain", () => {
   let ensApi: EnsApi;
   let verifierSigner: Wallet;
   let ipfsClient: IPFSHTTPClient;
-  let polywrapClient: Web3ApiClient;
-  let ethersProv: JsonRpcProvider;
+
+  const configureDomainForPolywrap = async (domain: EnsDomain) => {
+    await ensApi.registerDomainName(packageOwner.signer, domain);
+    await ensApi.setPolywrapOwner(packageOwner.signer, domain);
+  };
+
+  const authorizeCurrentVerifier = async () => {
+    await authority.authorizeVerifiers([await verifierSigner.getAddress()]);
+  };
+
+  const publishAndVerifyVersion = async (domain: EnsDomain, majorNumber: number, minorNumber: number, patchNumber: number, packageLocation: string) => {
+    await packageOwner.publishVersion(domain, packageLocation, majorNumber, minorNumber, patchNumber);
+
+    const versionInfo = await packageOwner.getVersionNodeInfo(domain, majorNumber, minorNumber, patchNumber);
+    const resolvedPackageLocation = await packageOwner.resolveToPackageLocation(domain, majorNumber, minorNumber, patchNumber);
+
+    expect(versionInfo.location).toEqual(packageLocation);
+    expect(resolvedPackageLocation).toEqual(packageLocation);
+  };
 
   beforeAll(async () => {
     const dependencyContainer = buildDependencyContainer(
@@ -43,8 +55,6 @@ describe("Start local chain", () => {
     ensApi = dependencyContainer.cradle.ensApi;
     verifierSigner = dependencyContainer.cradle.verifierSigner;
     ipfsClient = dependencyContainer.cradle.ipfsClient;
-    polywrapClient = dependencyContainer.cradle.polywrapClient;
-    ethersProv = dependencyContainer.cradle.ethersProvider;
   });
 
   beforeEach(async () => {
@@ -60,29 +70,31 @@ describe("Start local chain", () => {
     await down(`${__dirname}/../../../`);
   });
 
-  it("start", async () => {
+  it("sanity", async () => {
     const domain = new EnsDomain("test");
-    const l1ChainName = "l1-chain-name";
     const l2ChainName = "l2-chain-name";
+    const polywrapBuildPath = `${__dirname}/test-build`;
+    const majorNumber = 1;
+    const minorNumber = 0;
+    const patchNumber = 0;
+    const patchNodeId = packageOwner.calculatePatchNodeId(domain, majorNumber, minorNumber, patchNumber);
 
-    await authority.authorizeVerifiers([await verifierSigner.getAddress()]);
+    await configureDomainForPolywrap(domain);
 
-    await ensApi.registerDomainName(packageOwner.signer, domain);
-    await ensApi.setPolywrapOwner(packageOwner.signer, domain);
-
-    const cid = await publishToIPFS(`${__dirname}/test-build`, ipfsClient);
-
-    const packageLocation = cid;
-    console.log("packageLocation", cid);
+    const packageLocation = await publishToIPFS(polywrapBuildPath, ipfsClient);
 
     await packageOwner.updateOwnership(domain);
     await packageOwner.relayOwnership(domain, l2ChainName);
 
-    await packageOwner.proposeVersion(domain, packageLocation, 1, 0, 0);
+    await packageOwner.proposeVersion(domain, majorNumber, minorNumber, patchNumber, packageLocation);
 
+    await authorizeCurrentVerifier();
     await verifierClient.queryAndVerifyVersions();
 
-    await packageOwner.waitForVotingEnd(domain, packageLocation, 1, 0, 0);
-    await packageOwner.publishVersion(domain, packageLocation, 1, 0, 0);
+    const votingResult = await packageOwner.waitForVotingEnd(domain, majorNumber, minorNumber, patchNumber, packageLocation);
+    expect(votingResult.patchNodeId).toEqual(patchNodeId);
+    expect(votingResult.verified).toEqual(true);
+
+    await publishAndVerifyVersion(domain, majorNumber, minorNumber, patchNumber, packageLocation);
   });
 });

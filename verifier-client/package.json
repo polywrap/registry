@@ -28,7 +28,7 @@
     "ethers": "^5.4.4",
     "ipfs-http-client": "^52.0.1",
     "js-yaml": "^4.1.0",
-    "registry-js": "file:./../packages/registry-js",
+    "registry-js": "file:../packages/registry-js",
     "typechain": "^5.1.2",
     "typescript": "^4.3.5"
   },
