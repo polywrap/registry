@@ -1,5 +1,5 @@
 {
-  "name": "registry-e2e",
+  "name": "e2e",
   "version": "1.0.0",
   "license": "MIT",
   "scripts": {
