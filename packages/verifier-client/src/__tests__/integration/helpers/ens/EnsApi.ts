@@ -1,6 +1,6 @@
 import { ethers, Signer } from "ethers";
 import { EnsDomain } from "registry-js";
-import { ENSRegistry, TestEthRegistrar, TestPublicResolver, ENSRegistry__factory, TestEthRegistrar__factory, TestPublicResolver__factory } from "../../../../typechain";
+import { ENSRegistry, TestEthRegistrar, TestPublicResolver } from "registry/typechain";
 
 export const POLYWRAP_OWNER_RECORD_NAME = "polywrap-owner";
 const rootNode = ethers.utils.zeroPad([0], 32);
