@@ -5,20 +5,18 @@ import { RegistryAuthority } from "registry-test-utils";
 import { create } from "ipfs-http-client";
 import {
   ENSRegistry__factory,
+  PackageOwnershipManager__factory,
+  PolywrapRegistrar__factory,
   TestEthRegistrar__factory,
   TestPublicResolver__factory,
-} from "registry/typechain";
+  VerificationTreeManager__factory,
+  VersionVerificationManager__factory,
+  VotingMachine__factory,
+} from "../../typechain";
 import * as EnsRegistryL1 from "../../deployments/localhost/EnsRegistryL1.json";
 import * as TestEthRegistrarL1 from "../../deployments/localhost/TestEthRegistrarL1.json";
 import * as TestPublicResolverL1 from "../../deployments/localhost/TestPublicResolverL1.json";
 import { EnsApi } from "./ens/EnsApi";
-import {
-  PackageOwnershipManager__factory,
-  PolywrapRegistrar__factory,
-  VerificationTreeManager__factory,
-  VersionVerificationManager__factory,
-  VotingMachine__factory,
-} from "registry/typechain";
 import * as VersionVerificationManagerL2 from "../../deployments/localhost/VersionVerificationManagerL2.json";
 import * as PackageOwnershipManagerL1 from "../../deployments/localhost/PackageOwnershipManagerL1.json";
 import * as PolywrapRegistrar from "../../deployments/localhost/PolywrapRegistrar.json";

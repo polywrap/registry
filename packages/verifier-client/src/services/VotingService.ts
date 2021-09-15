@@ -1,5 +1,5 @@
 import { BytesLike } from "ethers";
-import { VotingMachine } from "registry/typechain";
+import { VotingMachine } from "../typechain";
 
 export class VotingService {
   private votingMachine: VotingMachine;

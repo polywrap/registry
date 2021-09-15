@@ -78,9 +78,9 @@ describe("e2e", () => {
     await packageOwner.updateOwnership(domain);
     await packageOwner.relayOwnership(domain, l2ChainName);
 
-    await packageOwner.proposeVersion(domain, packageLocation, 1, 0, 0);
+    await packageOwner.proposeVersion(domain, 1, 0, 0, packageLocation);
 
-    await packageOwner.waitForVotingEnd(domain, packageLocation, 1, 0, 0);
+    await packageOwner.waitForVotingEnd(domain, 1, 0, 0, packageLocation);
     await packageOwner.publishVersion(domain, packageLocation, 1, 0, 0);
   });
 });

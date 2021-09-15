@@ -1,11 +1,7 @@
 import { ethers, Signer } from "ethers";
 import { EnsDomain } from "registry-js";
 import { POLYWRAP_OWNER_RECORD_NAME } from "../constants";
-import {
-  ENSRegistry,
-  TestEthRegistrar,
-  TestPublicResolver,
-} from "registry/typechain";
+import { ENSRegistry, TestEthRegistrar, TestPublicResolver } from "../typechain";
 
 const rootNode = ethers.utils.zeroPad([0], 32);
 

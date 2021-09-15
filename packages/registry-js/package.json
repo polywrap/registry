@@ -16,8 +16,7 @@
   "dependencies": {
     "@typechain/ethers-v5": "^7.0.1",
     "ethers": "^5.4.6",
-    "registry": "1.0.0",
-    "registry-core-js": "1.0.0",
+    "registry-core-js": "^1.0.0",
     "typechain": "^5.1.2",
     "typescript": "^4.4.2"
   },

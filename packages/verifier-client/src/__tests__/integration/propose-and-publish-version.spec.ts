@@ -6,7 +6,7 @@ import { EnsApi } from "./helpers/ens/EnsApi";
 import { buildHelpersDependencyExtensions } from "./helpers/buildHelpersDependencyExtensions";
 import { down, up } from "./helpers/testEnv";
 import { EnsDomain, PackageOwner } from "registry-js";
-import { RegistryAuthority } from "registry-test-utils";
+import { publishToIPFS, RegistryAuthority } from "registry-test-utils";
 import runCommand from "./helpers/runCommand";
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -83,7 +83,7 @@ describe("Start local chain", () => {
     await runCommand(
       "yarn hardhat deploy --network localhost",
       !shouldLog,
-      `${__dirname}/../../../../`
+      `${__dirname}/../../../../registry`
     );
   });
 
