@@ -1,5 +1,5 @@
 import { ethers } from "ethers";
-import { VotingMachine__factory } from "./typechain";
+import { VotingMachine__factory } from "registry/typechain";
 import * as VotingMachine from "./deployments/localhost/VotingMachine.json";
 
 export class RegistryAuthority {

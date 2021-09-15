@@ -13,7 +13,7 @@ import {
   VerificationTreeManager,
   VersionVerificationManager,
   VotingMachine,
-} from "./typechain";
+} from "registry/typechain";
 
 export type BlockchainsWithRegistry = "l2-chain-name" | "ethereum" | "xdai";
 

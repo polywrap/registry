@@ -5,11 +5,11 @@ import { VerifierClient } from "../../services/VerifierClient";
 import { EnsDomain } from "registry-js";
 import { EnsApi } from "registry-test-utils";
 import { RegistryAuthority } from "registry-test-utils";
-import { buildHelpersDependencyExtensions } from "registry-test-utils";
+import { buildHelpersDependencyExtensions } from "./helpers/buildHelpersDependencyExtensions";
 
-import { down, up } from "registry-test-utils";
-import runCommand from "./helpers/runCommand";
-import publishToIPFS from "./helpers/publishToIPFS";
+import { down, up } from "./helpers/testEnv";
+import { runCommand } from "registry-test-utils";
+import { publishToIPFS } from "registry-test-utils";
 import { Web3ApiClient } from "@web3api/client-js";
 import { EthereumProvider } from "@web3api/ethereum-plugin-js";
 import { setupWeb3ApiClient } from "../../web3Api/setupClient";

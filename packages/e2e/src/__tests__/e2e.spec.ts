@@ -5,7 +5,7 @@ import { IPFSHTTPClient } from "ipfs-http-client";
 import { EnsDomain, PackageOwner } from "registry-js";
 import { runCommand } from "registry-test-utils";
 import { buildDependencyContainer } from "../di/buildDependencyContainer";
-import { buildHelpersDependencyExtensions } from "registry-test-utils";
+import { buildHelpersDependencyExtensions } from "./helpers/buildHelpersDependencyExtensions";
 import { Wallet } from "@ethersproject/wallet";
 
 require("custom-env").env();

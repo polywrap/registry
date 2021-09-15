@@ -5,7 +5,7 @@ import {
   ENSRegistry,
   TestEthRegistrar,
   TestPublicResolver,
-} from "../typechain";
+} from "registry/typechain";
 
 const rootNode = ethers.utils.zeroPad([0], 32);
 
