@@ -11,7 +11,9 @@ packages/registry-test-utils/src/deployments/localhost
 #Hardhat files
 cache
 artifacts
-typechain/
+packages/registry/typechain
+
+#Environment
 .env
 .env.docker
 .env.local
