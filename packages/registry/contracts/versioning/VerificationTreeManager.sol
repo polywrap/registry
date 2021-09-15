@@ -77,9 +77,9 @@ contract VerificationTreeManager is
       verifiedVersionCount
     );
 
-    VerificationRootRelayer(verificationRootRelayer).onVersionVerified();
-
     verifiedVersionCount++;
+
+    VerificationRootRelayer(verificationRootRelayer).onVersionVerified();
   }
 
   function addVersionToTree(bytes32 patchNodeId, bytes32 packageLocationHash)
