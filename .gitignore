@@ -16,6 +16,9 @@ typechain/
 .env.docker
 .env.local
 
+#Verifier
+packages/verifier-client/state-info.json
+
 # OpenZeppelin
 .openzeppelin/dev-*.json
 .openzeppelin/unknown-*.json

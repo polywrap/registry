@@ -1,8 +1,7 @@
-import { VotingMachine } from "registry/typechain";
 import { VersionProcessingService } from "./VersionProcessingService";
 import { VerifierStateManager } from "./VerifierStateManager";
-import { VersionVerifierService } from "./VersionVerifierService";
 import { ProposedVersionEventArgs } from "../events/ProposedVersionEventArgs";
+import { VotingMachine } from "../typechain";
 
 function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));

@@ -7,14 +7,7 @@ import {
 } from "ethers/lib/utils";
 import { computeMerkleProof } from "registry-core-js";
 import { EnsDomain } from "registry-core-js";
-import {
-  PackageOwnershipManager,
-  PolywrapRegistrar,
-  VerificationTreeManager,
-  VersionVerificationManager,
-  VotingMachine as VotingMachineContract,
-  PolywrapRegistry,
-} from "registry/typechain";
+import { PackageOwnershipManager, PolywrapRegistrar, PolywrapRegistry, VerificationTreeManager, VersionVerificationManager, VotingMachine } from "./typechain";
 
 export type BlockchainsWithRegistry = "l2-chain-name" | "ethereum" | "xdai";
 
@@ -24,7 +17,7 @@ interface PackageOwnerDependencies {
   packageOwnershipManagerL1: PackageOwnershipManager;
   registrar: PolywrapRegistrar;
   verificationTreeManager: VerificationTreeManager;
-  votingMachine: VotingMachineContract;
+  votingMachine: VotingMachine;
   registryL2: PolywrapRegistry;
 }
 
@@ -44,7 +37,7 @@ export class PackageOwner {
   private packageOwnershipManagerL1: PackageOwnershipManager;
   private registrar: PolywrapRegistrar;
   private verificationTreeManager: VerificationTreeManager;
-  private votingMachine: VotingMachineContract;
+  private votingMachine: VotingMachine;
   private registryL2: PolywrapRegistry;
 
   async updateOwnership(domain: EnsDomain) {

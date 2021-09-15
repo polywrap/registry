@@ -1,6 +1,6 @@
 import { BytesLike } from "ethers";
 import { Web3ApiClient } from "@web3api/client-js";
-import { VotingMachine } from "registry/typechain";
+import { VotingMachine } from "../typechain";
 
 export class SchemaRetrievalService {
   private votingMachine: VotingMachine;
