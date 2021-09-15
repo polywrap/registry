@@ -114,12 +114,11 @@ export class PackageOwner {
     const verificationRoot = await this.getVerificationRoot();
     const leafCountForRoot = await this.getLeafCountForRoot(verificationRoot);
 
-    const verifiedVersionEvents =
-      await this.verificationTreeManager.queryFilter(
-        this.verificationTreeManager.filters.VersionVerified(),
-        0,
-        "latest"
-      );
+    const verifiedVersionEvents = await this.verificationTreeManager.queryFilter(
+      this.verificationTreeManager.filters.VersionVerified(),
+      0,
+      "latest"
+    );
 
     const leaves: string[] = [];
     let currentVerifiedVersionIndex: BigNumber;
@@ -131,8 +130,11 @@ export class PackageOwner {
     );
 
     for (const event of verifiedVersionEvents) {
-      const { patchNodeId, packageLocationHash, verifiedVersionIndex } =
-        event.args;
+      const {
+        patchNodeId,
+        packageLocationHash,
+        verifiedVersionIndex,
+      } = event.args;
       const verifiedVersionId = solidityKeccak256(
         ["bytes32", "bytes32"],
         [patchNodeId, packageLocationHash]
@@ -183,7 +185,9 @@ export class PackageOwner {
     return await this.registryL2.getPackageLocation(patchNodeId);
   }
 
-  async getNodeInfo(nodeId: BytesLike): Promise<{
+  async getNodeInfo(
+    nodeId: BytesLike
+  ): Promise<{
     leaf: boolean;
     latestSubVersion: BigNumber;
     created: boolean;

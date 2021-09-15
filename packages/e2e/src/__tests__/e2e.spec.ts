@@ -8,6 +8,7 @@ import { buildDependencyContainer } from "../di/buildDependencyContainer";
 import { buildHelpersDependencyExtensions } from "./helpers/buildHelpersDependencyExtensions";
 import { Wallet } from "@ethersproject/wallet";
 
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 require("custom-env").env();
 
 jest.setTimeout(200000);
