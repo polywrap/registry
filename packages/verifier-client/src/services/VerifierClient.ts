@@ -1,11 +1,11 @@
-import { VotingMachine } from "../typechain";
+import { VotingMachine } from "registry/typechain";
 import { VersionProcessingService } from "./VersionProcessingService";
 import { VerifierStateManager } from "./VerifierStateManager";
 import { VersionVerifierService } from "./VersionVerifierService";
 import { ProposedVersionEventArgs } from "../events/ProposedVersionEventArgs";
 
 function delay(ms: number) {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 export class VerifierClient {
@@ -14,9 +14,9 @@ export class VerifierClient {
   private verifierStateManager: VerifierStateManager;
 
   constructor(deps: {
-    votingMachine: VotingMachine,
-    versionProcessingService: VersionProcessingService,
-    verifierStateManager: VerifierStateManager
+    votingMachine: VotingMachine;
+    versionProcessingService: VersionProcessingService;
+    verifierStateManager: VerifierStateManager;
   }) {
     this.votingMachine = deps.votingMachine;
     this.versionProcessingService = deps.versionProcessingService;
@@ -35,8 +35,7 @@ export class VerifierClient {
     }
   }
 
-  async queryAndVerifyVersions(
-  ): Promise<number> {
+  async queryAndVerifyVersions(): Promise<number> {
     const proposedVersionEvents = await this.votingMachine.queryFilter(
       this.votingMachine.filters.VersionVotingStarted(),
       this.verifierStateManager.state.currentlyProcessingBlock
@@ -45,13 +44,16 @@ export class VerifierClient {
     for (let event of proposedVersionEvents) {
       //@ts-ignore
       const typedEvent: {
-        blockNumber: number,
-        transactionIndex: number,
-        logIndex: number,
-        args: ProposedVersionEventArgs
+        blockNumber: number;
+        transactionIndex: number;
+        logIndex: number;
+        args: ProposedVersionEventArgs;
       } = event;
 
-      await this.versionProcessingService.processProposedVersionEvent(this.verifierStateManager.state, typedEvent);
+      await this.versionProcessingService.processProposedVersionEvent(
+        this.verifierStateManager.state,
+        typedEvent
+      );
 
       this.verifierStateManager.save();
     }

@@ -1,7 +1,7 @@
 import * as awilix from "awilix";
 import { ethers } from "ethers";
-import { VotingMachine__factory } from "../typechain";
-import * as VotingMachine from "../deployments/localhost/VotingMachine.json";
+import { VotingMachine__factory } from "registry/typechain";
+import * as VotingMachine from "registry/deployments/localhost/VotingMachine.json";
 import { Web3ApiClient } from "@web3api/client-js";
 import { SchemaComparisonService } from "../services/SchemaComparisonService";
 import { VersionVerifierService } from "../services/VersionVerifierService";
