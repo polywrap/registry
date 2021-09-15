@@ -7,6 +7,7 @@ import { buildHelpersDependencyExtensions } from "./helpers/buildHelpersDependen
 import { down, up } from "./helpers/testEnv";
 import { EnsDomain, PackageOwner } from "registry-js";
 import { RegistryAuthority } from "registry-test-utils";
+import runCommand from "./helpers/runCommand";
 
 require("custom-env").env("local");
 
