@@ -14,16 +14,14 @@ export class VotingService {
     nextMinorNodeId: BytesLike,
     approved: boolean
   ) {
-    const voteTx = await this.votingMachine.vote(
-      [
-        {
-          prevMinorNodeId,
-          nextMinorNodeId,
-          patchNodeId,
-          approved: approved,
-        },
-      ]
-    );
+    const voteTx = await this.votingMachine.vote([
+      {
+        prevMinorNodeId,
+        nextMinorNodeId,
+        patchNodeId,
+        approved: approved,
+      },
+    ]);
 
     const receipt = await voteTx.wait(
       +process.env.NUM_OF_CONFIRMATIONS_TO_WAIT!

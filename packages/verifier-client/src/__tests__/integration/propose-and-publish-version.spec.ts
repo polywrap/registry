@@ -9,6 +9,7 @@ import { EnsDomain, PackageOwner } from "registry-js";
 import { publishToIPFS, RegistryAuthority } from "registry-test-utils";
 import runCommand from "./helpers/runCommand";
 
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 require("custom-env").env("local");
 
 jest.setTimeout(200000);
@@ -32,11 +33,33 @@ describe("Start local chain", () => {
     await authority.authorizeVerifiers([await verifierSigner.getAddress()]);
   };
 
-  const publishAndVerifyVersion = async (domain: EnsDomain, majorNumber: number, minorNumber: number, patchNumber: number, packageLocation: string) => {
-    await packageOwner.publishVersion(domain, packageLocation, majorNumber, minorNumber, patchNumber);
+  const publishAndVerifyVersion = async (
+    domain: EnsDomain,
+    majorNumber: number,
+    minorNumber: number,
+    patchNumber: number,
+    packageLocation: string
+  ) => {
+    await packageOwner.publishVersion(
+      domain,
+      packageLocation,
+      majorNumber,
+      minorNumber,
+      patchNumber
+    );
 
-    const versionInfo = await packageOwner.getVersionNodeInfo(domain, majorNumber, minorNumber, patchNumber);
-    const resolvedPackageLocation = await packageOwner.resolveToPackageLocation(domain, majorNumber, minorNumber, patchNumber);
+    const versionInfo = await packageOwner.getVersionNodeInfo(
+      domain,
+      majorNumber,
+      minorNumber,
+      patchNumber
+    );
+    const resolvedPackageLocation = await packageOwner.resolveToPackageLocation(
+      domain,
+      majorNumber,
+      minorNumber,
+      patchNumber
+    );
 
     expect(versionInfo.location).toEqual(packageLocation);
     expect(resolvedPackageLocation).toEqual(packageLocation);
@@ -75,7 +98,12 @@ describe("Start local chain", () => {
     const majorNumber = 1;
     const minorNumber = 0;
     const patchNumber = 0;
-    const patchNodeId = packageOwner.calculatePatchNodeId(domain, majorNumber, minorNumber, patchNumber);
+    const patchNodeId = packageOwner.calculatePatchNodeId(
+      domain,
+      majorNumber,
+      minorNumber,
+      patchNumber
+    );
 
     await configureDomainForPolywrap(domain);
 
@@ -84,15 +112,33 @@ describe("Start local chain", () => {
     await packageOwner.updateOwnership(domain);
     await packageOwner.relayOwnership(domain, l2ChainName);
 
-    await packageOwner.proposeVersion(domain, majorNumber, minorNumber, patchNumber, packageLocation);
+    await packageOwner.proposeVersion(
+      domain,
+      majorNumber,
+      minorNumber,
+      patchNumber,
+      packageLocation
+    );
 
     await authorizeCurrentVerifier();
     await verifierClient.queryAndVerifyVersions();
 
-    const votingResult = await packageOwner.waitForVotingEnd(domain, majorNumber, minorNumber, patchNumber, packageLocation);
+    const votingResult = await packageOwner.waitForVotingEnd(
+      domain,
+      majorNumber,
+      minorNumber,
+      patchNumber,
+      packageLocation
+    );
     expect(votingResult.patchNodeId).toEqual(patchNodeId);
     expect(votingResult.verified).toEqual(true);
 
-    await publishAndVerifyVersion(domain, majorNumber, minorNumber, patchNumber, packageLocation);
+    await publishAndVerifyVersion(
+      domain,
+      majorNumber,
+      minorNumber,
+      patchNumber,
+      packageLocation
+    );
   });
 });

@@ -11,7 +11,9 @@
     "test": "jest --passWithNoTests --runInBand --verbose",
     "docker:full": "docker-compose -f docker-compose-with-client.yml up",
     "docker:base": "docker-compose -f docker-compose.yml up",
-    "docker:down": "docker-compose down"
+    "docker:down": "docker-compose down",
+    "fix": "eslint . --ext .ts --fix",
+    "lint": "eslint . --ext .ts"
   },
   "dependencies": {
     "@typechain/ethers-v5": "^7.0.1",
@@ -35,6 +37,7 @@
   },
   "devDependencies": {
     "@types/jest": "^27.0.1",
+    "eslint": "^7.32.0",
     "jest": "^27.1.0",
     "ts-jest": "^27.0.5",
     "ts-node": "^10.2.0",

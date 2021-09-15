@@ -19,7 +19,7 @@ import { VerificationRootBridgeLinkMock } from "../../../typechain/VerificationR
 import { OwnershipBridgeLinkMock } from "../../../typechain/OwnershipBridgeLinkMock";
 import { expectEvent } from "../../helpers";
 import { Signer } from "ethers";
-import { computeMerkleProof, EnsDomain } from "registry-js";
+import { computeMerkleProof, EnsDomain } from "registry-core-js";
 
 describe("Voting", () => {
   const testDomain = new EnsDomain("test-domain");
@@ -39,7 +39,7 @@ describe("Voting", () => {
   let versionVerificationManagerL2: VersionVerificationManager;
   let votingMachine: VotingMachine;
 
-  let ens = new EnsApi();
+  const ens = new EnsApi();
 
   let owner: Signer;
   let domainOwner: Signer;
@@ -48,8 +48,13 @@ describe("Voting", () => {
   let randomAcc: Signer;
 
   before(async () => {
-    const [_owner, _domainOwner, _polywrapOwner, _verifier1, _randomAcc] =
-      await ethers.getSigners();
+    const [
+      _owner,
+      _domainOwner,
+      _polywrapOwner,
+      _verifier1,
+      _randomAcc,
+    ] = await ethers.getSigners();
     owner = _owner;
     domainOwner = _domainOwner;
     polywrapOwner = _polywrapOwner;
@@ -123,14 +128,17 @@ describe("Voting", () => {
   });
 
   it("can propose and publish a version", async () => {
-    packageOwnershipManagerL1 =
-      packageOwnershipManagerL1.connect(polywrapOwner);
+    packageOwnershipManagerL1 = packageOwnershipManagerL1.connect(
+      polywrapOwner
+    );
     registryL1 = registryL1.connect(polywrapOwner);
     registryL2 = registryL2.connect(polywrapOwner);
-    versionVerificationManagerL1 =
-      versionVerificationManagerL1.connect(polywrapOwner);
-    versionVerificationManagerL2 =
-      versionVerificationManagerL2.connect(polywrapOwner);
+    versionVerificationManagerL1 = versionVerificationManagerL1.connect(
+      polywrapOwner
+    );
+    versionVerificationManagerL2 = versionVerificationManagerL2.connect(
+      polywrapOwner
+    );
 
     packageOwnershipManagerL1.updateOwnership(
       EnsDomain.RegistryBytes32,

@@ -74,10 +74,14 @@ export class VersionVerifierService {
     nextMinorNodeId: BytesLike;
     approved: boolean;
   }> {
-    const { prevMinorNodeId, prevSchema, nextMinorNodeId, nextSchema } =
-      await this.schemaRetrievalService.getPreviousAndNextVersionSchema(
-        patchNodeId
-      );
+    const {
+      prevMinorNodeId,
+      prevSchema,
+      nextMinorNodeId,
+      nextSchema,
+    } = await this.schemaRetrievalService.getPreviousAndNextVersionSchema(
+      patchNodeId
+    );
 
     return {
       prevMinorNodeId,
@@ -94,8 +98,9 @@ export class VersionVerifierService {
   ): Promise<boolean> {
     // return true;
 
-    const minorVersionSchema =
-      await this.schemaRetrievalService.getMinorVersionSchema(patchNodeId);
+    const minorVersionSchema = await this.schemaRetrievalService.getMinorVersionSchema(
+      patchNodeId
+    );
 
     return this.schemaComparisonService.areSchemasFunctionallyIdentical(
       proposedVersionSchema,

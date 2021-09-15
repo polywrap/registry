@@ -1,11 +1,7 @@
 {
   "compilerOptions": {
     "target": "es2018",
-    "lib": [
-      "ES2018",
-      "DOM",
-      "ES2018.PROMISE"
-    ],
+    "lib": ["ES2018", "DOM", "ES2018.PROMISE"],
     "module": "commonjs",
     "strict": true,
     "esModuleInterop": true,
@@ -14,14 +10,6 @@
     "declaration": true,
     "resolveJsonModule": true
   },
-  "include": [
-    "./scripts",
-    "./test",
-    "./typechain",
-    "./utilities",
-    "./deploy"
-  ],
-  "files": [
-    "./hardhat.config.ts"
-  ]
+  "include": ["./scripts", "./test", "./typechain", "./utilities", "./deploy"],
+  "files": ["./hardhat.config.ts"]
 }

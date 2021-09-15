@@ -1,12 +1,5 @@
-
 export class SchemaComparisonService {
-  constructor() {
-  }
-
-  areSchemasFunctionallyIdentical(
-    schemaA: string,
-    schemaB: string
-  ): boolean {
+  areSchemasFunctionallyIdentical(schemaA: string, schemaB: string): boolean {
     return schemaA === schemaB;
   }
 

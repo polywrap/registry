@@ -1,7 +1,7 @@
 import { HardhatRuntimeEnvironment } from "hardhat/types";
-import { DeployFunction } from 'hardhat-deploy/types';
+import { DeployFunction } from "hardhat-deploy/types";
 import { ethers } from "hardhat";
-import { labelhash, EnsDomain } from "registry-js";
+import { labelhash, EnsDomain } from "registry-core-js";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deployer } = await hre.getNamedAccounts();
@@ -11,11 +11,15 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   const rootNode = ethers.utils.zeroPad([0], 32);
 
-  const registry = await ethers.getContract('EnsRegistryL1');
-  const registrar = await ethers.getContract('TestEthRegistrarL1');
-  const publicResolver = await ethers.getContract('TestPublicResolverL1');
+  const registry = await ethers.getContract("EnsRegistryL1");
+  const registrar = await ethers.getContract("TestEthRegistrarL1");
+  const publicResolver = await ethers.getContract("TestPublicResolverL1");
 
-  await registry.setSubnodeOwner(rootNode, labelhash(EnsDomain.TLD), registrar.address);
+  await registry.setSubnodeOwner(
+    rootNode,
+    labelhash(EnsDomain.TLD),
+    registrar.address
+  );
   await registrar.addController(deployer);
 
   await registrar.setResolver(publicResolver.address);
@@ -23,5 +27,5 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   return !useProxy;
 };
 export default func;
-func.id = 'setup_ens_l1';
-func.tags = ['SetupEnsL1'];
+func.id = "setup_ens_l1";
+func.tags = ["SetupEnsL1"];
