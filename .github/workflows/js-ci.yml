@@ -1,7 +1,11 @@
 
 name: JS-CI
 
-on: [push, pull_request]
+on: 
+  push: 
+      branches:
+        - main
+  pull_request:
 
 jobs:
   JS-CI-Linux:
@@ -38,7 +42,7 @@ jobs:
         run: yarn lint
 
       - name: Styling format check
-        run: yarn check
+        run: yarn format:check
 
       # TODO: Add build and test once stable
       # - name: Build
