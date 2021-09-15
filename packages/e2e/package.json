@@ -14,6 +14,7 @@
     "custom-env": "^2.0.1",
     "dotenv": "^10.0.0",
     "ipfs-http-client": "^52.0.3",
+    "registry": "1.0.0",
     "registry-js": "1.0.0",
     "registry-test-utils": "1.0.0",
     "spawn-command": "^0.0.2-1",
