@@ -1,0 +1,25 @@
+{
+  "name": "registry-core-js",
+  "version": "1.0.0",
+  "license": "MIT",
+  "main": "bin/index.js",
+  "types": "bin/index.d.ts",
+  "files": [
+    "/bin"
+  ],
+  "scripts": {
+    "build": "tsc --project tsconfig.build.json",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@typechain/ethers-v5": "^7.0.1",
+    "ethers": "^5.4.6",
+    "typechain": "^5.1.2",
+    "typescript": "^4.4.2"
+  },
+  "devDependencies": {
+    "@types/jest": "^27.0.1",
+    "jest": "^27.1.1",
+    "ts-jest": "^27.0.5"
+  }
+}
