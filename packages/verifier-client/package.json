@@ -28,7 +28,6 @@
     "ethers": "^5.4.4",
     "ipfs-http-client": "^52.0.1",
     "js-yaml": "^4.1.0",
-    "registry": "1.0.0",
     "registry-js": "1.0.0",
     "registry-test-utils": "1.0.0",
     "typechain": "^5.1.2",
@@ -38,6 +37,7 @@
     "@types/jest": "^27.0.1",
     "jest": "^27.1.0",
     "ts-jest": "^27.0.5",
-    "ts-node": "^10.2.0"
+    "ts-node": "^10.2.0",
+    "registry": "1.0.0"
   }
 }

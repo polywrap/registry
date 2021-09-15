@@ -1,8 +1,5 @@
 import * as awilix from "awilix";
 import { ethers } from "ethers";
-import { VotingMachine__factory } from "registry/typechain";
-import * as VotingMachine from "registry/deployments/localhost/VotingMachine.json";
-import { Web3ApiClient } from "@web3api/client-js";
 import { SchemaComparisonService } from "../services/SchemaComparisonService";
 import { VersionVerifierService } from "../services/VersionVerifierService";
 import { VersionProcessingService } from "../services/VersionProcessingService";
@@ -12,7 +9,8 @@ import { VerifierStateManager } from "../services/VerifierStateManager";
 import { VerifierClient } from "../services/VerifierClient";
 import { NameAndRegistrationPair } from "awilix";
 import { setupWeb3ApiClient } from "../web3Api/setupClient";
-import { create } from "ipfs-http-client";
+import { VotingMachine__factory } from "../typechain";
+import * as VotingMachine from "../deployments/localhost/VotingMachine.json";
 
 export const buildDependencyContainer = (
   extensionsAndOverrides?: NameAndRegistrationPair<any>
