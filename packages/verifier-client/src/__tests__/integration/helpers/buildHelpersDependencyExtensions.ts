@@ -9,7 +9,7 @@ import {
   PolywrapRegistry__factory,
   VerificationTreeManager__factory,
   VersionVerificationManager__factory,
-} from "../../../typechain";
+} from "registry/typechain";
 import * as VersionVerificationManagerL2 from "../../../deployments/localhost/VersionVerificationManagerL2.json";
 import * as PackageOwnershipManagerL1 from "../../../deployments/localhost/PackageOwnershipManagerL1.json";
 import * as PolywrapRegistrar from "../../../deployments/localhost/PolywrapRegistrar.json";
@@ -24,6 +24,7 @@ import * as EnsRegistryL1 from "../../../deployments/localhost/EnsRegistryL1.jso
 import * as TestEthRegistrarL1 from "../../../deployments/localhost/TestEthRegistrarL1.json";
 import * as TestPublicResolverL1 from "../../../deployments/localhost/TestPublicResolverL1.json";
 import { PackageOwner } from "registry-js";
+import { RegistryAuthority } from "registry-test-utils";
 
 export const buildHelpersDependencyExtensions =
   (): NameAndRegistrationPair<any> => ({

@@ -2,7 +2,7 @@ import { BigNumber, ethers, Wallet } from "ethers";
 import { BytesLike, formatBytes32String, hexZeroPad, solidityKeccak256 } from "ethers/lib/utils";
 import { EnsDomain } from "./ens/EnsDomain";
 import { computeMerkleProof } from "./merkle-tree/computeMerkleProof";
-import { VotingMachine as VotingMachineContract, PackageOwnershipManager, PolywrapRegistrar, VerificationTreeManager, VersionVerificationManager, PolywrapRegistry } from "./typechain";
+import { VotingMachine as VotingMachineContract, PackageOwnershipManager, PolywrapRegistrar, VerificationTreeManager, VersionVerificationManager, PolywrapRegistry } from "registry/typechain";
 
 export type BlockchainsWithRegistry = "l2-chain-name" | "ethereum" | "xdai";
 
