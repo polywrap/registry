@@ -1,3 +1,2 @@
-export * from "./ens/index";
+export * from "registry-core-js";
 export * from "./PackageOwner";
-export * from "./merkle-tree/computeMerkleProof";

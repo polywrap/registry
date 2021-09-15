@@ -1,0 +1,46 @@
+{
+  "name": "verifier-client",
+  "version": "1.0.0",
+  "main": "app.js",
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc --project tsconfig.build.json",
+    "start:local": "NODE_ENV=local yarn build && node ./bin/app.js",
+    "start:docker": "NODE_ENV=docker yarn build && node ./bin/app.js",
+    "dev": "NODE_ENV=local ts-node ./src/app.ts",
+    "test": "jest --passWithNoTests --runInBand --verbose",
+    "docker:full": "docker-compose -f docker-compose-with-client.yml up",
+    "docker:base": "docker-compose -f docker-compose.yml up",
+    "docker:down": "docker-compose down",
+    "fix": "eslint . --ext .ts --fix",
+    "lint": "eslint . --ext .ts"
+  },
+  "dependencies": {
+    "@typechain/ethers-v5": "^7.0.1",
+    "@types/js-yaml": "^4.0.2",
+    "@types/node": "^16.6.1",
+    "@web3api/client-js": "^0.0.1-prealpha.40",
+    "@web3api/ens-plugin-js": "^0.0.1-prealpha.40",
+    "@web3api/ethereum-plugin-js": "^0.0.1-prealpha.40",
+    "@web3api/ipfs-plugin-js": "^0.0.1-prealpha.40",
+    "@web3api/schema-parse": "^0.0.1-prealpha.36",
+    "awilix": "^5.0.1",
+    "custom-env": "^2.0.1",
+    "dotenv": "^10.0.0",
+    "ethers": "^5.4.4",
+    "ipfs-http-client": "^52.0.1",
+    "js-yaml": "^4.1.0",
+    "registry": "1.0.0",
+    "registry-js": "1.0.0",
+    "registry-test-utils": "1.0.0",
+    "typechain": "^5.1.2",
+    "typescript": "^4.3.5"
+  },
+  "devDependencies": {
+    "@types/jest": "^27.0.1",
+    "eslint": "^7.32.0",
+    "jest": "^27.1.0",
+    "ts-jest": "^27.0.5",
+    "ts-node": "^10.2.0"
+  }
+}
