@@ -1,21 +1,21 @@
 import { BytesLike } from "ethers";
 import { Web3ApiClient } from "@web3api/client-js";
-import { VotingMachine } from "../typechain";
+import { PolywrapVotingSystem } from "registry-js";
 
 export class SchemaRetrievalService {
-  private votingMachine: VotingMachine;
+  private polywrapVotingSystem: PolywrapVotingSystem;
   private polywrapClient: Web3ApiClient;
 
   constructor(deps: {
-    votingMachine: VotingMachine;
+    polywrapVotingSystem: PolywrapVotingSystem;
     polywrapClient: Web3ApiClient;
   }) {
-    this.votingMachine = deps.votingMachine;
+    this.polywrapVotingSystem = deps.polywrapVotingSystem;
     this.polywrapClient = deps.polywrapClient;
   }
 
   async getMinorVersionSchema(patchNodeId: BytesLike): Promise<string> {
-    const location = await this.votingMachine.getPrevPatchPackageLocation(
+    const location = await this.polywrapVotingSystem.getPrevPatchPackageLocation(
       patchNodeId
     );
     const minorVersionSchema = await this.polywrapClient.getSchema(
@@ -37,7 +37,7 @@ export class SchemaRetrievalService {
       prevPackageLocation,
       nextMinorNodeId,
       nextPackageLocation,
-    } = await this.votingMachine.getPrevAndNextMinorPackageLocations(
+    } = await this.polywrapVotingSystem.getPrevAndNextMinorPackageLocations(
       patchNodeId
     );
 

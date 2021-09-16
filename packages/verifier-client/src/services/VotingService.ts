@@ -1,11 +1,13 @@
 import { BytesLike } from "ethers";
-import { VotingMachine } from "../typechain";
+import { PolywrapVotingSystem } from "registry-js";
 
 export class VotingService {
-  private votingMachine: VotingMachine;
+  private polywrapVotingSystem: PolywrapVotingSystem;
 
-  constructor(deps: { votingMachine: VotingMachine }) {
-    this.votingMachine = deps.votingMachine;
+  constructor(deps: {
+    polywrapVotingSystem: PolywrapVotingSystem
+  }) {
+    this.polywrapVotingSystem = deps.polywrapVotingSystem;
   }
 
   async voteOnVersion(
@@ -14,7 +16,7 @@ export class VotingService {
     nextMinorNodeId: BytesLike,
     approved: boolean
   ) {
-    const voteTx = await this.votingMachine.vote([
+    const voteTx = await this.polywrapVotingSystem.vote([
       {
         prevMinorNodeId,
         nextMinorNodeId,

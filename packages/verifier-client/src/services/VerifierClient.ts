@@ -1,7 +1,7 @@
 import { VersionProcessingService } from "./VersionProcessingService";
 import { VerifierStateManager } from "./VerifierStateManager";
 import { ProposedVersionEventArgs } from "../events/ProposedVersionEventArgs";
-import { VotingMachine } from "../typechain";
+import { PolywrapVotingSystem } from "registry-js";
 
 function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -16,15 +16,15 @@ interface TypedEvent {
 
 export class VerifierClient {
   private versionProcessingService: VersionProcessingService;
-  private votingMachine: VotingMachine;
+  private polywrapVotingSystem: PolywrapVotingSystem;
   private verifierStateManager: VerifierStateManager;
 
   constructor(deps: {
-    votingMachine: VotingMachine;
+    polywrapVotingSystem: PolywrapVotingSystem;
     versionProcessingService: VersionProcessingService;
     verifierStateManager: VerifierStateManager;
   }) {
-    this.votingMachine = deps.votingMachine;
+    this.polywrapVotingSystem = deps.polywrapVotingSystem;
     this.versionProcessingService = deps.versionProcessingService;
     this.verifierStateManager = deps.verifierStateManager;
   }
@@ -43,8 +43,7 @@ export class VerifierClient {
   }
 
   async queryAndVerifyVersions(): Promise<number> {
-    const proposedVersionEvents = await this.votingMachine.queryFilter(
-      this.votingMachine.filters.VersionVotingStarted(),
+    const proposedVersionEvents = await this.polywrapVotingSystem.queryVersionVotingStarted(
       this.verifierStateManager.state.currentlyProcessingBlock
     );
 
