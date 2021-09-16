@@ -6,7 +6,12 @@
   "stream": true,
   "command": {
     "bootstrap": {
-      "hoist": false
+      "hoist": false,
+      "npmClientArgs": [
+        "--nonInteractive",
+        "--frozen-lockfile",
+        "--prefer-offline"
+      ]
     }
   }
 }
