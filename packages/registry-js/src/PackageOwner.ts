@@ -7,7 +7,14 @@ import {
 } from "ethers/lib/utils";
 import { computeMerkleProof } from "registry-core-js";
 import { EnsDomain } from "registry-core-js";
-import { PackageOwnershipManager, PolywrapRegistrar, PolywrapRegistry, VerificationTreeManager, VersionVerificationManager, VotingMachine } from "./typechain";
+import {
+  PackageOwnershipManager,
+  PolywrapRegistrar,
+  PolywrapRegistry,
+  VerificationTreeManager,
+  VersionVerificationManager,
+  VotingMachine,
+} from "./typechain";
 
 export type BlockchainsWithRegistry = "l2-chain-name" | "ethereum" | "xdai";
 

@@ -26,7 +26,8 @@
     "build:verifier-client": "lerna run build --scope verifier-client",
     "lint": "lerna run lint --ignore registry && lerna run lint:ts --scope registry",
     "lint:fix": "lerna run fix --ignore registry && lerna run fix:ts --scope registry",
-    "format": "prettier --write \"./**/*.{js,ts}\""
+    "format": "prettier --write \"./**/*.{js,ts}\"",
+    "format:check": "prettier --check \"./**/*.{js,ts}\""
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "4.11.1",
