@@ -1,7 +1,5 @@
 import { CallOverrides, ContractTransaction, Overrides, Signer } from "ethers";
-import {
-  BytesLike,
-} from "ethers/lib/utils";
+import { BytesLike } from "ethers/lib/utils";
 import { RegistryContracts } from "./RegistryContracts";
 import { VersionVotingStartedEvent } from "./VersionVotingStartedEvent";
 
@@ -14,12 +12,13 @@ export class PolywrapVotingSystem {
   signer: Signer;
   private registryContracts: RegistryContracts;
 
-  vote(votes: {
-    patchNodeId: BytesLike;
-    prevMinorNodeId: BytesLike;
-    nextMinorNodeId: BytesLike;
-    approved: boolean;
-  }[],
+  vote(
+    votes: {
+      patchNodeId: BytesLike;
+      prevMinorNodeId: BytesLike;
+      nextMinorNodeId: BytesLike;
+      approved: boolean;
+    }[],
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction> {
     return overrides
@@ -32,8 +31,13 @@ export class PolywrapVotingSystem {
     overrides?: CallOverrides
   ): Promise<string> {
     return overrides
-      ? this.registryContracts.votingMachine.getPrevPatchPackageLocation(patchNodeId, overrides)
-      : this.registryContracts.votingMachine.getPrevPatchPackageLocation(patchNodeId);
+      ? this.registryContracts.votingMachine.getPrevPatchPackageLocation(
+          patchNodeId,
+          overrides
+        )
+      : this.registryContracts.votingMachine.getPrevPatchPackageLocation(
+          patchNodeId
+        );
   }
 
   getPrevAndNextMinorPackageLocations(
@@ -48,15 +52,23 @@ export class PolywrapVotingSystem {
     }
   > {
     return overrides
-      ? this.registryContracts.votingMachine.getPrevAndNextMinorPackageLocations(patchNodeId, overrides)
-      : this.registryContracts.votingMachine.getPrevAndNextMinorPackageLocations(patchNodeId);
+      ? this.registryContracts.votingMachine.getPrevAndNextMinorPackageLocations(
+          patchNodeId,
+          overrides
+        )
+      : this.registryContracts.votingMachine.getPrevAndNextMinorPackageLocations(
+          patchNodeId
+        );
   }
 
-  queryVersionVotingStarted(blockNumber: number): Promise<VersionVotingStartedEvent[]> {
-    //@ts-ignore
-    return this.registryContracts.votingMachine.queryFilter(
+  async queryVersionVotingStarted(
+    blockNumber: number
+  ): Promise<VersionVotingStartedEvent[]> {
+    const resp = await this.registryContracts.votingMachine.queryFilter(
       this.registryContracts.votingMachine.filters.VersionVotingStarted(),
       blockNumber
     );
+
+    return (resp as unknown) as VersionVotingStartedEvent[];
   }
 }

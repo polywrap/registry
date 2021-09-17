@@ -29,7 +29,7 @@ const config: HardhatUserConfig = {
   },
   paths: {
     sources: "./contracts",
-    tests: "./test"
+    tests: "./test",
   },
   mocha: {
     timeout: 50000,
@@ -67,7 +67,7 @@ const config: HardhatUserConfig = {
       companionNetworks: {
         l1: "ropsten",
       },
-    }
+    },
   },
   etherscan: {
     apiKey: "FZ1ANB251FC8ISFDXFGFCUDCANSJNWPF9Q",

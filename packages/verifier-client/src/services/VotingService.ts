@@ -4,9 +4,7 @@ import { PolywrapVotingSystem } from "@polywrap/registry-js";
 export class VotingService {
   private polywrapVotingSystem: PolywrapVotingSystem;
 
-  constructor(deps: {
-    polywrapVotingSystem: PolywrapVotingSystem
-  }) {
+  constructor(deps: { polywrapVotingSystem: PolywrapVotingSystem }) {
     this.polywrapVotingSystem = deps.polywrapVotingSystem;
   }
 

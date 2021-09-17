@@ -21,7 +21,11 @@ import * as PackageOwnershipManagerL1 from "../../deployments/localhost/PackageO
 import * as PolywrapRegistrar from "../../deployments/localhost/PolywrapRegistrar.json";
 import * as VerificationTreeManager from "../../deployments/localhost/PolywrapRegistrar.json";
 import * as VotingMachine from "../../deployments/localhost/VotingMachine.json";
-import { PackageOwner, RegistryAuthority, RegistryContracts } from "@polywrap/registry-js";
+import {
+  PackageOwner,
+  RegistryAuthority,
+  RegistryContracts,
+} from "@polywrap/registry-js";
 
 export const buildHelpersDependencyExtensions = (): NameAndRegistrationPair<any> => {
   return {

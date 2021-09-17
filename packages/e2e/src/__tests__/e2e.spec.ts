@@ -1,7 +1,11 @@
 import * as dotenv from "dotenv";
 import { EnsApi } from "./helpers/ens/EnsApi";
 import { IPFSHTTPClient } from "ipfs-http-client";
-import { EnsDomain, PackageOwner, RegistryAuthority } from "@polywrap/registry-js";
+import {
+  EnsDomain,
+  PackageOwner,
+  RegistryAuthority,
+} from "@polywrap/registry-js";
 import { runCommand } from "@polywrap/registry-test-utils";
 import { buildDependencyContainer } from "../di/buildDependencyContainer";
 import { buildHelpersDependencyExtensions } from "./helpers/buildHelpersDependencyExtensions";
@@ -59,7 +63,9 @@ describe("e2e", () => {
     const l1ChainName = "l1-chain-name";
     const l2ChainName = "l2-chain-name";
 
-    await registryAuthority.authorizeVerifiers([await verifierSigner.getAddress()]);
+    await registryAuthority.authorizeVerifiers([
+      await verifierSigner.getAddress(),
+    ]);
 
     await ensApi.registerDomainName(packageOwner.signer, domain);
     await ensApi.setPolywrapOwner(packageOwner.signer, domain);

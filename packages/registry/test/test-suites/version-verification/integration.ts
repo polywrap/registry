@@ -99,54 +99,91 @@ describe("Voting", () => {
 
     const provider = ethers.getDefaultProvider();
 
-    registryL1 = PolywrapRegistry__factory.connect(deploys["PolywrapRegistryL1"].address, provider);
-    registryL2 = PolywrapRegistry__factory.connect(deploys["PolywrapRegistryL2"].address, provider);
-    registrar = PolywrapRegistrar__factory.connect(deploys["PolywrapRegistrar"].address, provider);
+    registryL1 = PolywrapRegistry__factory.connect(
+      deploys["PolywrapRegistryL1"].address,
+      provider
+    );
+    registryL2 = PolywrapRegistry__factory.connect(
+      deploys["PolywrapRegistryL2"].address,
+      provider
+    );
+    registrar = PolywrapRegistrar__factory.connect(
+      deploys["PolywrapRegistrar"].address,
+      provider
+    );
     verificationTreeManager = VerificationTreeManager__factory.connect(
-      deploys["VerificationTreeManager"].address, provider
+      deploys["VerificationTreeManager"].address,
+      provider
     );
     verificationRootRelayer = VerificationRootRelayer__factory.connect(
-      deploys["VerificationRootRelayer"].address, provider
+      deploys["VerificationRootRelayer"].address,
+      provider
     );
     packageOwnershipManagerL1 = PackageOwnershipManager__factory.connect(
-      deploys["PackageOwnershipManagerL1"].address, provider
+      deploys["PackageOwnershipManagerL1"].address,
+      provider
     );
     packageOwnershipManagerL2 = PackageOwnershipManager__factory.connect(
-      deploys["PackageOwnershipManagerL2"].address, provider
+      deploys["PackageOwnershipManagerL2"].address,
+      provider
     );
     verificationRootBridgeLinkL1 = VerificationRootBridgeLink__factory.connect(
-      deploys["VerificationRootBridgeLinkL1"].address, provider
+      deploys["VerificationRootBridgeLinkL1"].address,
+      provider
     );
     verificationRootBridgeLinkL2 = VerificationRootBridgeLink__factory.connect(
-      deploys["VerificationRootBridgeLinkL2"].address, provider
+      deploys["VerificationRootBridgeLinkL2"].address,
+      provider
     );
-    ownershipBridgeLinkL1 = OwnershipBridgeLink__factory.connect(deploys["OwnershipBridgeLinkL1"].address, provider);
-    ownershipBridgeLinkL2 = OwnershipBridgeLink__factory.connect(deploys["OwnershipBridgeLinkL2"].address, provider);
+    ownershipBridgeLinkL1 = OwnershipBridgeLink__factory.connect(
+      deploys["OwnershipBridgeLinkL1"].address,
+      provider
+    );
+    ownershipBridgeLinkL2 = OwnershipBridgeLink__factory.connect(
+      deploys["OwnershipBridgeLinkL2"].address,
+      provider
+    );
     versionVerificationManagerL1 = VersionVerificationManager__factory.connect(
-      deploys["VersionVerificationManagerL1"].address, provider
+      deploys["VersionVerificationManagerL1"].address,
+      provider
     );
     versionVerificationManagerL2 = VersionVerificationManager__factory.connect(
-      deploys["VersionVerificationManagerL2"].address, provider
+      deploys["VersionVerificationManagerL2"].address,
+      provider
     );
-    votingMachine = VotingMachine__factory.connect(deploys["VotingMachine"].address, provider);
+    votingMachine = VotingMachine__factory.connect(
+      deploys["VotingMachine"].address,
+      provider
+    );
 
-    const ensRegistry = ENSRegistry__factory.connect(deploys["EnsRegistryL1"].address, provider);
-    const ethRegistrar = TestEthRegistrar__factory.connect(deploys["TestEthRegistrarL1"].address, provider);
-    const ensPublicResolver = TestPublicResolver__factory.connect(deploys["TestPublicResolverL1"].address, provider);
+    const ensRegistry = ENSRegistry__factory.connect(
+      deploys["EnsRegistryL1"].address,
+      provider
+    );
+    const ethRegistrar = TestEthRegistrar__factory.connect(
+      deploys["TestEthRegistrarL1"].address,
+      provider
+    );
+    const ensPublicResolver = TestPublicResolver__factory.connect(
+      deploys["TestPublicResolverL1"].address,
+      provider
+    );
 
-    ens = new EnsApi({
-      ensRegistryL1: deploys["EnsRegistryL1"].address,
-      testEthRegistrarL1: deploys["TestEthRegistrarL1"].address,
-      testPublicResolverL1: deploys["TestPublicResolverL1"].address,
-    }, provider);
+    ens = new EnsApi(
+      {
+        ensRegistryL1: deploys["EnsRegistryL1"].address,
+        testEthRegistrarL1: deploys["TestEthRegistrarL1"].address,
+        testPublicResolverL1: deploys["TestPublicResolverL1"].address,
+      },
+      provider
+    );
 
     await ens.registerDomainName(owner, polywrapOwner, testDomain);
-    await ens.setPolywrapOwner(
-      polywrapOwner,
-      testDomain
-    );
+    await ens.setPolywrapOwner(polywrapOwner, testDomain);
 
-    await votingMachine.connect(owner).authorizeVerifiers([await verifier1.getAddress()]);
+    await votingMachine
+      .connect(owner)
+      .authorizeVerifiers([await verifier1.getAddress()]);
   });
 
   it("can propose and publish a version", async () => {

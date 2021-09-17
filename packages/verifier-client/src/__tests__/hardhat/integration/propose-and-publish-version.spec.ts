@@ -6,17 +6,18 @@ import { VerifierClient } from "../../../services/VerifierClient";
 import { EnsApi } from "./helpers/ens/EnsApi";
 import { buildHelpersDependencyExtensions } from "./helpers/buildHelpersDependencyExtensions";
 import { down, up } from "./helpers/testEnv";
-import { EnsDomain, PackageOwner, RegistryAuthority } from "@polywrap/registry-js";
+import {
+  EnsDomain,
+  PackageOwner,
+  RegistryAuthority,
+} from "@polywrap/registry-js";
 import { publishToIPFS } from "@polywrap/registry-test-utils";
 import { deployments } from "hardhat";
-import { Signer, Wallet } from "ethers";
-const hre = require("hardhat");
+import { Signer } from "ethers";
 import "hardhat-deploy";
 import "@nomiclabs/hardhat-ethers";
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 require("custom-env").env("local");
-
-const shouldLog = process.env.LOG_TESTS === "true";
 
 describe("Start local chain", () => {
   let verifierClient: VerifierClient;
@@ -29,12 +30,18 @@ describe("Start local chain", () => {
   let ipfsClient: IPFSHTTPClient;
 
   const configureDomainForPolywrap = async (domain: EnsDomain) => {
-    await ensApi.registerDomainName(registryAuthoritySigner, packageOwner.signer, domain);
+    await ensApi.registerDomainName(
+      registryAuthoritySigner,
+      packageOwner.signer,
+      domain
+    );
     await ensApi.setPolywrapOwner(packageOwner.signer, domain);
   };
 
   const authorizeCurrentVerifier = async () => {
-    await registryAuthority.authorizeVerifiers([await verifierSigner.getAddress()]);
+    await registryAuthority.authorizeVerifiers([
+      await verifierSigner.getAddress(),
+    ]);
   };
 
   const publishAndVerifyVersion = async (
@@ -73,7 +80,7 @@ describe("Start local chain", () => {
     const [
       _registryAuthoritySigner,
       _verifierSigner,
-      _packageOwnerSigner
+      _packageOwnerSigner,
     ] = await ethers.getSigners();
 
     registryAuthoritySigner = _registryAuthoritySigner;
@@ -83,10 +90,7 @@ describe("Start local chain", () => {
 
   beforeEach(async () => {
     await up(`${__dirname}/../../..`);
-    await deployments.fixture([
-      "l1",
-      "l2"
-    ]);
+    await deployments.fixture(["l1", "l2"]);
 
     const registrar = await ethers.getContract("VerificationRootBridgeLinkL2");
 
@@ -95,21 +99,36 @@ describe("Start local chain", () => {
         {
           registryAuthoritySigner,
           verifierSigner,
-          packageOwnerSigner
+          packageOwnerSigner,
         },
         {
-          versionVerificationManagerL2: await (await ethers.getContract('VersionVerificationManagerL2')).address,
-          packageOwnershipManagerL1: await (await ethers.getContract('PackageOwnershipManagerL1')).address,
-          registrar: await (await ethers.getContract('PolywrapRegistrar')).address,
-          verificationTreeManager: await (await ethers.getContract('VerificationTreeManager')).address,
-          registryL1: await (await ethers.getContract('PolywrapRegistryL1')).address,
-          registryL2: await (await ethers.getContract('PolywrapRegistryL2')).address,
-          votingMachine: await (await ethers.getContract('VotingMachine')).address
+          versionVerificationManagerL2: await (
+            await ethers.getContract("VersionVerificationManagerL2")
+          ).address,
+          packageOwnershipManagerL1: await (
+            await ethers.getContract("PackageOwnershipManagerL1")
+          ).address,
+          registrar: await (await ethers.getContract("PolywrapRegistrar"))
+            .address,
+          verificationTreeManager: await (
+            await ethers.getContract("VerificationTreeManager")
+          ).address,
+          registryL1: await (await ethers.getContract("PolywrapRegistryL1"))
+            .address,
+          registryL2: await (await ethers.getContract("PolywrapRegistryL2"))
+            .address,
+          votingMachine: await (await ethers.getContract("VotingMachine"))
+            .address,
         },
         {
-          ensRegistryL1: await (await ethers.getContract('EnsRegistryL1')).address,
-          testEthRegistrarL1: await (await ethers.getContract('TestEthRegistrarL1')).address,
-          testPublicResolverL1: await (await ethers.getContract('TestPublicResolverL1')).address,
+          ensRegistryL1: await (await ethers.getContract("EnsRegistryL1"))
+            .address,
+          testEthRegistrarL1: await (
+            await ethers.getContract("TestEthRegistrarL1")
+          ).address,
+          testPublicResolverL1: await (
+            await ethers.getContract("TestPublicResolverL1")
+          ).address,
         }
       )
     );
@@ -164,7 +183,7 @@ describe("Start local chain", () => {
         patchNumber,
         packageLocation
       ),
-      verifierClient.queryAndVerifyVersions()
+      verifierClient.queryAndVerifyVersions(),
     ]);
 
     expect(votingResult.patchNodeId).to.eq(patchNodeId);

@@ -43,9 +43,14 @@ export const buildDependencyContainer = (
     votingService: awilix.asClass(VotingService),
     schemaRetrievalService: awilix.asClass(SchemaRetrievalService),
     schemaComparisonService: awilix.asClass(SchemaComparisonService),
-    polywrapVotingSystem: awilix.asFunction(({ verifierSigner, ethersProvider }) => {
-      return new PolywrapVotingSystem(verifierSigner, RegistryContracts.fromTestnet(ethersProvider));
-    }),
+    polywrapVotingSystem: awilix.asFunction(
+      ({ verifierSigner, ethersProvider }) => {
+        return new PolywrapVotingSystem(
+          verifierSigner,
+          RegistryContracts.fromTestnet(ethersProvider)
+        );
+      }
+    ),
     ...extensionsAndOverrides,
   });
 

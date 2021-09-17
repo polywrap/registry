@@ -23,11 +23,11 @@ const config: HardhatUserConfig = {
   },
   namedAccounts: {
     deployer: {
-      default: 0
+      default: 0,
     },
   },
   paths: {
-    tests: "./src/__tests__/hardhat"
+    tests: "./src/__tests__/hardhat",
   },
   mocha: {
     timeout: 50000,
@@ -44,13 +44,15 @@ const config: HardhatUserConfig = {
         mnemonic: "test test test test test test test test test test test test",
       },
       // deploy: ["../registry/dist/deploy/scripts/localhost"],
-    }
+    },
   },
   external: {
-    contracts: [{
-      artifacts: "../registry/artifacts",
-      deploy: "../registry/deploy"
-    }],
+    contracts: [
+      {
+        artifacts: "../registry/artifacts",
+        deploy: "../registry/deploy",
+      },
+    ],
     // deployments: {
     //   localhost: ["node_modules/registry/deployments/localhost"],
     // }

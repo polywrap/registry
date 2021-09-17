@@ -7,14 +7,6 @@ import {
 import { computeMerkleProof } from "@polywrap/registry-core-js";
 import { EnsDomain } from "@polywrap/registry-core-js";
 import { RegistryContracts } from "./RegistryContracts";
-import {
-  PackageOwnershipManager,
-  PolywrapRegistrar,
-  PolywrapRegistry,
-  VerificationTreeManager,
-  VersionVerificationManager,
-  VotingMachine,
-} from "./typechain";
 
 export type BlockchainsWithRegistry = "l2-chain-name" | "ethereum" | "xdai";
 
@@ -27,23 +19,26 @@ export class PackageOwner {
   signer: Signer;
   private registryContracts: RegistryContracts;
 
-  async updateOwnership(domain: EnsDomain) {
+  async updateOwnership(domain: EnsDomain): Promise<void> {
     const tx = await this.registryContracts.packageOwnershipManagerL1.updateOwnership(
       EnsDomain.RegistryBytes32,
       domain.node
     );
 
-    await tx.wait(+process.env.NUM_OF_CONFIRMATIONS_TO_WAIT!);
+    await tx.wait();
   }
 
-  async relayOwnership(domain: EnsDomain, chainName: BlockchainsWithRegistry) {
+  async relayOwnership(
+    domain: EnsDomain,
+    chainName: BlockchainsWithRegistry
+  ): Promise<void> {
     const tx = await this.registryContracts.packageOwnershipManagerL1.relayOwnership(
       formatBytes32String(chainName),
       EnsDomain.RegistryBytes32,
       domain.node
     );
 
-    await tx.wait(+process.env.NUM_OF_CONFIRMATIONS_TO_WAIT!);
+    await tx.wait();
   }
 
   async proposeVersion(
@@ -52,7 +47,7 @@ export class PackageOwner {
     minor: number,
     patch: number,
     packageLocation: string
-  ) {
+  ): Promise<void> {
     const proposeTx = await this.registryContracts.registrar.proposeVersion(
       domain.packageId,
       major,
@@ -61,7 +56,7 @@ export class PackageOwner {
       packageLocation
     );
 
-    await proposeTx.wait(+process.env.NUM_OF_CONFIRMATIONS_TO_WAIT!);
+    await proposeTx.wait();
   }
 
   async getVerificationRoot(): Promise<BytesLike> {
@@ -86,7 +81,7 @@ export class PackageOwner {
     major: number,
     minor: number,
     patch: number
-  ) {
+  ): Promise<void> {
     const verificationRoot = await this.getVerificationRoot();
     const leafCountForRoot = await this.getLeafCountForRoot(verificationRoot);
 
@@ -97,7 +92,7 @@ export class PackageOwner {
     );
 
     const leaves: string[] = [];
-    let currentVerifiedVersionIndex: BigNumber;
+    let currentVerifiedVersionIndex: BigNumber | undefined;
     const currentPatchNodeId = this.calculatePatchNodeId(
       domain,
       major,
@@ -127,9 +122,13 @@ export class PackageOwner {
       }
     }
 
+    if (currentVerifiedVersionIndex === undefined) {
+      throw "currentVerifiedVersionIndex is undefined";
+    }
+
     const [proof, sides] = computeMerkleProof(
       leaves,
-      currentVerifiedVersionIndex!.toNumber()
+      currentVerifiedVersionIndex.toNumber()
     );
     const publishTx = await this.registryContracts.versionVerificationManagerL2.publishVersion(
       domain.packageId,
@@ -142,9 +141,7 @@ export class PackageOwner {
       sides
     );
 
-    const receipt = await publishTx.wait(
-      +process.env.NUM_OF_CONFIRMATIONS_TO_WAIT!
-    );
+    await publishTx.wait();
   }
 
   async getPackageLocation(nodeId: BytesLike): Promise<string> {
@@ -158,7 +155,9 @@ export class PackageOwner {
     patch: number
   ): Promise<string> {
     const patchNodeId = this.calculatePatchNodeId(domain, major, minor, patch);
-    return await this.registryContracts.registryL2.getPackageLocation(patchNodeId);
+    return await this.registryContracts.registryL2.getPackageLocation(
+      patchNodeId
+    );
   }
 
   async getNodeInfo(
@@ -204,7 +203,7 @@ export class PackageOwner {
       [packageLocation]
     );
 
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       const listener = (
         decidedPatchNodeId: BytesLike,
         verified: boolean,

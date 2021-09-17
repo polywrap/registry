@@ -5,8 +5,8 @@ export class VerifierStateManager {
   public state: VerifierStateInfo;
 
   options: {
-    memoryOnly: boolean
-  }
+    memoryOnly: boolean;
+  };
 
   constructor(_state: VerifierStateInfo, options?: { memoryOnly: boolean }) {
     this.state = _state;
@@ -14,8 +14,8 @@ export class VerifierStateManager {
     this.options = options
       ? options
       : {
-        memoryOnly: false
-      };
+          memoryOnly: false,
+        };
   }
 
   static load(): VerifierStateInfo {
@@ -27,7 +27,12 @@ export class VerifierStateManager {
     };
 
     if (fs.existsSync(process.env.STATE_INFO_PATH!)) {
-      verifierStateInfo = JSON.parse(fs.readFileSync(process.env.STATE_INFO_PATH!, { encoding: 'utf8', flag: 'r' }));
+      verifierStateInfo = JSON.parse(
+        fs.readFileSync(process.env.STATE_INFO_PATH!, {
+          encoding: "utf8",
+          flag: "r",
+        })
+      );
     }
 
     return verifierStateInfo;

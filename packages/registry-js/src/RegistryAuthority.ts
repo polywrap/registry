@@ -13,8 +13,10 @@ export class RegistryAuthority {
   signer: ethers.Signer;
   private votingMachine: VotingMachine;
 
-  async authorizeVerifiers(verifierAddresses: string[]) {
-    const receipt = await this.votingMachine.authorizeVerifiers(verifierAddresses);
+  async authorizeVerifiers(verifierAddresses: string[]): Promise<void> {
+    const receipt = await this.votingMachine.authorizeVerifiers(
+      verifierAddresses
+    );
 
     await receipt.wait();
   }
