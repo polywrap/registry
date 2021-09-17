@@ -92,8 +92,6 @@ describe("Start local chain", () => {
     await up(`${__dirname}/../../..`);
     await deployments.fixture(["l1", "l2"]);
 
-    const registrar = await ethers.getContract("VerificationRootBridgeLinkL2");
-
     const dependencyContainer = buildDependencyContainer(
       buildHelpersDependencyExtensions(
         {
