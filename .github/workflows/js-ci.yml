@@ -43,9 +43,8 @@ jobs:
       - name: Styling format check
         run: yarn format:check
 
-      #TODO: Implement once CI works
-      # - name: Build
-      #   run: yarn build
+      - name: Build
+        run: yarn build
 
-      # - name: Test
-      #   run: yarn test
+      - name: Test
+        run: yarn test

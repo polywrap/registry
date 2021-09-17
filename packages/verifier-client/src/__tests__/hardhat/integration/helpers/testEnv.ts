@@ -1,6 +1,4 @@
-import { exec, ExecException } from "child_process";
 import axios from "axios";
-import dotenv from "dotenv";
 import { runCommand } from "@polywrap/registry-test-utils";
 
 enum HTTPMethod {
@@ -56,7 +54,11 @@ async function awaitResponse(
   return false;
 }
 
-export async function up(cwd: string, quiet = false): Promise<void> {
+export async function up(
+  cwd: string,
+  ipfsProvider: string,
+  quiet = false
+): Promise<void> {
   await runCommand("docker-compose up -d", quiet, cwd);
 
   // Wait for all endpoints to become available
@@ -64,7 +66,7 @@ export async function up(cwd: string, quiet = false): Promise<void> {
 
   // IPFS
   success = await awaitResponse(
-    `http://localhost:${process.env.IPFS_PORT}/api/v0/version`,
+    `${ipfsProvider}/api/v0/version`,
     '"Version":',
     HTTPMethod.GET,
     2000,

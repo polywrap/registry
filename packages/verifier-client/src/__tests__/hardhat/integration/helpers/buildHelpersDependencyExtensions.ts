@@ -1,5 +1,4 @@
 import * as awilix from "awilix";
-import { ethers } from "ethers";
 import { NameAndRegistrationPair } from "awilix";
 import { EnsApi } from "./ens/EnsApi";
 import { PackageOwner, PolywrapVotingSystem } from "@polywrap/registry-js";
@@ -37,9 +36,9 @@ export const buildHelpersDependencyExtensions = (
         ethersProvider
       );
     }),
-    ipfsClient: awilix.asFunction(() => {
+    ipfsClient: awilix.asFunction(({ ipfsConfig }) => {
       return create({
-        url: process.env.IPFS_URI,
+        url: ipfsConfig.ipfsProvider,
       });
     }),
     verifierSigner: awilix.asFunction(() => {
@@ -59,7 +58,7 @@ export const buildHelpersDependencyExtensions = (
     packageOwnerSigner: awilix.asFunction(() => {
       return signers.packageOwnerSigner;
     }),
-    verifierStateManager: awilix.asFunction(() => {
+    verifierStateManager: awilix.asFunction(({ verifierClientConfig }) => {
       const state: VerifierStateInfo = {
         lastProcessedBlock: -1,
         lastProcessedTransactionIndex: -1,
@@ -67,7 +66,9 @@ export const buildHelpersDependencyExtensions = (
         currentlyProcessingBlock: 0,
       };
 
-      return new VerifierStateManager(state, { memoryOnly: true });
+      return new VerifierStateManager(verifierClientConfig, state, {
+        memoryOnly: true,
+      });
     }),
     ensApi: awilix.asFunction(({ ethersProvider }) => {
       return new EnsApi(testEnsContractAddresses, ethersProvider);
