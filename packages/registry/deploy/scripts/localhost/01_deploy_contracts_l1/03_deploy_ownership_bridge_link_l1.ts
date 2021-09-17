@@ -29,4 +29,4 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 };
 export default func;
 func.id = "deploy_ownership_bridge_link_l1";
-func.tags = ["OwnershipBridgeLinkL1"];
+func.tags = ["OwnershipBridgeLinkL1", "l1"];

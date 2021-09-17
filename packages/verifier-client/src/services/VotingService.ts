@@ -1,5 +1,5 @@
 import { BytesLike } from "ethers";
-import { PolywrapVotingSystem } from "registry-js";
+import { PolywrapVotingSystem } from "@polywrap/registry-js";
 
 export class VotingService {
   private polywrapVotingSystem: PolywrapVotingSystem;

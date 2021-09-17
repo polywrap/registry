@@ -19,4 +19,4 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 };
 export default func;
 func.id = "deploy_version_verification_manager_l2";
-func.tags = ["VersionVerificationManagerL2"];
+func.tags = ["VersionVerificationManagerL2", "l2"];

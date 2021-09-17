@@ -23,13 +23,11 @@ const config: HardhatUserConfig = {
   },
   namedAccounts: {
     deployer: {
-      default: 0,
-      rinkeby: process.env.DEPLOYER_ADDRESS_RINKEBY!,
+      default: 0
     },
   },
   paths: {
-    sources: "./contracts",
-    tests: "./test"
+    tests: "./src/__tests__/hardhat"
   },
   mocha: {
     timeout: 50000,
@@ -42,32 +40,20 @@ const config: HardhatUserConfig = {
           "https://eth-mainnet.alchemyapi.io/v2/MnO3SuHlzuCydPWE1XhsYZM_pHZP8_ix",
         blockNumber: 11845661,
       },
-      deploy: ["./deploy/scripts/localhost"],
-    },
-    localhost: {
-      live: false,
-      gas: "auto",
-      gasPrice: "auto",
-      gasMultiplier: 1,
-      url: "http://127.0.0.1:8545",
-      chainId: 1337,
       accounts: {
         mnemonic: "test test test test test test test test test test test test",
       },
-      deploy: ["./deploy/scripts/localhost"],
-    },
-    kovan: {
-      accounts: { mnemonic: process.env.TESTNET_MNEMONIC || "" },
-      url: `https://kovan.infura.io/v3/0e6434f252a949719227b5d68caa2657`,
-    },
-    rinkeby: {
-      accounts: [`0x${process.env.DEPLOYER_KEY_RINKEBY}`],
-      url: "https://rinkeby.infura.io/v3/77c3d733140f4c12a77699e24cb30c27",
-      deploy: ["./deploy/scripts/testnet/l2"],
-      companionNetworks: {
-        l1: "ropsten",
-      },
+      // deploy: ["../registry/dist/deploy/scripts/localhost"],
     }
+  },
+  external: {
+    contracts: [{
+      artifacts: "../registry/artifacts",
+      deploy: "../registry/deploy"
+    }],
+    // deployments: {
+    //   localhost: ["node_modules/registry/deployments/localhost"],
+    // }
   },
   etherscan: {
     apiKey: "FZ1ANB251FC8ISFDXFGFCUDCANSJNWPF9Q",

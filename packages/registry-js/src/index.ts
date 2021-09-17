@@ -1,4 +1,4 @@
-export * from "registry-core-js";
+export * from "@polywrap/registry-core-js";
 export * from "./PackageOwner";
 export * from "./PolywrapVotingSystem";
 export * from "./RegistryContracts";

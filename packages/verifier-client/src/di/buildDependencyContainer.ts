@@ -9,7 +9,7 @@ import { VerifierStateManager } from "../services/VerifierStateManager";
 import { VerifierClient } from "../services/VerifierClient";
 import { NameAndRegistrationPair } from "awilix";
 import { setupWeb3ApiClient } from "../web3Api/setupClient";
-import { PolywrapVotingSystem, RegistryContracts } from "registry-js";
+import { PolywrapVotingSystem, RegistryContracts } from "@polywrap/registry-js";
 
 export const buildDependencyContainer = (
   extensionsAndOverrides?: NameAndRegistrationPair<any>

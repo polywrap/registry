@@ -1,7 +1,7 @@
 import { exec, ExecException } from "child_process";
 import axios from "axios";
 import dotenv from "dotenv";
-import { runCommand } from "registry-test-utils";
+import { runCommand } from "@polywrap/registry-test-utils";
 
 enum HTTPMethod {
   GET,

@@ -19,4 +19,4 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 };
 export default func;
 func.id = "deploy_ens_link_l1";
-func.tags = ["EnsLinkL1"];
+func.tags = ["EnsLinkL1", "l1"];

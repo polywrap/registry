@@ -1,5 +1,5 @@
 {
-  "name": "registry-js",
+  "name": "@polywrap/registry-js",
   "version": "1.0.0",
   "license": "MIT",
   "main": "bin/index.js",
@@ -9,14 +9,14 @@
   ],
   "scripts": {
     "build": "tsc --project tsconfig.build.json",
-    "test": "jest",
+    "test": "jest --passWithNoTests",
     "fix": "eslint . --ext .ts --fix",
     "lint": "eslint . --ext .ts"
   },
   "dependencies": {
     "@typechain/ethers-v5": "^7.0.1",
     "ethers": "^5.4.6",
-    "registry-core-js": "^1.0.0",
+    "@polywrap/registry-core-js": "^1.0.0",
     "typechain": "^5.1.2",
     "typescript": "^4.4.2"
   },

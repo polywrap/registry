@@ -20,4 +20,4 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 };
 export default func;
 func.id = "deploy_verification_root_relayer";
-func.tags = ["VerificationRootRelayer"];
+func.tags = ["VerificationRootRelayer", "l2"];

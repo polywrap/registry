@@ -4,8 +4,8 @@ import {
   formatBytes32String,
   solidityKeccak256,
 } from "ethers/lib/utils";
-import { computeMerkleProof } from "registry-core-js";
-import { EnsDomain } from "registry-core-js";
+import { computeMerkleProof } from "@polywrap/registry-core-js";
+import { EnsDomain } from "@polywrap/registry-core-js";
 import { RegistryContracts } from "./RegistryContracts";
 
 export type BlockchainsWithRegistry = "l2-chain-name" | "ethereum" | "xdai";

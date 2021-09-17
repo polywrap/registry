@@ -1,7 +1,7 @@
 import { VersionProcessingService } from "./VersionProcessingService";
 import { VerifierStateManager } from "./VerifierStateManager";
 import { ProposedVersionEventArgs } from "../events/ProposedVersionEventArgs";
-import { PolywrapVotingSystem } from "registry-js";
+import { PolywrapVotingSystem } from "@polywrap/registry-js";
 
 function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));

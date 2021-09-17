@@ -1,6 +1,6 @@
 import { BytesLike } from "ethers";
 import { Web3ApiClient } from "@web3api/client-js";
-import { PolywrapVotingSystem } from "registry-js";
+import { PolywrapVotingSystem } from "@polywrap/registry-js";
 
 export class SchemaRetrievalService {
   private polywrapVotingSystem: PolywrapVotingSystem;
