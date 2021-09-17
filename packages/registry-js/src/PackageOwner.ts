@@ -7,6 +7,14 @@ import {
 import { computeMerkleProof } from "@polywrap/registry-core-js";
 import { EnsDomain } from "@polywrap/registry-core-js";
 import { RegistryContracts } from "./RegistryContracts";
+import {
+  PackageOwnershipManager,
+  PolywrapRegistrar,
+  PolywrapRegistry,
+  VerificationTreeManager,
+  VersionVerificationManager,
+  VotingMachine,
+} from "./typechain";
 
 export type BlockchainsWithRegistry = "l2-chain-name" | "ethereum" | "xdai";
 

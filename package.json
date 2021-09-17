@@ -27,7 +27,8 @@
     "test": "lerna run test",
     "lint": "lerna run lint --ignore @polywrap/registry && lerna run lint:ts --scope @polywrap/registry",
     "lint:fix": "lerna run fix --ignore @polywrap/registry && lerna run fix:ts --scope @polywrap/registry",
-    "format": "prettier --write \"./**/*.{js,ts}\""
+    "format": "prettier --write \"./**/*.{js,ts}\"",
+    "format:check": "prettier --check \"./**/*.{js,ts}\""
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "4.11.1",
