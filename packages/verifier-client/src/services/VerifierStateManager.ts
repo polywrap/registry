@@ -4,8 +4,18 @@ import { VerifierStateInfo } from "../VerifierStateInfo";
 export class VerifierStateManager {
   public state: VerifierStateInfo;
 
-  constructor(_state: VerifierStateInfo) {
+  options: {
+    memoryOnly: boolean
+  }
+
+  constructor(_state: VerifierStateInfo, options?: { memoryOnly: boolean }) {
     this.state = _state;
+
+    this.options = options
+      ? options
+      : {
+        memoryOnly: false
+      };
   }
 
   static load(): VerifierStateInfo {
@@ -24,6 +34,10 @@ export class VerifierStateManager {
   }
 
   save(): void {
+    if (this.options.memoryOnly) {
+      return;
+    }
+
     fs.writeFileSync(
       process.env.STATE_INFO_PATH!,
       JSON.stringify(this.state, null, 2)

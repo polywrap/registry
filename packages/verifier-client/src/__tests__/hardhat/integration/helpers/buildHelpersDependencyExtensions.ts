@@ -62,7 +62,7 @@ export const buildHelpersDependencyExtensions = (
         currentlyProcessingBlock: 0,
       };
 
-      return new VerifierStateManager(state);
+      return new VerifierStateManager(state, { memoryOnly: true });
     }),
     ensApi: awilix.asFunction(({ ethersProvider }) => {
       return new EnsApi(testEnsContractAddresses, ethersProvider)
