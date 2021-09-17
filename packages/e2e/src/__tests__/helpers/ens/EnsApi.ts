@@ -1,5 +1,5 @@
 import { ethers, Signer } from "ethers";
-import { EnsDomain } from "registry-js";
+import { EnsDomain } from "@polywrap/registry-js";
 import {
   ENSRegistry,
   TestEthRegistrar,

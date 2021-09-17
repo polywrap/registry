@@ -1,7 +1,7 @@
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
 import { ethers } from "hardhat";
-import { EnsDomain } from "registry-core-js";
+import { EnsDomain } from "@polywrap/registry-core-js";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deployer } = await hre.getNamedAccounts();
@@ -33,4 +33,4 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 };
 export default func;
 func.id = "deploy_ens_l1";
-func.tags = ["EnsL1"];
+func.tags = ["EnsL1", "ens", "l1"];

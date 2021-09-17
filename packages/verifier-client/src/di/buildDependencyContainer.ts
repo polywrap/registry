@@ -9,8 +9,7 @@ import { VerifierStateManager } from "../services/VerifierStateManager";
 import { VerifierClient } from "../services/VerifierClient";
 import { NameAndRegistrationPair } from "awilix";
 import { setupWeb3ApiClient } from "../web3Api/setupClient";
-import { VotingMachine__factory } from "../typechain";
-import * as VotingMachine from "../deployments/localhost/VotingMachine.json";
+import { PolywrapVotingSystem, RegistryContracts } from "@polywrap/registry-js";
 
 export const buildDependencyContainer = (
   extensionsAndOverrides?: NameAndRegistrationPair<any>
@@ -34,12 +33,6 @@ export const buildDependencyContainer = (
     verifierSigner: awilix.asFunction(({ ethersProvider }) => {
       return new ethers.Wallet(process.env.CLIENT_PRIVATE_KEY!, ethersProvider);
     }),
-    votingMachine: awilix.asFunction(({ verifierSigner }) => {
-      return VotingMachine__factory.connect(
-        VotingMachine.address,
-        verifierSigner
-      );
-    }),
     verifierStateManager: awilix.asFunction(() => {
       const state = VerifierStateManager.load();
       return new VerifierStateManager(state);
@@ -50,6 +43,14 @@ export const buildDependencyContainer = (
     votingService: awilix.asClass(VotingService),
     schemaRetrievalService: awilix.asClass(SchemaRetrievalService),
     schemaComparisonService: awilix.asClass(SchemaComparisonService),
+    polywrapVotingSystem: awilix.asFunction(
+      ({ verifierSigner, ethersProvider }) => {
+        return new PolywrapVotingSystem(
+          verifierSigner,
+          RegistryContracts.fromTestnet(ethersProvider)
+        );
+      }
+    ),
     ...extensionsAndOverrides,
   });
 

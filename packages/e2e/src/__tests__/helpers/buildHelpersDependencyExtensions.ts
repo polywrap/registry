@@ -1,7 +1,6 @@
 import * as awilix from "awilix";
 import { ethers } from "ethers";
 import { NameAndRegistrationPair } from "awilix";
-import { RegistryAuthority } from "registry-test-utils";
 import { create } from "ipfs-http-client";
 import {
   ENSRegistry__factory,
@@ -22,10 +21,17 @@ import * as PackageOwnershipManagerL1 from "../../deployments/localhost/PackageO
 import * as PolywrapRegistrar from "../../deployments/localhost/PolywrapRegistrar.json";
 import * as VerificationTreeManager from "../../deployments/localhost/PolywrapRegistrar.json";
 import * as VotingMachine from "../../deployments/localhost/VotingMachine.json";
-import { PackageOwner } from "registry-js";
+import {
+  PackageOwner,
+  RegistryAuthority,
+  RegistryContracts,
+} from "@polywrap/registry-js";
 
 export const buildHelpersDependencyExtensions = (): NameAndRegistrationPair<any> => {
   return {
+    registryContracts: awilix.asFunction(({ ethersProvider }) => {
+      return RegistryContracts.fromTestnet(ethersProvider);
+    }),
     ipfsClient: awilix.asFunction(() => {
       return create({
         url: process.env.IPFS_URI,
@@ -37,7 +43,7 @@ export const buildHelpersDependencyExtensions = (): NameAndRegistrationPair<any>
         ethersProvider
       );
     }),
-    authority: awilix.asFunction(({ ethersProvider }) => {
+    registryAuthority: awilix.asFunction(({ ethersProvider }) => {
       return new RegistryAuthority(
         ethersProvider,
         process.env.REGISTRY_AUTHORITY_PRIVATE_KEY!

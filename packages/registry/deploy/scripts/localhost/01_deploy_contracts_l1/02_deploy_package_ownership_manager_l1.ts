@@ -25,4 +25,4 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 };
 export default func;
 func.id = "deploy_package_ownership_manager_l1";
-func.tags = ["PackageOwnershipManagerL1"];
+func.tags = ["PackageOwnershipManagerL1", "l1"];

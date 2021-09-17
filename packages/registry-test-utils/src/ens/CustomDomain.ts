@@ -4,7 +4,7 @@ import {
   namehash,
   solidityKeccak256,
 } from "ethers/lib/utils";
-import { labelhash } from "registry-js";
+import { labelhash } from "@polywrap/registry-js";
 
 export class CustomDomain {
   constructor(label: string) {

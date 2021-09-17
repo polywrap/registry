@@ -2,7 +2,14 @@ import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
 import { ethers } from "hardhat";
 import { formatBytes32String } from "ethers/lib/utils";
-import { EnsDomain } from "registry-core-js";
+import { EnsDomain } from "@polywrap/registry-core-js";
+import {
+  OwnershipBridgeLink__factory,
+  PackageOwnershipManager__factory,
+  PolywrapRegistry__factory,
+  VerificationRootBridgeLink__factory,
+  VersionVerificationManager__factory,
+} from "../../../../typechain";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deployer } = await hre.getNamedAccounts();
@@ -10,18 +17,25 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const useProxy = !hre.network.live;
   const signer = await ethers.getSigner(deployer);
 
-  const registryL1 = await ethers.getContract("PolywrapRegistryL1");
-  const versionVerificationManagerL1 = await ethers.getContract(
-    "VersionVerificationManagerL1"
+  const registryL1 = PolywrapRegistry__factory.connect(
+    (await hre.deployments.get("PolywrapRegistryL1")).address,
+    signer
   );
-  const packageOwnershipManagerL1 = await ethers.getContract(
-    "PackageOwnershipManagerL1"
+  const versionVerificationManagerL1 = VersionVerificationManager__factory.connect(
+    (await hre.deployments.get("VersionVerificationManagerL1")).address,
+    signer
   );
-  const verificationRootBridgeLinkL1 = await ethers.getContract(
-    "VerificationRootBridgeLinkL1"
+  const packageOwnershipManagerL1 = PackageOwnershipManager__factory.connect(
+    (await hre.deployments.get("PackageOwnershipManagerL1")).address,
+    signer
   );
-  const ownershipBridgeLinkL1 = await ethers.getContract(
-    "OwnershipBridgeLinkL1"
+  const verificationRootBridgeLinkL1 = VerificationRootBridgeLink__factory.connect(
+    (await hre.deployments.get("VerificationRootBridgeLinkL1")).address,
+    signer
+  );
+  const ownershipBridgeLinkL1 = OwnershipBridgeLink__factory.connect(
+    (await hre.deployments.get("OwnershipBridgeLinkL1")).address,
+    signer
   );
 
   await verificationRootBridgeLinkL1.updateVersionVerificationManager(
@@ -47,4 +61,4 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 };
 export default func;
 func.id = "connect_contracts";
-func.tags = ["ConnectContracts"];
+func.tags = ["ConnectContracts", "l1"];

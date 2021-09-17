@@ -3,9 +3,10 @@
     "target": "es5",
     "module": "commonjs",
     "moduleResolution": "node",
-    "lib": ["es2019"],
+    "lib": [
+      "es2019"
+    ],
     "outDir": "./bin",
-    "rootDir": "src",
     "strict": true,
     "noImplicitAny": true,
     "esModuleInterop": true,
@@ -13,6 +14,13 @@
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "emitDecoratorMetadata": true,
-    "experimentalDecorators": true
-  }
+    "experimentalDecorators": true,
+    "preserveSymlinks": true
+  },
+  "include": [
+    "../registry/deploy/*/*.js",
+  ],
+  "files": [
+    "./hardhat.config.ts",
+  ]
 }

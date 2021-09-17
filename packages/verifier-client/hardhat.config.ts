@@ -27,8 +27,7 @@ const config: HardhatUserConfig = {
     },
   },
   paths: {
-    sources: "./contracts",
-    tests: "./test",
+    tests: "./src/__tests__/hardhat",
   },
   mocha: {
     timeout: 50000,
@@ -41,20 +40,18 @@ const config: HardhatUserConfig = {
           "https://eth-mainnet.alchemyapi.io/v2/MnO3SuHlzuCydPWE1XhsYZM_pHZP8_ix",
         blockNumber: 11845661,
       },
-      deploy: ["./deploy/scripts/localhost"],
-    },
-    localhost: {
-      live: false,
-      gas: "auto",
-      gasPrice: "auto",
-      gasMultiplier: 1,
-      url: "http://127.0.0.1:8545",
-      chainId: 1337,
       accounts: {
         mnemonic: "test test test test test test test test test test test test",
       },
-      deploy: ["./deploy/scripts/localhost"],
     },
+  },
+  external: {
+    contracts: [
+      {
+        artifacts: "../registry/artifacts",
+        deploy: "../registry/deploy",
+      },
+    ],
   },
   etherscan: {
     apiKey: "FZ1ANB251FC8ISFDXFGFCUDCANSJNWPF9Q",

@@ -17,4 +17,4 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 };
 export default func;
 func.id = "deploy_registry_l1";
-func.tags = ["PolywrapRegistryL1"];
+func.tags = ["PolywrapRegistryL1", "l1"];

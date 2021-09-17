@@ -19,4 +19,4 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 };
 export default func;
 func.id = "deploy_verification_root_bridge_link_l1";
-func.tags = ["VerificationRootBridgeLinkL1"];
+func.tags = ["VerificationRootBridgeLinkL1", "l1"];

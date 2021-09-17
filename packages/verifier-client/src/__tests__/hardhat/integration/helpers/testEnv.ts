@@ -1,9 +1,7 @@
 import { exec, ExecException } from "child_process";
 import axios from "axios";
 import dotenv from "dotenv";
-import { runCommand } from "registry-test-utils";
-
-dotenv.config({ path: `${__dirname}/.env` });
+import { runCommand } from "@polywrap/registry-test-utils";
 
 enum HTTPMethod {
   GET,
@@ -75,20 +73,6 @@ export async function up(cwd: string, quiet = false): Promise<void> {
 
   if (!success) {
     throw Error("test-env: IPFS failed to start");
-  }
-
-  // Ganache
-  success = await awaitResponse(
-    `http://localhost:${process.env.ETHEREUM_PORT}`,
-    '"jsonrpc":',
-    HTTPMethod.POST,
-    2000,
-    20000,
-    '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":83}'
-  );
-
-  if (!success) {
-    throw Error("test-env: Ganache failed to start");
   }
 }
 

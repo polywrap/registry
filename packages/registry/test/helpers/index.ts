@@ -1,3 +1,4 @@
+import hre from "hardhat";
 import { expect } from "chai";
 import {
   BaseContract,
@@ -7,6 +8,7 @@ import {
   providers,
 } from "ethers";
 import { eventNames } from "process";
+import { DeploymentsExtension } from "hardhat-deploy/dist/types";
 
 export const getSubnodeHash = (
   parentHash: string,
@@ -74,7 +76,7 @@ export const expectEvent = async (
   const receivedArgs = await getEventArgs(tx, eventName);
 
   for (const arg of Object.keys(args)) {
-    expect(receivedArgs[arg]).to.equal(args[arg], `${arg}`);
+    expect(receivedArgs[arg]).to.eql(args[arg], `${arg}`);
   }
 };
 

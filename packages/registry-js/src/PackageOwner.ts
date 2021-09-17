@@ -1,69 +1,44 @@
-import { BigNumber, ethers, Wallet } from "ethers";
+import { BigNumber, Signer } from "ethers";
 import {
   BytesLike,
   formatBytes32String,
-  hexZeroPad,
   solidityKeccak256,
 } from "ethers/lib/utils";
-import { computeMerkleProof } from "registry-core-js";
-import { EnsDomain } from "registry-core-js";
-import {
-  PackageOwnershipManager,
-  PolywrapRegistrar,
-  PolywrapRegistry,
-  VerificationTreeManager,
-  VersionVerificationManager,
-  VotingMachine,
-} from "./typechain";
+import { computeMerkleProof } from "@polywrap/registry-core-js";
+import { EnsDomain } from "@polywrap/registry-core-js";
+import { RegistryContracts } from "./RegistryContracts";
 
 export type BlockchainsWithRegistry = "l2-chain-name" | "ethereum" | "xdai";
 
-interface PackageOwnerDependencies {
-  packageOwnerSigner: Wallet;
-  versionVerificationManagerL2: VersionVerificationManager;
-  packageOwnershipManagerL1: PackageOwnershipManager;
-  registrar: PolywrapRegistrar;
-  verificationTreeManager: VerificationTreeManager;
-  votingMachine: VotingMachine;
-  registryL2: PolywrapRegistry;
-}
-
 export class PackageOwner {
-  constructor(deps: PackageOwnerDependencies) {
-    this.signer = deps.packageOwnerSigner;
-    this.versionVerificationManagerL2 = deps.versionVerificationManagerL2;
-    this.packageOwnershipManagerL1 = deps.packageOwnershipManagerL1;
-    this.registrar = deps.registrar;
-    this.verificationTreeManager = deps.verificationTreeManager;
-    this.votingMachine = deps.votingMachine;
-    this.registryL2 = deps.registryL2;
+  constructor(signer: Signer, registryContracts: RegistryContracts) {
+    this.signer = signer;
+    this.registryContracts = registryContracts.connect(signer);
   }
 
-  public signer: ethers.Wallet;
-  private versionVerificationManagerL2: VersionVerificationManager;
-  private packageOwnershipManagerL1: PackageOwnershipManager;
-  private registrar: PolywrapRegistrar;
-  private verificationTreeManager: VerificationTreeManager;
-  private votingMachine: VotingMachine;
-  private registryL2: PolywrapRegistry;
+  signer: Signer;
+  private registryContracts: RegistryContracts;
 
-  async updateOwnership(domain: EnsDomain) {
-    const tx = await this.packageOwnershipManagerL1.updateOwnership(
+  async updateOwnership(domain: EnsDomain): Promise<void> {
+    const tx = await this.registryContracts.packageOwnershipManagerL1.updateOwnership(
       EnsDomain.RegistryBytes32,
       domain.node
     );
 
-    await tx.wait(+process.env.NUM_OF_CONFIRMATIONS_TO_WAIT!);
+    await tx.wait();
   }
 
-  async relayOwnership(domain: EnsDomain, chainName: BlockchainsWithRegistry) {
-    const tx = await this.packageOwnershipManagerL1.relayOwnership(
+  async relayOwnership(
+    domain: EnsDomain,
+    chainName: BlockchainsWithRegistry
+  ): Promise<void> {
+    const tx = await this.registryContracts.packageOwnershipManagerL1.relayOwnership(
       formatBytes32String(chainName),
       EnsDomain.RegistryBytes32,
       domain.node
     );
 
-    await tx.wait(+process.env.NUM_OF_CONFIRMATIONS_TO_WAIT!);
+    await tx.wait();
   }
 
   async proposeVersion(
@@ -72,8 +47,8 @@ export class PackageOwner {
     minor: number,
     patch: number,
     packageLocation: string
-  ) {
-    const proposeTx = await this.registrar.proposeVersion(
+  ): Promise<void> {
+    const proposeTx = await this.registryContracts.registrar.proposeVersion(
       domain.packageId,
       major,
       minor,
@@ -81,26 +56,22 @@ export class PackageOwner {
       packageLocation
     );
 
-    await proposeTx.wait(+process.env.NUM_OF_CONFIRMATIONS_TO_WAIT!);
+    await proposeTx.wait();
   }
 
   async getVerificationRoot(): Promise<BytesLike> {
-    return await this.versionVerificationManagerL2.verificationRoot();
+    return await this.registryContracts.versionVerificationManagerL2.verificationRoot();
   }
 
   async getLeafCountForRoot(verificationRoot: BytesLike): Promise<number> {
-    const rootCalculatedEvents = await this.verificationTreeManager.queryFilter(
-      this.verificationTreeManager.filters.VerificationRootCalculated(
+    const rootCalculatedEvents = await this.registryContracts.verificationTreeManager.queryFilter(
+      this.registryContracts.verificationTreeManager.filters.VerificationRootCalculated(
         verificationRoot
       ),
       0,
       "latest"
     );
 
-    // const rootCalculatedEventArgs = (rootCalculatedEvents[0]
-    //   .args as unknown) as Record<string, any>;
-
-    // return rootCalculatedEventArgs["verifiedVersionCount"];
     return rootCalculatedEvents[0].args.verifiedVersionCount.toNumber();
   }
 
@@ -110,18 +81,18 @@ export class PackageOwner {
     major: number,
     minor: number,
     patch: number
-  ) {
+  ): Promise<void> {
     const verificationRoot = await this.getVerificationRoot();
     const leafCountForRoot = await this.getLeafCountForRoot(verificationRoot);
 
-    const verifiedVersionEvents = await this.verificationTreeManager.queryFilter(
-      this.verificationTreeManager.filters.VersionVerified(),
+    const verifiedVersionEvents = await this.registryContracts.verificationTreeManager.queryFilter(
+      this.registryContracts.verificationTreeManager.filters.VersionVerified(),
       0,
       "latest"
     );
 
     const leaves: string[] = [];
-    let currentVerifiedVersionIndex: BigNumber;
+    let currentVerifiedVersionIndex: BigNumber | undefined;
     const currentPatchNodeId = this.calculatePatchNodeId(
       domain,
       major,
@@ -151,11 +122,15 @@ export class PackageOwner {
       }
     }
 
+    if (currentVerifiedVersionIndex === undefined) {
+      throw "currentVerifiedVersionIndex is undefined";
+    }
+
     const [proof, sides] = computeMerkleProof(
       leaves,
-      currentVerifiedVersionIndex!.toNumber()
+      currentVerifiedVersionIndex.toNumber()
     );
-    const publishTx = await this.versionVerificationManagerL2.publishVersion(
+    const publishTx = await this.registryContracts.versionVerificationManagerL2.publishVersion(
       domain.packageId,
       currentPatchNodeId,
       major,
@@ -166,13 +141,11 @@ export class PackageOwner {
       sides
     );
 
-    const receipt = await publishTx.wait(
-      +process.env.NUM_OF_CONFIRMATIONS_TO_WAIT!
-    );
+    await publishTx.wait();
   }
 
   async getPackageLocation(nodeId: BytesLike): Promise<string> {
-    return await this.registryL2.getPackageLocation(nodeId);
+    return await this.registryContracts.registryL2.getPackageLocation(nodeId);
   }
 
   async resolveToPackageLocation(
@@ -182,7 +155,9 @@ export class PackageOwner {
     patch: number
   ): Promise<string> {
     const patchNodeId = this.calculatePatchNodeId(domain, major, minor, patch);
-    return await this.registryL2.getPackageLocation(patchNodeId);
+    return await this.registryContracts.registryL2.getPackageLocation(
+      patchNodeId
+    );
   }
 
   async getNodeInfo(
@@ -193,7 +168,7 @@ export class PackageOwner {
     created: boolean;
     location: string;
   }> {
-    return await this.registryL2.versionNodes(nodeId);
+    return await this.registryContracts.registryL2.versionNodes(nodeId);
   }
 
   async getVersionNodeInfo(
@@ -228,7 +203,7 @@ export class PackageOwner {
       [packageLocation]
     );
 
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       const listener = (
         decidedPatchNodeId: BytesLike,
         verified: boolean,
@@ -241,7 +216,7 @@ export class PackageOwner {
           return;
         }
 
-        this.votingMachine.off("VersionDecided", listener);
+        this.registryContracts.votingMachine.off("VersionDecided", listener);
 
         resolve({
           patchNodeId,
@@ -250,7 +225,7 @@ export class PackageOwner {
         });
       };
 
-      this.votingMachine.on("VersionDecided", listener);
+      this.registryContracts.votingMachine.on("VersionDecided", listener);
     });
   }
 
