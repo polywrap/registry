@@ -44,6 +44,8 @@ jobs:
       - name: Styling format check
         run: yarn format:check
 
-      # TODO: Add build and test once stable
-      # - name: Build
-      #   run: yarn build
+      - name: Build
+        run: yarn build
+
+      - name: Test
+        run: yarn test
