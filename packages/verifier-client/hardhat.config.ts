@@ -42,7 +42,7 @@ const config: HardhatUserConfig = {
       },
       accounts: {
         mnemonic: "test test test test test test test test test test test test",
-      }
+      },
     },
   },
   external: {
@@ -51,7 +51,7 @@ const config: HardhatUserConfig = {
         artifacts: "../registry/artifacts",
         deploy: "../registry/deploy",
       },
-    ]
+    ],
   },
   etherscan: {
     apiKey: "FZ1ANB251FC8ISFDXFGFCUDCANSJNWPF9Q",
