@@ -28,3 +28,6 @@ packages/verifier-client/state-info.json
 .openzeppelin/.session
 coverage/
 coverage.json
+
+# Logging
+*.log
