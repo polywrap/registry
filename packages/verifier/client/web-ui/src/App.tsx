@@ -5,7 +5,7 @@ import { ethereumPlugin } from "@web3api/ethereum-plugin-js";
 import { ToastProvider } from "react-toast-notifications";
 import Logo from "./logo.png";
 
-function App() {
+function App(): JSX.Element {
   const ethereum = (window as any).ethereum;
   const [clientStatus, setClientStatus] = useState("Loading...");
 

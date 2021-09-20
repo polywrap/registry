@@ -13,6 +13,7 @@ jobs:
     timeout-minutes: 60
     env:
       ENV: ci
+      CI: false
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2

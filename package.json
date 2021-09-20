@@ -14,8 +14,7 @@
     ],
     "nohoist": [
       "**/jest",
-      "*react*",
-      "*react*/**"
+      "react"
     ]
   },
   "scripts": {
