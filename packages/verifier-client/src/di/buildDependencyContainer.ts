@@ -30,14 +30,14 @@ export const buildDependencyContainer = (
     ethersProvider: awilix.asFunction(({ ethersConfig }) => {
       return ethers.providers.getDefaultProvider(ethersConfig.providerNetwork);
     }),
-    polywrapClient: awilix.asFunction(
-      ({ polywrapClientConfig, ethersProvider }) => {
+    polywrapClient: awilix
+      .asFunction(({ polywrapClientConfig, ethersProvider }) => {
         return setupWeb3ApiClient({
           ethersProvider: ethersProvider,
           ipfsProvider: polywrapClientConfig.ipfsProvider,
         });
-      }
-    ),
+      })
+      .singleton(),
     verifierSigner: awilix.asFunction(
       ({ verifierClientConfig, ethersProvider }) => {
         return new ethers.Wallet(

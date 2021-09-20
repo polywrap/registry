@@ -1,5 +1,18 @@
 version: '3'
 services:
+  verifier-client:
+    build: ./
+    links:
+      - ganache
+      - ipfs
+    environment:
+      ganache: 'ganache:${ETHEREUM_PORT}'
+      ipfs: 'ipfs:${IPFS_PORT}'
+  ganache:
+    image: 'trufflesuite/ganache-cli:v6.12.2'
+    ports:
+      - '${ETHEREUM_PORT}:8545'
+    command: -l 8000000 --networkId 1576478390085 --deterministic --hostname=0.0.0.0 -m "test test test test test test test test test test test test"
   ipfs:
     image: 'ipfs/go-ipfs:v0.4.23'
     ports:

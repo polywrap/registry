@@ -2,11 +2,11 @@ import * as awilix from "awilix";
 import { NameAndRegistrationPair } from "awilix";
 import { EnsApi } from "./ens/EnsApi";
 import { PackageOwner, PolywrapVotingSystem } from "@polywrap/registry-js";
-import { create } from "ipfs-http-client";
 import { Signer } from "ethers";
 import { VerifierStateManager } from "../../../../services/VerifierStateManager";
 import { VerifierStateInfo } from "../../../../VerifierStateInfo";
 import { RegistryContracts, RegistryAuthority } from "@polywrap/registry-js";
+import { IpfsPublisher } from "./IpfsPublisher";
 
 export const buildHelpersDependencyExtensions = (
   signers: {
@@ -36,11 +36,7 @@ export const buildHelpersDependencyExtensions = (
         ethersProvider
       );
     }),
-    ipfsClient: awilix.asFunction(({ ipfsConfig }) => {
-      return create({
-        url: ipfsConfig.ipfsProvider,
-      });
-    }),
+    ipfsPublisher: awilix.asClass(IpfsPublisher),
     verifierSigner: awilix.asFunction(() => {
       return signers.verifierSigner;
     }),
