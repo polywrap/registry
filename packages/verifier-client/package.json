@@ -27,6 +27,7 @@
     "@web3api/ethereum-plugin-js": "^0.0.1-prealpha.40",
     "@web3api/ipfs-plugin-js": "^0.0.1-prealpha.40",
     "@web3api/schema-parse": "^0.0.1-prealpha.36",
+    "@web3api/tracing-js": "^0.0.1-prealpha.44",
     "awilix": "^5.0.1",
     "custom-env": "^2.0.1",
     "dotenv": "^10.0.0",
@@ -34,7 +35,8 @@
     "ipfs-http-client": "^52.0.1",
     "js-yaml": "^4.1.0",
     "typechain": "^5.1.2",
-    "typescript": "^4.3.5"
+    "typescript": "^4.3.5",
+    "winston": "^3.3.3"
   },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "npm:hardhat-deploy-ethers@0.3.0-beta.10",

@@ -2,15 +2,19 @@ import { ProposedVersionEventArgs } from "../events/ProposedVersionEventArgs";
 import { VerifierStateInfo } from "../VerifierStateInfo";
 import { VersionVerifierService } from "./VersionVerifierService";
 import { VotingService } from "./VotingService";
+import { Logger } from "winston";
 
 export class VersionProcessingService {
+  private logger: Logger;
   private votingService: VotingService;
   private versionVerifierService: VersionVerifierService;
 
   constructor(deps: {
+    logger: Logger;
     votingService: VotingService;
     versionVerifierService: VersionVerifierService;
   }) {
+    this.logger = deps.logger;
     this.votingService = deps.votingService;
     this.versionVerifierService = deps.versionVerifierService;
   }
@@ -64,7 +68,7 @@ export class VersionProcessingService {
       isPatch,
     } = proposedVersion;
 
-    console.log(
+    this.logger.info(
       `Version proposed: ${patchNodeId}, ${majorVersion}, ${minorVersion}, ${patchVersion}`
     );
 

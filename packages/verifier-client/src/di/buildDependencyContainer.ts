@@ -14,6 +14,7 @@ import { VerifierClientConfig } from "../config/VerifierClientConfig";
 import { EthersConfig } from "../config/EthersConfig";
 import { PolywrapClientConfig } from "../config/PolywrapClientConfig";
 import { IpfsConfig } from "../config/IpfsConfig";
+import winston from "winston";
 
 export const buildDependencyContainer = (
   extensionsAndOverrides?: NameAndRegistrationPair<unknown>
@@ -29,6 +30,16 @@ export const buildDependencyContainer = (
     polywrapClientConfig: awilix.asClass(PolywrapClientConfig).singleton(),
     ethersProvider: awilix.asFunction(({ ethersConfig }) => {
       return ethers.providers.getDefaultProvider(ethersConfig.providerNetwork);
+    }),
+    logger: awilix.asFunction(() => {
+      return winston.createLogger({
+        level: "info",
+        transports: [
+          new winston.transports.Console(),
+          new winston.transports.File({ filename: "verifier_client.log" }),
+        ],
+        format: winston.format.combine(winston.format.simple()),
+      });
     }),
     polywrapClient: awilix
       .asFunction(({ polywrapClientConfig, ethersProvider }) => {

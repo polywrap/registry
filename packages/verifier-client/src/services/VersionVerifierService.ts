@@ -2,17 +2,21 @@ import { BytesLike, ethers } from "ethers";
 import { Web3ApiClient } from "@web3api/client-js";
 import { SchemaComparisonService } from "./SchemaComparisonService";
 import { SchemaRetrievalService } from "./SchemaRetrievalService";
+import { Logger } from "winston";
 
 export class VersionVerifierService {
+  private logger: Logger;
   private polywrapClient: Web3ApiClient;
   private schemaRetrievalService: SchemaRetrievalService;
   private schemaComparisonService: SchemaComparisonService;
 
   constructor(deps: {
+    logger: Logger;
     polywrapClient: Web3ApiClient;
     schemaRetrievalService: SchemaRetrievalService;
     schemaComparisonService: SchemaComparisonService;
   }) {
+    this.logger = deps.logger;
     this.polywrapClient = deps.polywrapClient;
     this.schemaRetrievalService = deps.schemaRetrievalService;
     this.schemaComparisonService = deps.schemaComparisonService;
@@ -31,7 +35,7 @@ export class VersionVerifierService {
     nextMinorNodeId: BytesLike;
     approved: boolean;
   }> {
-    console.log(
+    this.logger.info(
       `Verifying proposed version: ${packageId}, v${majorVersion}.${minorVersion}.${patchVersion}`
     );
 
