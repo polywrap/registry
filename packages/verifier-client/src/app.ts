@@ -1,7 +1,7 @@
 import { buildDependencyContainer } from "./di/buildDependencyContainer";
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-require("custom-env").env();
+require("custom-env").env(process.env.ENV);
 
 const dependencyContainer = buildDependencyContainer();
 const verifierClient = dependencyContainer.cradle.verifierClient;

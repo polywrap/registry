@@ -1,5 +1,5 @@
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-require("dotenv").config();
+require("custom-env").env(process.env.ENV);
 
 import { task, HardhatUserConfig } from "hardhat/config";
 import "@typechain/hardhat";

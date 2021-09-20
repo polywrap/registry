@@ -17,7 +17,7 @@ import { IpfsPublisher } from "./helpers/IpfsPublisher";
 import { Logger } from "winston";
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-require("custom-env").env("local");
+require("custom-env").env(process.env.ENV);
 
 describe("Start local chain", () => {
   let logger: Logger;

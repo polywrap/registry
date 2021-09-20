@@ -12,7 +12,7 @@ import { buildHelpersDependencyExtensions } from "./helpers/buildHelpersDependen
 import { Wallet } from "@ethersproject/wallet";
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-require("custom-env").env();
+require("custom-env").env(process.env.ENV);
 
 jest.setTimeout(200000);
 
