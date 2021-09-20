@@ -8,13 +8,13 @@ import {
   EnsDomain,
   PackageOwner,
   RegistryAuthority,
-  Logger,
 } from "@polywrap/registry-js";
 import { deployments } from "hardhat";
 import { Signer } from "ethers";
 import "hardhat-deploy";
 import "@nomiclabs/hardhat-ethers";
 import { IpfsPublisher } from "./helpers/IpfsPublisher";
+import { Logger } from "winston";
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 require("custom-env").env("local");

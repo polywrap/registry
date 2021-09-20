@@ -9,12 +9,9 @@ export class VotingService {
   private verifierClientConfig: VerifierClientConfig;
 
   constructor(deps: {
-    polywrapVotingSystem: PolywrapVotingSystem;
-    verifierClientConfig: VerifierClientConfig;
-  }) {
-  constructor(deps: {
     logger: Logger;
     polywrapVotingSystem: PolywrapVotingSystem;
+    verifierClientConfig: VerifierClientConfig;
   }) {
     this.logger = deps.logger;
     this.polywrapVotingSystem = deps.polywrapVotingSystem;
