@@ -2,6 +2,7 @@ import { VersionProcessingService } from "./VersionProcessingService";
 import { VerifierStateManager } from "./VerifierStateManager";
 import { ProposedVersionEventArgs } from "../events/ProposedVersionEventArgs";
 import { PolywrapVotingSystem } from "@polywrap/registry-js";
+import { VerifierClientConfig } from "../config/VerifierClientConfig";
 
 function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -18,15 +19,18 @@ export class VerifierClient {
   private versionProcessingService: VersionProcessingService;
   private polywrapVotingSystem: PolywrapVotingSystem;
   private verifierStateManager: VerifierStateManager;
+  private verifierClientConfig: VerifierClientConfig;
 
   constructor(deps: {
     polywrapVotingSystem: PolywrapVotingSystem;
     versionProcessingService: VersionProcessingService;
     verifierStateManager: VerifierStateManager;
+    verifierClientConfig: VerifierClientConfig;
   }) {
     this.polywrapVotingSystem = deps.polywrapVotingSystem;
     this.versionProcessingService = deps.versionProcessingService;
     this.verifierStateManager = deps.verifierStateManager;
+    this.verifierClientConfig = deps.verifierClientConfig;
   }
 
   async run(): Promise<void> {
@@ -38,7 +42,7 @@ export class VerifierClient {
 
       console.log(`Processed ${processedEventCnt} events.`);
 
-      await delay(+process.env.PAUSE_TIME!);
+      await delay(this.verifierClientConfig.pauseTimeInMiliseconds);
     }
   }
 

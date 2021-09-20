@@ -10,32 +10,45 @@ import { VerifierClient } from "../services/VerifierClient";
 import { NameAndRegistrationPair } from "awilix";
 import { setupWeb3ApiClient } from "../web3Api/setupClient";
 import { PolywrapVotingSystem, RegistryContracts } from "@polywrap/registry-js";
+import { VerifierClientConfig } from "../config/VerifierClientConfig";
+import { EthersConfig } from "../config/EthersConfig";
+import { PolywrapClientConfig } from "../config/PolywrapClientConfig";
+import { IpfsConfig } from "../config/IpfsConfig";
 
 export const buildDependencyContainer = (
-  extensionsAndOverrides?: NameAndRegistrationPair<any>
+  extensionsAndOverrides?: NameAndRegistrationPair<unknown>
 ): awilix.AwilixContainer<any> => {
   const container = awilix.createContainer({
     injectionMode: awilix.InjectionMode.PROXY,
   });
 
   container.register({
-    ethersProvider: awilix.asFunction(() => {
-      return ethers.providers.getDefaultProvider(
-        `${process.env.PROVIDER_NETWORK}`
-      );
+    ipfsConfig: awilix.asClass(IpfsConfig).singleton(),
+    verifierClientConfig: awilix.asClass(VerifierClientConfig).singleton(),
+    ethersConfig: awilix.asClass(EthersConfig).singleton(),
+    polywrapClientConfig: awilix.asClass(PolywrapClientConfig).singleton(),
+    ethersProvider: awilix.asFunction(({ ethersConfig }) => {
+      return ethers.providers.getDefaultProvider(ethersConfig.providerNetwork);
     }),
-    polywrapClient: awilix.asFunction(({ ethersProvider }) => {
-      return setupWeb3ApiClient({
-        ethersProvider: ethersProvider,
-        ipfsProvider: process.env.IPFS_URI as string,
-      });
-    }),
-    verifierSigner: awilix.asFunction(({ ethersProvider }) => {
-      return new ethers.Wallet(process.env.CLIENT_PRIVATE_KEY!, ethersProvider);
-    }),
-    verifierStateManager: awilix.asFunction(() => {
-      const state = VerifierStateManager.load();
-      return new VerifierStateManager(state);
+    polywrapClient: awilix.asFunction(
+      ({ polywrapClientConfig, ethersProvider }) => {
+        return setupWeb3ApiClient({
+          ethersProvider: ethersProvider,
+          ipfsProvider: polywrapClientConfig.ipfsProvider,
+        });
+      }
+    ),
+    verifierSigner: awilix.asFunction(
+      ({ verifierClientConfig, ethersProvider }) => {
+        return new ethers.Wallet(
+          verifierClientConfig.verifierPrivateKey,
+          ethersProvider
+        );
+      }
+    ),
+    verifierStateManager: awilix.asFunction(({ verifierClientConfig }) => {
+      const state = VerifierStateManager.load(verifierClientConfig);
+      return new VerifierStateManager(verifierClientConfig, state);
     }),
     verifierClient: awilix.asClass(VerifierClient),
     versionProcessingService: awilix.asClass(VersionProcessingService),

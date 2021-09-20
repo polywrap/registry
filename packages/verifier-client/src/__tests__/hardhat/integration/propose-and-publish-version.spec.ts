@@ -16,6 +16,7 @@ import { deployments } from "hardhat";
 import { Signer } from "ethers";
 import "hardhat-deploy";
 import "@nomiclabs/hardhat-ethers";
+import { IpfsConfig } from "../../../config/IpfsConfig";
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 require("custom-env").env("local");
 
@@ -28,6 +29,7 @@ describe("Start local chain", () => {
   let verifierSigner: Signer;
   let packageOwnerSigner: Signer;
   let ipfsClient: IPFSHTTPClient;
+  let ipfsConfig: IpfsConfig;
 
   const configureDomainForPolywrap = async (domain: EnsDomain) => {
     await ensApi.registerDomainName(
@@ -89,7 +91,6 @@ describe("Start local chain", () => {
   });
 
   beforeEach(async () => {
-    await up(`${__dirname}/../../..`);
     await deployments.fixture(["l1", "l2"]);
 
     const dependencyContainer = buildDependencyContainer(
@@ -136,6 +137,9 @@ describe("Start local chain", () => {
     registryAuthority = dependencyContainer.cradle.registryAuthority;
     ensApi = dependencyContainer.cradle.ensApi;
     ipfsClient = dependencyContainer.cradle.ipfsClient;
+    ipfsConfig = dependencyContainer.cradle.ipfsConfig;
+
+    await up(`${__dirname}/../../..`, ipfsConfig.ipfsProvider);
   });
 
   afterEach(async () => {

@@ -1,4 +1,5 @@
 import * as fs from "fs";
+import { VerifierClientConfig } from "../config/VerifierClientConfig";
 import { VerifierStateInfo } from "../VerifierStateInfo";
 
 export class VerifierStateManager {
@@ -8,7 +9,14 @@ export class VerifierStateManager {
     memoryOnly: boolean;
   };
 
-  constructor(_state: VerifierStateInfo, options?: { memoryOnly: boolean }) {
+  private verifierClientConfig: VerifierClientConfig;
+
+  constructor(
+    verifierClientConfig: VerifierClientConfig,
+    _state: VerifierStateInfo,
+    options?: { memoryOnly: boolean }
+  ) {
+    this.verifierClientConfig = verifierClientConfig;
     this.state = _state;
 
     this.options = options
@@ -18,7 +26,7 @@ export class VerifierStateManager {
         };
   }
 
-  static load(): VerifierStateInfo {
+  static load(verifierClientConfig: VerifierClientConfig): VerifierStateInfo {
     let verifierStateInfo: VerifierStateInfo = {
       lastProcessedBlock: -1,
       lastProcessedTransactionIndex: -1,
@@ -26,9 +34,9 @@ export class VerifierStateManager {
       currentlyProcessingBlock: 0,
     };
 
-    if (fs.existsSync(process.env.STATE_INFO_PATH!)) {
+    if (fs.existsSync(verifierClientConfig.stateInfoPath)) {
       verifierStateInfo = JSON.parse(
-        fs.readFileSync(process.env.STATE_INFO_PATH!, {
+        fs.readFileSync(verifierClientConfig.stateInfoPath, {
           encoding: "utf8",
           flag: "r",
         })
@@ -44,7 +52,7 @@ export class VerifierStateManager {
     }
 
     fs.writeFileSync(
-      process.env.STATE_INFO_PATH!,
+      this.verifierClientConfig.stateInfoPath,
       JSON.stringify(this.state, null, 2)
     );
   }
