@@ -30,6 +30,7 @@ export const buildDependencyContainer = (
     polywrapClientConfig: awilix.asClass(PolywrapClientConfig).singleton(),
     ethersProvider: awilix.asFunction(({ ethersConfig }) => {
       return ethers.providers.getDefaultProvider(ethersConfig.providerNetwork);
+    }),
     logger: awilix.asFunction(() => {
       return winston.createLogger({
         level: "info",
@@ -39,11 +40,6 @@ export const buildDependencyContainer = (
         ],
         format: winston.format.combine(winston.format.simple()),
       });
-    }),
-    ethersProvider: awilix.asFunction(() => {
-      return ethers.providers.getDefaultProvider(
-        `${process.env.PROVIDER_NETWORK}`
-      );
     }),
     polywrapClient: awilix.asFunction(
       ({ polywrapClientConfig, ethersProvider }) => {
