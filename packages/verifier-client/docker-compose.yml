@@ -1,13 +1,5 @@
 version: '3'
 services:
-  verifier-client:
-    build: ./
-    links:
-      - ganache
-      - ipfs
-    environment:
-      ganache: 'ganache:${ETHEREUM_PORT}'
-      ipfs: 'ipfs:${IPFS_PORT}'
   ganache:
     image: 'trufflesuite/ganache-cli:v6.12.2'
     ports:

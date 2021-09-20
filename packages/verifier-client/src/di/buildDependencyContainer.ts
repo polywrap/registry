@@ -15,6 +15,8 @@ import { EthersConfig } from "../config/EthersConfig";
 import { PolywrapClientConfig } from "../config/PolywrapClientConfig";
 import { IpfsConfig } from "../config/IpfsConfig";
 import winston from "winston";
+import { ApiServerConfig } from "../config/ApiServerConfig";
+import { WebUiServerConfig } from "../config/WebUiServerConfig";
 
 export const buildDependencyContainer = (
   extensionsAndOverrides?: NameAndRegistrationPair<unknown>
@@ -28,19 +30,27 @@ export const buildDependencyContainer = (
     verifierClientConfig: awilix.asClass(VerifierClientConfig).singleton(),
     ethersConfig: awilix.asClass(EthersConfig).singleton(),
     polywrapClientConfig: awilix.asClass(PolywrapClientConfig).singleton(),
-    ethersProvider: awilix.asFunction(({ ethersConfig }) => {
-      return ethers.providers.getDefaultProvider(ethersConfig.providerNetwork);
-    }),
-    logger: awilix.asFunction(() => {
-      return winston.createLogger({
-        level: "info",
-        transports: [
-          new winston.transports.Console(),
-          new winston.transports.File({ filename: "verifier_client.log" }),
-        ],
-        format: winston.format.combine(winston.format.simple()),
-      });
-    }),
+    apiServerConfig: awilix.asClass(ApiServerConfig).singleton(),
+    webUiServerConfig: awilix.asClass(WebUiServerConfig).singleton(),
+    ethersProvider: awilix
+      .asFunction(({ ethersConfig }) => {
+        return ethers.providers.getDefaultProvider(
+          ethersConfig.providerNetwork
+        );
+      })
+      .singleton(),
+    logger: awilix
+      .asFunction(() => {
+        return winston.createLogger({
+          level: "info",
+          transports: [
+            new winston.transports.Console(),
+            new winston.transports.File({ filename: "verifier_client.log" }),
+          ],
+          format: winston.format.combine(winston.format.simple()),
+        });
+      })
+      .singleton(),
     polywrapClient: awilix
       .asFunction(({ polywrapClientConfig, ethersProvider }) => {
         return setupWeb3ApiClient({
@@ -49,14 +59,15 @@ export const buildDependencyContainer = (
         });
       })
       .singleton(),
-    verifierSigner: awilix.asFunction(
-      ({ verifierClientConfig, ethersProvider }) => {
+    verifierSigner: awilix
+      .asFunction(({ verifierClientConfig, ethersProvider }) => {
+        console.log(verifierClientConfig);
         return new ethers.Wallet(
           verifierClientConfig.verifierPrivateKey,
           ethersProvider
         );
-      }
-    ),
+      })
+      .singleton(),
     verifierStateManager: awilix.asFunction(({ verifierClientConfig }) => {
       const state = VerifierStateManager.load(verifierClientConfig);
       return new VerifierStateManager(verifierClientConfig, state);

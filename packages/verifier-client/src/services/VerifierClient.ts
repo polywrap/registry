@@ -42,7 +42,7 @@ export class VerifierClient {
 
     // eslint-disable-next-line no-constant-condition
     while (true) {
-      processedEventCnt = await this.queryAndVerifyVersions();
+      // processedEventCnt = await this.queryAndVerifyVersions();
 
       this.logger.info(`Processed ${processedEventCnt} events.`);
 
