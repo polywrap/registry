@@ -38,7 +38,7 @@ export class VerifierClient {
   }
 
   async run(): Promise<void> {
-    let processedEventCnt = 0;
+    const processedEventCnt = 0;
 
     // eslint-disable-next-line no-constant-condition
     while (true) {

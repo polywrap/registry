@@ -48,8 +48,8 @@ const config: HardhatUserConfig = {
   external: {
     contracts: [
       {
-        artifacts: "../registry/artifacts",
-        deploy: "../registry/deploy",
+        artifacts: "../../../registry/artifacts",
+        deploy: "../../../registry/deploy",
       },
     ],
   },

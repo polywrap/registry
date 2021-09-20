@@ -11,20 +11,24 @@
   "workspaces": {
     "packages": [
       "./packages/**/*"
+    ],
+    "nohoist": [
+      "**/jest",
+      "*react*",
+      "*react*/**"
     ]
   },
   "scripts": {
     "reset": "yarn clean && yarn bootstrap && yarn build",
     "clean": "npx rimraf ./**/node_modules ./**/build ./**/cache ./**/artifacts && lerna clean",
     "bootstrap": "lerna bootstrap",
-    "build": "yarn build:registry-core-js && yarn build:registry  && yarn build:registry-js && yarn build:registry-test-utils && yarn build:verifier-client && yarn build:verifier-client-react",
+    "build": "yarn build:registry-core-js && yarn build:registry  && yarn build:registry-js && yarn build:registry-test-utils && yarn build:verifier",
     "build:registry-core-js": "lerna run build --scope @polywrap/registry-core-js",
     "build:registry": "lerna run build --scope @polywrap/registry",
     "build:e2e": "lerna run build --scope @polywrap/e2e",
     "build:registry-js": "lerna run build --scope @polywrap/registry-js",
     "build:registry-test-utils": "lerna run build --scope @polywrap/registry-test-utils",
-    "build:verifier-client": "lerna run build --scope @polywrap/verifier-client",
-    "build:verifier-client-react": "lerna run build --scope @polywrap/verifier-client-react",
+    "build:verifier": "lerna run build --scope @polywrap/verifier-client-api && lerna run build --scope @polywrap/verifier-client-web-ui",
     "test": "lerna run test",
     "lint": "lerna run lint --ignore @polywrap/registry && lerna run lint:ts --scope @polywrap/registry",
     "lint:fix": "lerna run fix --ignore @polywrap/registry && lerna run fix:ts --scope @polywrap/registry",

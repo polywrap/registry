@@ -1,12 +1,12 @@
 {
-  "name": "@polywrap/verifier-client",
+  "name": "@polywrap/verifier-client-api",
   "version": "1.0.0",
   "main": "app.js",
   "license": "MIT",
   "scripts": {
     "build": "tsc --project tsconfig.build.json",
-    "start:local": "NODE_ENV=local yarn build && node ./bin/app.js",
-    "start:docker": "NODE_ENV=docker yarn build && node ./bin/app.js",
+    "start:local": "ENV=local yarn build && node ./bin/app.js",
+    "start:docker": "ENV=docker yarn build && node ./bin/app.js",
     "dev": "ENV=local ts-node ./src/app.ts",
     "test": "yarn test:jest && yarn test:hardhat",
     "test:jest": "jest test --passWithNoTests",

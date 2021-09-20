@@ -1,0 +1,10 @@
+version: '3'
+services:
+  api-server:
+    build: ./api
+    ports:
+      - '${API_PORT}:${API_PORT}'
+  web-ui-server:
+    build: ./web-ui
+    ports:
+      - '${WEB_UI_PORT}:${WEB_UI_PORT}'
