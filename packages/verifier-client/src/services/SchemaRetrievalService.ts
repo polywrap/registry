@@ -1,15 +1,19 @@
+import { Logger } from "winston";
 import { BytesLike } from "ethers";
 import { Web3ApiClient } from "@web3api/client-js";
 import { PolywrapVotingSystem } from "@polywrap/registry-js";
 
 export class SchemaRetrievalService {
+  private logger: Logger;
   private polywrapVotingSystem: PolywrapVotingSystem;
   private polywrapClient: Web3ApiClient;
 
   constructor(deps: {
+    logger: Logger;
     polywrapVotingSystem: PolywrapVotingSystem;
     polywrapClient: Web3ApiClient;
   }) {
+    this.logger = deps.logger;
     this.polywrapVotingSystem = deps.polywrapVotingSystem;
     this.polywrapClient = deps.polywrapClient;
   }
