@@ -1,23 +1,21 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import { IPFSHTTPClient } from "ipfs-http-client";
 import { buildDependencyContainer } from "../../../di/buildDependencyContainer";
 import { VerifierClient } from "../../../services/VerifierClient";
 import { EnsApi } from "./helpers/ens/EnsApi";
 import { buildHelpersDependencyExtensions } from "./helpers/buildHelpersDependencyExtensions";
-import { down, up } from "./helpers/testEnv";
 import {
   EnsDomain,
   PackageOwner,
   RegistryAuthority,
-  Logger,
 } from "@polywrap/registry-js";
-import { publishToIPFS } from "@polywrap/registry-test-utils";
 import { deployments } from "hardhat";
 import { Signer } from "ethers";
 import "hardhat-deploy";
 import "@nomiclabs/hardhat-ethers";
-import { IpfsConfig } from "../../../config/IpfsConfig";
+import { IpfsPublisher } from "./helpers/IpfsPublisher";
+import { Logger } from "winston";
+
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 require("custom-env").env("local");
 
@@ -30,8 +28,7 @@ describe("Start local chain", () => {
   let registryAuthoritySigner: Signer;
   let verifierSigner: Signer;
   let packageOwnerSigner: Signer;
-  let ipfsClient: IPFSHTTPClient;
-  let ipfsConfig: IpfsConfig;
+  let ipfsPublisher: IpfsPublisher;
 
   const configureDomainForPolywrap = async (domain: EnsDomain) => {
     await ensApi.registerDomainName(
@@ -138,15 +135,8 @@ describe("Start local chain", () => {
     packageOwner = dependencyContainer.cradle.packageOwner;
     registryAuthority = dependencyContainer.cradle.registryAuthority;
     ensApi = dependencyContainer.cradle.ensApi;
-    ipfsClient = dependencyContainer.cradle.ipfsClient;
-    ipfsConfig = dependencyContainer.cradle.ipfsConfig;
-
-    await up(`${__dirname}/../../..`, ipfsConfig.ipfsProvider);
+    ipfsPublisher = dependencyContainer.cradle.ipfsPublisher;
     logger = dependencyContainer.cradle.logger;
-  });
-
-  afterEach(async () => {
-    await down(`${__dirname}/../../../`);
   });
 
   it("sanity", async () => {
@@ -166,7 +156,7 @@ describe("Start local chain", () => {
 
     await configureDomainForPolywrap(domain);
 
-    const packageLocation = await publishToIPFS(polywrapBuildPath, ipfsClient);
+    const packageLocation = await ipfsPublisher.publishDir(polywrapBuildPath);
 
     await packageOwner.updateOwnership(domain);
     await packageOwner.relayOwnership(domain, l2ChainName);

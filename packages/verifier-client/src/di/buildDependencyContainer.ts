@@ -41,14 +41,14 @@ export const buildDependencyContainer = (
         format: winston.format.combine(winston.format.simple()),
       });
     }),
-    polywrapClient: awilix.asFunction(
-      ({ polywrapClientConfig, ethersProvider }) => {
+    polywrapClient: awilix
+      .asFunction(({ polywrapClientConfig, ethersProvider }) => {
         return setupWeb3ApiClient({
           ethersProvider: ethersProvider,
           ipfsProvider: polywrapClientConfig.ipfsProvider,
         });
-      }
-    ),
+      })
+      .singleton(),
     verifierSigner: awilix.asFunction(
       ({ verifierClientConfig, ethersProvider }) => {
         return new ethers.Wallet(
