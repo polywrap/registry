@@ -3,6 +3,7 @@ import { VerifierStateManager } from "./VerifierStateManager";
 import { ProposedVersionEventArgs } from "../events/ProposedVersionEventArgs";
 import { PolywrapVotingSystem } from "@polywrap/registry-js";
 import { VerifierClientConfig } from "../config/VerifierClientConfig";
+import { Logger } from "winston";
 
 function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -16,17 +17,20 @@ interface TypedEvent {
 }
 
 export class VerifierClient {
+  private logger: Logger;
   private versionProcessingService: VersionProcessingService;
   private polywrapVotingSystem: PolywrapVotingSystem;
   private verifierStateManager: VerifierStateManager;
   private verifierClientConfig: VerifierClientConfig;
 
   constructor(deps: {
+    logger: Logger;
     polywrapVotingSystem: PolywrapVotingSystem;
     versionProcessingService: VersionProcessingService;
     verifierStateManager: VerifierStateManager;
     verifierClientConfig: VerifierClientConfig;
   }) {
+    this.logger = deps.logger;
     this.polywrapVotingSystem = deps.polywrapVotingSystem;
     this.versionProcessingService = deps.versionProcessingService;
     this.verifierStateManager = deps.verifierStateManager;
@@ -40,7 +44,7 @@ export class VerifierClient {
     while (true) {
       processedEventCnt = await this.queryAndVerifyVersions();
 
-      console.log(`Processed ${processedEventCnt} events.`);
+      this.logger.info(`Processed ${processedEventCnt} events.`);
 
       await delay(this.verifierClientConfig.pauseTimeInMiliseconds);
     }

@@ -7,6 +7,7 @@ import { Signer } from "ethers";
 import { VerifierStateManager } from "../../../../services/VerifierStateManager";
 import { VerifierStateInfo } from "../../../../VerifierStateInfo";
 import { RegistryContracts, RegistryAuthority } from "@polywrap/registry-js";
+import winston from "winston";
 
 export const buildHelpersDependencyExtensions = (
   signers: {
@@ -30,6 +31,16 @@ export const buildHelpersDependencyExtensions = (
   }
 ): NameAndRegistrationPair<any> => {
   return {
+    logger: awilix.asFunction(() => {
+      return winston.createLogger({
+        level: "debug",
+        transports: [
+          new winston.transports.Console(),
+          new winston.transports.File({ filename: "test_verifier_client.log" }),
+        ],
+        format: winston.format.combine(winston.format.simple()),
+      });
+    }),
     registryContracts: awilix.asFunction(({ ethersProvider }) => {
       return RegistryContracts.fromAddresses(
         registryContractAddresses,

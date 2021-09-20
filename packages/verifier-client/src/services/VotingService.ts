@@ -1,8 +1,10 @@
 import { BytesLike } from "ethers";
 import { PolywrapVotingSystem } from "@polywrap/registry-js";
 import { VerifierClientConfig } from "../config/VerifierClientConfig";
+import { Logger } from "winston";
 
 export class VotingService {
+  private logger: Logger;
   private polywrapVotingSystem: PolywrapVotingSystem;
   private verifierClientConfig: VerifierClientConfig;
 
@@ -10,6 +12,11 @@ export class VotingService {
     polywrapVotingSystem: PolywrapVotingSystem;
     verifierClientConfig: VerifierClientConfig;
   }) {
+  constructor(deps: {
+    logger: Logger;
+    polywrapVotingSystem: PolywrapVotingSystem;
+  }) {
+    this.logger = deps.logger;
     this.polywrapVotingSystem = deps.polywrapVotingSystem;
     this.verifierClientConfig = deps.verifierClientConfig;
   }
@@ -31,7 +38,7 @@ export class VotingService {
 
     await voteTx.wait(this.verifierClientConfig.numOfConfirmationsToWait);
 
-    console.log(
+    this.logger.info(
       `Voted on proposed version ${patchNodeId}, approved: ${approved}`
     );
   }

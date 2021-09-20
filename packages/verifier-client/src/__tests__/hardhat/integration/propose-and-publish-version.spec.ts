@@ -10,6 +10,7 @@ import {
   EnsDomain,
   PackageOwner,
   RegistryAuthority,
+  Logger,
 } from "@polywrap/registry-js";
 import { publishToIPFS } from "@polywrap/registry-test-utils";
 import { deployments } from "hardhat";
@@ -21,6 +22,7 @@ import { IpfsConfig } from "../../../config/IpfsConfig";
 require("custom-env").env("local");
 
 describe("Start local chain", () => {
+  let logger: Logger;
   let verifierClient: VerifierClient;
   let packageOwner: PackageOwner;
   let registryAuthority: RegistryAuthority;
@@ -140,6 +142,7 @@ describe("Start local chain", () => {
     ipfsConfig = dependencyContainer.cradle.ipfsConfig;
 
     await up(`${__dirname}/../../..`, ipfsConfig.ipfsProvider);
+    logger = dependencyContainer.cradle.logger;
   });
 
   afterEach(async () => {
@@ -147,6 +150,7 @@ describe("Start local chain", () => {
   });
 
   it("sanity", async () => {
+    logger.info("Running sanity test!");
     const domain = new EnsDomain("test");
     const l2ChainName = "l2-chain-name";
     const polywrapBuildPath = `${__dirname}/test-build`;
