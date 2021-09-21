@@ -1,5 +1,7 @@
 node_modules
 bin
 dist
+build
 archive
 typechain
+public
