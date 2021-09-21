@@ -26,15 +26,19 @@ import {
   RegistryAuthority,
   RegistryContracts,
 } from "@polywrap/registry-js";
+import { IpfsConfig } from "../../config/IpfsConfig";
 
 export const buildHelpersDependencyExtensions = (): NameAndRegistrationPair<any> => {
   return {
+    ipfsConfig: awilix.asFunction(() => {
+      return new IpfsConfig();
+    }),
     registryContracts: awilix.asFunction(({ ethersProvider }) => {
       return RegistryContracts.fromTestnet(ethersProvider);
     }),
-    ipfsClient: awilix.asFunction(() => {
+    ipfsClient: awilix.asFunction(({ ipfsConfig }) => {
       return create({
-        url: process.env.IPFS_URI,
+        url: ipfsConfig.ipfsProvider,
       });
     }),
     verifierSigner: awilix.asFunction(({ ethersProvider }) => {
@@ -43,20 +47,32 @@ export const buildHelpersDependencyExtensions = (): NameAndRegistrationPair<any>
         ethersProvider
       );
     }),
-    registryAuthority: awilix.asFunction(({ ethersProvider }) => {
-      return new RegistryAuthority(
-        ethersProvider,
-        process.env.REGISTRY_AUTHORITY_PRIVATE_KEY!
+    registryAuthoritySigner: awilix.asFunction(({ ethersProvider }) => {
+      return new ethers.Wallet(
+        process.env.REGISTRY_AUTHORITY_PRIVATE_KEY!,
+        ethersProvider
       );
     }),
+    registryAuthority: awilix.asFunction(
+      ({ registryAuthoritySigner, registryContracts }) => {
+        return new RegistryAuthority(
+          registryAuthoritySigner,
+          registryContracts.votingMachine.address
+        );
+      }
+    ),
     ensApi: awilix.asClass(EnsApi),
-    packageOwner: awilix.asClass(PackageOwner),
     packageOwnerSigner: awilix.asFunction(({ ethersProvider }) => {
       return new ethers.Wallet(
         process.env.PACKAGE_OWNER_PRIVATE_KEY!,
         ethersProvider
       );
     }),
+    packageOwner: awilix.asFunction(
+      ({ packageOwnerSigner, registryContracts }) => {
+        return new PackageOwner(packageOwnerSigner, registryContracts);
+      }
+    ),
     versionVerificationManagerL2: awilix.asFunction(
       ({ packageOwnerSigner }) => {
         return VersionVerificationManager__factory.connect(
@@ -83,28 +99,22 @@ export const buildHelpersDependencyExtensions = (): NameAndRegistrationPair<any>
         packageOwnerSigner
       );
     }),
-    registryAutoritySigner: awilix.asFunction(({ ethersProvider }) => {
-      return new ethers.Wallet(
-        process.env.REGISTRY_AUTHORITY_PRIVATE_KEY!,
-        ethersProvider
-      );
-    }),
-    ensRegistryL1: awilix.asFunction(({ registryAutoritySigner }) => {
+    ensRegistryL1: awilix.asFunction(({ registryAuthoritySigner }) => {
       return ENSRegistry__factory.connect(
         EnsRegistryL1.address,
-        registryAutoritySigner
+        registryAuthoritySigner
       );
     }),
-    testEthRegistrarL1: awilix.asFunction(({ registryAutoritySigner }) => {
+    testEthRegistrarL1: awilix.asFunction(({ registryAuthoritySigner }) => {
       return TestEthRegistrar__factory.connect(
         TestEthRegistrarL1.address,
-        registryAutoritySigner
+        registryAuthoritySigner
       );
     }),
-    testPublicResolverL1: awilix.asFunction(({ registryAutoritySigner }) => {
+    testPublicResolverL1: awilix.asFunction(({ registryAuthoritySigner }) => {
       return TestPublicResolver__factory.connect(
         TestPublicResolverL1.address,
-        registryAutoritySigner
+        registryAuthoritySigner
       );
     }),
     votingMachine: awilix.asFunction(({ verifierSigner }) => {

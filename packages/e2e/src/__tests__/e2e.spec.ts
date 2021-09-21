@@ -1,4 +1,3 @@
-import * as dotenv from "dotenv";
 import { EnsApi } from "./helpers/ens/EnsApi";
 import { IPFSHTTPClient } from "ipfs-http-client";
 import {
@@ -6,15 +5,19 @@ import {
   PackageOwner,
   RegistryAuthority,
 } from "@polywrap/registry-js";
-import { runCommand } from "@polywrap/registry-test-utils";
-import { buildDependencyContainer } from "../di/buildDependencyContainer";
-import { buildHelpersDependencyExtensions } from "./helpers/buildHelpersDependencyExtensions";
+import { publishToIPFS, runCommand } from "@polywrap/registry-test-utils";
 import { Wallet } from "@ethersproject/wallet";
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-require("custom-env").env(process.env.ENV);
+require("custom-env").env(process.env.ENV || "local");
 
-jest.setTimeout(200000);
+import { buildDependencyContainer } from "../di/buildDependencyContainer";
+import { buildHelpersDependencyExtensions } from "./helpers/buildHelpersDependencyExtensions";
+
+import { up, down } from "./helpers/testEnv";
+import { IpfsConfig } from "../config/IpfsConfig";
+
+jest.setTimeout(2000000);
 
 const shouldLog = process.env.LOG_TESTS === "true";
 
@@ -22,6 +25,7 @@ describe("e2e", () => {
   let packageOwner: PackageOwner;
   let registryAuthority: RegistryAuthority;
   let ensApi: EnsApi;
+  let ipfsConfig: IpfsConfig;
   let ipfsClient: IPFSHTTPClient;
   let verifierSigner: Wallet;
 
@@ -33,59 +37,102 @@ describe("e2e", () => {
     packageOwner = dependencyContainer.cradle.packageOwner;
     registryAuthority = dependencyContainer.cradle.registryAuthority;
     ensApi = dependencyContainer.cradle.ensApi;
+    ipfsConfig = dependencyContainer.cradle.ipfsConfig;
     ipfsClient = dependencyContainer.cradle.ipfsClient;
     verifierSigner = dependencyContainer.cradle.verifierSigner;
   });
 
   beforeEach(async () => {
-    await runCommand(
-      "yarn docker:full -d",
-      !shouldLog,
-      `${__dirname}/../../../verifier-client`
-    );
+    await up(`${__dirname}/../../../verifier-client`, ipfsConfig.ipfsProvider);
     await runCommand(
       "yarn hardhat deploy --network localhost",
       !shouldLog,
-      `${__dirname}/../../../`
+      `${__dirname}/../../../registry`
     );
   });
 
   afterEach(async () => {
-    await runCommand(
-      "docker-compose down",
-      !shouldLog,
-      `${__dirname}/../../../verifier-client`
-    );
+    await down(`${__dirname}/../../../verifier-client`);
   });
 
   it("sanity", async () => {
+    console.log("Hello 1");
     const domain = new EnsDomain("test");
     const l1ChainName = "l1-chain-name";
     const l2ChainName = "l2-chain-name";
+    const polywrapBuildPath = `${__dirname}/test-build`;
+    const majorNumber = 1;
+    const minorNumber = 0;
+    const patchNumber = 0;
+    console.log("Hello 2");
+    const patchNodeId = packageOwner.calculatePatchNodeId(
+      domain,
+      majorNumber,
+      minorNumber,
+      patchNumber
+    );
+    console.log("Hello 3");
 
     await registryAuthority.authorizeVerifiers([
       await verifierSigner.getAddress(),
     ]);
+    console.log("Hello 4");
 
     await ensApi.registerDomainName(packageOwner.signer, domain);
     await ensApi.setPolywrapOwner(packageOwner.signer, domain);
-    const { cid } = await ipfsClient.add(`type Object {
-      """
-      comment
-      """
-        prop1: Int!
-      }
-      `);
+    console.log("Hello 5");
+    const packageLocation = await publishToIPFS(polywrapBuildPath, ipfsClient);
 
-    const packageLocation = cid.toString();
     shouldLog && console.log("Package location", packageLocation);
 
     await packageOwner.updateOwnership(domain);
     await packageOwner.relayOwnership(domain, l2ChainName);
+    console.log("Hello 6");
+    await packageOwner.proposeVersion(
+      domain,
+      majorNumber,
+      minorNumber,
+      patchNumber,
+      packageLocation
+    );
+    console.log("Hello 7");
 
-    await packageOwner.proposeVersion(domain, 1, 0, 0, packageLocation);
+    const votingResult = await packageOwner.waitForVotingEnd(
+      domain,
+      majorNumber,
+      minorNumber,
+      patchNumber,
+      packageLocation
+    );
+    console.log("Hello 8");
 
-    await packageOwner.waitForVotingEnd(domain, 1, 0, 0, packageLocation);
-    await packageOwner.publishVersion(domain, packageLocation, 1, 0, 0);
+    expect(votingResult.patchNodeId).toBe(patchNodeId);
+    expect(votingResult.verified).toBe(true);
+
+    await packageOwner.publishVersion(
+      domain,
+      packageLocation,
+      majorNumber,
+      minorNumber,
+      patchNumber
+    );
+    console.log("Hello 9");
+
+    const versionInfo = await packageOwner.getVersionNodeInfo(
+      domain,
+      majorNumber,
+      minorNumber,
+      patchNumber
+    );
+    console.log("Hello 10");
+    const resolvedPackageLocation = await packageOwner.resolveToPackageLocation(
+      domain,
+      majorNumber,
+      minorNumber,
+      patchNumber
+    );
+
+    expect(versionInfo.location).toBe(packageLocation);
+    expect(resolvedPackageLocation).toBe(packageLocation);
   });
 });

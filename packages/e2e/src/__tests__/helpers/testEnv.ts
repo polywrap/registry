@@ -59,7 +59,7 @@ export async function up(
   ipfsProvider: string,
   quiet = false
 ): Promise<void> {
-  await runCommand("docker-compose up -d", quiet, cwd);
+  await runCommand(`docker compose up -d`, quiet, cwd);
 
   // Wait for all endpoints to become available
   let success = false;
@@ -76,6 +76,24 @@ export async function up(
   if (!success) {
     throw Error("test-env: IPFS failed to start");
   }
+
+  await new Promise<void>(function (resolve) {
+    setTimeout(() => resolve(), 10000);
+  });
+
+  // // Ganache
+  // success = await awaitResponse(
+  //   `http://localhost:${process.env.ETHEREUM_PORT}`,
+  //   '"jsonrpc":',
+  //   HTTPMethod.POST,
+  //   2000,
+  //   40000,
+  //   '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":83}'
+  // );
+
+  // if (!success) {
+  //   throw Error("test-env: Ganache failed to start");
+  // }
 }
 
 export async function down(cwd: string, quiet = false): Promise<void> {

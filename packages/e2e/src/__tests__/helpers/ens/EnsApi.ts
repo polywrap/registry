@@ -28,17 +28,20 @@ export class EnsApi {
     domainOwner: Signer,
     domain: EnsDomain
   ): Promise<void> {
+    console.log("registerDomainName 1");
     await this.testEthRegistrarL1.register(
       domain.labelHash,
       await domainOwner.getAddress(),
       10 * 60
     );
+    console.log("registerDomainName 2");
     const ownedRegistry = this.ensRegistryL1.connect(domainOwner);
-
+    console.log("registerDomainName 3");
     const tx = await ownedRegistry.setResolver(
       domain.node,
       this.testPublicResolverL1!.address
     );
+    console.log("registerDomainName 4");
 
     await tx.wait();
   }
