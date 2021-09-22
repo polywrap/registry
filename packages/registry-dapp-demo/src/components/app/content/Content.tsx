@@ -1,16 +1,24 @@
 import "./Content.scss";
 import Logo from "../../../logo.png";
+import WrapperInfoComponent from "../../wrappers/wrapper-info/WrapperInfoComponent";
+import { PackageOwner } from "@polywrap/registry-js";
 
-const Content: React.FC = () => {
+const Content: React.FC<{
+  packageOwner: PackageOwner;
+}> = ({ packageOwner }) => {
   return (
-    <div className="container content">
+    <div className="Content">
       <div className="row">
         <div>
           <img src={Logo} className="main__logo" />
           <h3 className="title">Polywrap Registry dApp</h3>
         </div>
 
-        <div className="widget-container"></div>
+        <div className="widget-container">
+          <WrapperInfoComponent
+            packageOwner={packageOwner}
+          ></WrapperInfoComponent>
+        </div>
       </div>
     </div>
   );
