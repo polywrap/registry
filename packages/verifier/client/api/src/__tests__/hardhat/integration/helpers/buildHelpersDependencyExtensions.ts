@@ -32,13 +32,20 @@ export const buildHelpersDependencyExtensions = (
 ): NameAndRegistrationPair<any> => {
   return {
     logger: awilix.asFunction(() => {
+      const format = winston.format.printf(({ level, message, timestamp }) => {
+        return `${timestamp} - ${level} - ${message}`;
+      });
       return winston.createLogger({
         level: "debug",
         transports: [
           new winston.transports.Console(),
           new winston.transports.File({ filename: "test_verifier_client.log" }),
         ],
-        format: winston.format.combine(winston.format.simple()),
+        format: winston.format.combine(
+          winston.format.simple(),
+          winston.format.timestamp(),
+          format
+        ),
       });
     }),
     registryContracts: awilix.asFunction(({ ethersProvider }) => {
