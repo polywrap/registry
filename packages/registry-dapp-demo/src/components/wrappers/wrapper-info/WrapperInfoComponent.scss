@@ -1,27 +1,29 @@
 .WrapperInfoComponent {
   max-width: 50em;
 
+  .tabs {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+  }
+
   h4 {
     margin-top: 5px;
   }
 
-  .register-api {
+  .find-btn {
     margin-left: 10px;
   }
 
-  .api-to-register {
+  .polywrapper-definition {
     margin-bottom: 20px;
   }
 
-  .empty-api-registered-container {
-    margin-top: 40px;
-  }
-
-  .api-registered-message {
+  .error {
     color: orangered;
   }
 
-  .api-not-registered-message {
+  .success {
     color: yellowgreen;
   }
 }

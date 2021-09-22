@@ -1,11 +1,12 @@
 import "./Content.scss";
 import Logo from "../../../logo.png";
 import WrapperInfoComponent from "../../wrappers/wrapper-info/WrapperInfoComponent";
-import { PackageOwner } from "@polywrap/registry-js";
+import React from "react";
+import { PolywrapRegistryContext } from "../../../providers/PolywrapRegistryContextProvider";
 
-const Content: React.FC<{
-  packageOwner: PackageOwner;
-}> = ({ packageOwner }) => {
+const Content: React.FC = () => {
+  const registry = React.useContext(PolywrapRegistryContext);
+
   return (
     <div className="Content">
       <div className="row">
@@ -15,9 +16,7 @@ const Content: React.FC<{
         </div>
 
         <div className="widget-container">
-          <WrapperInfoComponent
-            packageOwner={packageOwner}
-          ></WrapperInfoComponent>
+          {registry ? <WrapperInfoComponent></WrapperInfoComponent> : <></>}
         </div>
       </div>
     </div>

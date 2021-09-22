@@ -68,7 +68,7 @@ export class RegistryContracts {
       registryL2: string;
       votingMachine: string;
     },
-    provider: ethers.providers.BaseProvider
+    provider: ethers.providers.Provider
   ): RegistryContracts {
     return new RegistryContracts({
       versionVerificationManagerL2: VersionVerificationManager__factory.connect(
@@ -102,9 +102,7 @@ export class RegistryContracts {
     });
   }
 
-  static fromTestnet(
-    provider: ethers.providers.BaseProvider
-  ): RegistryContracts {
+  static fromTestnet(provider: ethers.providers.Provider): RegistryContracts {
     return RegistryContracts.fromAddresses(contractAddressesTestnet, provider);
   }
 }
