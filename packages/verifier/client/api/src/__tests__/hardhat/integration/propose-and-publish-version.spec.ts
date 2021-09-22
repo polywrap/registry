@@ -8,6 +8,7 @@ import {
   EnsDomain,
   PackageOwner,
   RegistryAuthority,
+  Tracer,
 } from "@polywrap/registry-js";
 import { deployments } from "hardhat";
 import { Signer } from "ethers";
@@ -87,6 +88,10 @@ describe("Start local chain", () => {
     registryAuthoritySigner = _registryAuthoritySigner;
     verifierSigner = _verifierSigner;
     packageOwnerSigner = _packageOwnerSigner;
+
+    if (process.env.ENABLE_TRACER) {
+      Tracer.enableTracing("verifier-client");
+    }
   });
 
   beforeEach(async () => {

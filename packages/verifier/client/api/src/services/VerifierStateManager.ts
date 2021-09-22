@@ -1,3 +1,4 @@
+import { traceFunc } from "@polywrap/registry-js";
 import * as fs from "fs";
 import { VerifierClientConfig } from "../config/VerifierClientConfig";
 import { VerifierStateInfo } from "../VerifierStateInfo";
@@ -26,6 +27,7 @@ export class VerifierStateManager {
         };
   }
 
+  @traceFunc("VerifierStateManager:load")
   static load(verifierClientConfig: VerifierClientConfig): VerifierStateInfo {
     let verifierStateInfo: VerifierStateInfo = {
       lastProcessedBlock: -1,
@@ -46,6 +48,7 @@ export class VerifierStateManager {
     return verifierStateInfo;
   }
 
+  @traceFunc("VerifierStateManager:save")
   save(): void {
     if (this.options.memoryOnly) {
       return;

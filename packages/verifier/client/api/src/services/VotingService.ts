@@ -1,5 +1,5 @@
 import { BytesLike } from "ethers";
-import { PolywrapVotingSystem } from "@polywrap/registry-js";
+import { PolywrapVotingSystem, traceFunc } from "@polywrap/registry-js";
 import { VerifierClientConfig } from "../config/VerifierClientConfig";
 import { Logger } from "winston";
 
@@ -18,6 +18,7 @@ export class VotingService {
     this.verifierClientConfig = deps.verifierClientConfig;
   }
 
+  @traceFunc("VotingService:voteOnVersion")
   async voteOnVersion(
     patchNodeId: BytesLike,
     prevMinorNodeId: BytesLike,
