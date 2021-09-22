@@ -41,13 +41,22 @@ export const buildDependencyContainer = (
       .singleton(),
     logger: awilix
       .asFunction(() => {
+        const format = winston.format.printf(
+          ({ level, message, timestamp }) => {
+            return `${timestamp} - ${level} - ${message}`;
+          }
+        );
         return winston.createLogger({
           level: "info",
           transports: [
             new winston.transports.Console(),
             new winston.transports.File({ filename: "verifier_client.log" }),
           ],
-          format: winston.format.combine(winston.format.simple()),
+          format: winston.format.combine(
+            winston.format.simple(),
+            winston.format.timestamp(),
+            format
+          ),
         });
       })
       .singleton(),

@@ -1,6 +1,7 @@
 import { buildDependencyContainer } from "./di/buildDependencyContainer";
 import express from "express";
 import cors from "cors";
+import fs from "fs";
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 require("custom-env").env(process.env.ENV);
@@ -44,6 +45,26 @@ async function run() {
   app.get("/info", (_, res) => {
     res.send({
       status: "running",
+    });
+  });
+
+  app.get("/logs", async (_, res) => {
+    const text = await fs.promises.readFile(
+      `${__dirname}/../verifier_client.log`,
+      "utf-8"
+    );
+    res.send({
+      data: text
+        .split("\n")
+        .filter((line) => line)
+        .map((line) => {
+          const [timestamp, level, message] = line.split(" - ");
+          return {
+            timestamp: timestamp,
+            level: level,
+            message: message,
+          };
+        }),
     });
   });
 
