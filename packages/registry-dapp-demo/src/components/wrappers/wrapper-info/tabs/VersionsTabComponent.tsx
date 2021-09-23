@@ -2,6 +2,7 @@ import { useState } from "react";
 import { VersionInfo } from "../../../../types/VersionInfo";
 import { PolywrapperInfo } from "../../../../types/PolywrapperInfo";
 import { usePolywrapRegistry } from "../../../../hooks/usePolywrapRegistry";
+import { BigNumber } from "ethers";
 
 const VersionsTabComponent: React.FC<{
   polywrapperInfo: PolywrapperInfo;
@@ -33,9 +34,9 @@ const VersionsTabComponent: React.FC<{
             patchNodeId: packageOwner
               .calculatePatchNodeId(
                 polywrapperInfo.domain,
-                versionInfo.majorVersion,
-                versionInfo.minorVersion,
-                versionInfo.patchVersion
+                versionInfo.majorVersion.toNumber(),
+                versionInfo.minorVersion.toNumber(),
+                versionInfo.patchVersion.toNumber()
               )
               .toString(),
             number: `${versionInfo.majorVersion}.${versionInfo.minorVersion}.${versionInfo.patchVersion}`,

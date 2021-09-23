@@ -100,31 +100,32 @@ describe("Start local chain", () => {
           packageOwnerSigner,
         },
         {
-          versionVerificationManagerL2: await (
+          versionVerificationManagerL2: await(
             await ethers.getContract("VersionVerificationManagerL2")
           ).address,
-          packageOwnershipManagerL1: await (
+          packageOwnershipManagerL1: await(
             await ethers.getContract("PackageOwnershipManagerL1")
           ).address,
-          registrar: await (await ethers.getContract("PolywrapRegistrar"))
+          registrar: await(await ethers.getContract("PolywrapRegistrar"))
             .address,
-          verificationTreeManager: await (
+          verificationTreeManager: await(
             await ethers.getContract("VerificationTreeManager")
           ).address,
-          registryL1: await (await ethers.getContract("PolywrapRegistryL1"))
+          registryL1: await(await ethers.getContract("PolywrapRegistryL1"))
             .address,
-          registryL2: await (await ethers.getContract("PolywrapRegistryL2"))
+          registryL2: await(await ethers.getContract("PolywrapRegistryL2"))
             .address,
-          votingMachine: await (await ethers.getContract("VotingMachine"))
+          votingMachine: await(await ethers.getContract("VotingMachine"))
             .address,
+          ensLinkL1: await(await ethers.getContract("EnsLinkL1")).address,
         },
         {
-          ensRegistryL1: await (await ethers.getContract("EnsRegistryL1"))
+          ensRegistryL1: await(await ethers.getContract("EnsRegistryL1"))
             .address,
-          testEthRegistrarL1: await (
+          testEthRegistrarL1: await(
             await ethers.getContract("TestEthRegistrarL1")
           ).address,
-          testPublicResolverL1: await (
+          testPublicResolverL1: await(
             await ethers.getContract("TestPublicResolverL1")
           ).address,
         }
