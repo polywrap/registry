@@ -57,9 +57,7 @@ contract VersionVerificationManager is OwnableUpgradeable {
     bytes32[] memory proof,
     bool[] memory sides
   ) public packageOwner(packageId) {
-    bytes32 verifiedVersionId = keccak256(
-      abi.encodePacked(patchNodeId, keccak256(abi.encodePacked(location)))
-    );
+    bytes32 verifiedVersionId = getVerifiedVersionId(patchNodeId, location);
 
     require(
       _isValidProof(proof, sides, verifiedVersionId, verificationRoot),
