@@ -92,6 +92,29 @@ interface DNSResolverInterface extends ethers.utils.Interface {
   getEvent(nameOrSignatureOrTopic: "DNSZonehashChanged"): EventFragment;
 }
 
+export type DNSRecordChangedEvent = TypedEvent<
+  [string, string, number, string] & {
+    node: string;
+    name: string;
+    resource: number;
+    record: string;
+  }
+>;
+
+export type DNSRecordDeletedEvent = TypedEvent<
+  [string, string, number] & { node: string; name: string; resource: number }
+>;
+
+export type DNSZoneClearedEvent = TypedEvent<[string] & { node: string }>;
+
+export type DNSZonehashChangedEvent = TypedEvent<
+  [string, string, string] & {
+    node: string;
+    lastzonehash: string;
+    zonehash: string;
+  }
+>;
+
 export class DNSResolver extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
   attach(addressOrName: string): this;
@@ -248,6 +271,16 @@ export class DNSResolver extends BaseContract {
   };
 
   filters: {
+    "DNSRecordChanged(bytes32,bytes,uint16,bytes)"(
+      node?: BytesLike | null,
+      name?: null,
+      resource?: null,
+      record?: null
+    ): TypedEventFilter<
+      [string, string, number, string],
+      { node: string; name: string; resource: number; record: string }
+    >;
+
     DNSRecordChanged(
       node?: BytesLike | null,
       name?: null,
@@ -256,6 +289,15 @@ export class DNSResolver extends BaseContract {
     ): TypedEventFilter<
       [string, string, number, string],
       { node: string; name: string; resource: number; record: string }
+    >;
+
+    "DNSRecordDeleted(bytes32,bytes,uint16)"(
+      node?: BytesLike | null,
+      name?: null,
+      resource?: null
+    ): TypedEventFilter<
+      [string, string, number],
+      { node: string; name: string; resource: number }
     >;
 
     DNSRecordDeleted(
@@ -267,9 +309,22 @@ export class DNSResolver extends BaseContract {
       { node: string; name: string; resource: number }
     >;
 
+    "DNSZoneCleared(bytes32)"(
+      node?: BytesLike | null
+    ): TypedEventFilter<[string], { node: string }>;
+
     DNSZoneCleared(
       node?: BytesLike | null
     ): TypedEventFilter<[string], { node: string }>;
+
+    "DNSZonehashChanged(bytes32,bytes,bytes)"(
+      node?: BytesLike | null,
+      lastzonehash?: null,
+      zonehash?: null
+    ): TypedEventFilter<
+      [string, string, string],
+      { node: string; lastzonehash: string; zonehash: string }
+    >;
 
     DNSZonehashChanged(
       node?: BytesLike | null,

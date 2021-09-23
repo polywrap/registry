@@ -52,6 +52,18 @@ interface AddrResolverInterface extends ethers.utils.Interface {
   getEvent(nameOrSignatureOrTopic: "AddressChanged"): EventFragment;
 }
 
+export type AddrChangedEvent = TypedEvent<
+  [string, string] & { node: string; a: string }
+>;
+
+export type AddressChangedEvent = TypedEvent<
+  [string, BigNumber, string] & {
+    node: string;
+    coinType: BigNumber;
+    newAddress: string;
+  }
+>;
+
 export class AddrResolver extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
   attach(addressOrName: string): this;
@@ -184,10 +196,24 @@ export class AddrResolver extends BaseContract {
   };
 
   filters: {
+    "AddrChanged(bytes32,address)"(
+      node?: BytesLike | null,
+      a?: null
+    ): TypedEventFilter<[string, string], { node: string; a: string }>;
+
     AddrChanged(
       node?: BytesLike | null,
       a?: null
     ): TypedEventFilter<[string, string], { node: string; a: string }>;
+
+    "AddressChanged(bytes32,uint256,bytes)"(
+      node?: BytesLike | null,
+      coinType?: null,
+      newAddress?: null
+    ): TypedEventFilter<
+      [string, BigNumber, string],
+      { node: string; coinType: BigNumber; newAddress: string }
+    >;
 
     AddressChanged(
       node?: BytesLike | null,

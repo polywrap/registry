@@ -50,6 +50,10 @@ interface NameResolverInterface extends ethers.utils.Interface {
   getEvent(nameOrSignatureOrTopic: "NameChanged"): EventFragment;
 }
 
+export type NameChangedEvent = TypedEvent<
+  [string, string] & { node: string; name: string }
+>;
+
 export class NameResolver extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
   attach(addressOrName: string): this;
@@ -137,6 +141,11 @@ export class NameResolver extends BaseContract {
   };
 
   filters: {
+    "NameChanged(bytes32,string)"(
+      node?: BytesLike | null,
+      name?: null
+    ): TypedEventFilter<[string, string], { node: string; name: string }>;
+
     NameChanged(
       node?: BytesLike | null,
       name?: null

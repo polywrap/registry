@@ -22,6 +22,7 @@ import { TypedEventFilter, TypedEvent, TypedListener } from "./commons";
 interface VersionVerificationManagerInterface extends ethers.utils.Interface {
   functions: {
     "initialize(address)": FunctionFragment;
+    "isValidProof(bytes32[],bool[],bytes32,string)": FunctionFragment;
     "owner()": FunctionFragment;
     "publishVersion(bytes32,bytes32,uint256,uint256,uint256,string,bytes32[],bool[])": FunctionFragment;
     "registry()": FunctionFragment;
@@ -35,6 +36,10 @@ interface VersionVerificationManagerInterface extends ethers.utils.Interface {
   };
 
   encodeFunctionData(functionFragment: "initialize", values: [string]): string;
+  encodeFunctionData(
+    functionFragment: "isValidProof",
+    values: [BytesLike[], boolean[], BytesLike, string]
+  ): string;
   encodeFunctionData(functionFragment: "owner", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "publishVersion",
@@ -80,6 +85,10 @@ interface VersionVerificationManagerInterface extends ethers.utils.Interface {
   ): string;
 
   decodeFunctionResult(functionFragment: "initialize", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "isValidProof",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "publishVersion",
@@ -123,6 +132,22 @@ interface VersionVerificationManagerInterface extends ethers.utils.Interface {
   getEvent(nameOrSignatureOrTopic: "OwnershipTransferred"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "VersionPublished"): EventFragment;
 }
+
+export type OwnershipTransferredEvent = TypedEvent<
+  [string, string] & { previousOwner: string; newOwner: string }
+>;
+
+export type VersionPublishedEvent = TypedEvent<
+  [string, string, string, BigNumber, BigNumber, BigNumber, string] & {
+    packageId: string;
+    verifiedVersionId: string;
+    patchNodeId: string;
+    major: BigNumber;
+    minor: BigNumber;
+    patch: BigNumber;
+    location: string;
+  }
+>;
 
 export class VersionVerificationManager extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
@@ -172,6 +197,14 @@ export class VersionVerificationManager extends BaseContract {
       _registry: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
+
+    isValidProof(
+      proof: BytesLike[],
+      sides: boolean[],
+      patchNodeId: BytesLike,
+      location: string,
+      overrides?: CallOverrides
+    ): Promise<[boolean]>;
 
     owner(overrides?: CallOverrides): Promise<[string]>;
 
@@ -223,6 +256,14 @@ export class VersionVerificationManager extends BaseContract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
+  isValidProof(
+    proof: BytesLike[],
+    sides: boolean[],
+    patchNodeId: BytesLike,
+    location: string,
+    overrides?: CallOverrides
+  ): Promise<boolean>;
+
   owner(overrides?: CallOverrides): Promise<string>;
 
   publishVersion(
@@ -270,6 +311,14 @@ export class VersionVerificationManager extends BaseContract {
   callStatic: {
     initialize(_registry: string, overrides?: CallOverrides): Promise<void>;
 
+    isValidProof(
+      proof: BytesLike[],
+      sides: boolean[],
+      patchNodeId: BytesLike,
+      location: string,
+      overrides?: CallOverrides
+    ): Promise<boolean>;
+
     owner(overrides?: CallOverrides): Promise<string>;
 
     publishVersion(
@@ -311,12 +360,41 @@ export class VersionVerificationManager extends BaseContract {
   };
 
   filters: {
+    "OwnershipTransferred(address,address)"(
+      previousOwner?: string | null,
+      newOwner?: string | null
+    ): TypedEventFilter<
+      [string, string],
+      { previousOwner: string; newOwner: string }
+    >;
+
     OwnershipTransferred(
       previousOwner?: string | null,
       newOwner?: string | null
     ): TypedEventFilter<
       [string, string],
       { previousOwner: string; newOwner: string }
+    >;
+
+    "VersionPublished(bytes32,bytes32,bytes32,uint256,uint256,uint256,string)"(
+      packageId?: BytesLike | null,
+      verifiedVersionId?: BytesLike | null,
+      patchNodeId?: BytesLike | null,
+      major?: null,
+      minor?: null,
+      patch?: null,
+      location?: null
+    ): TypedEventFilter<
+      [string, string, string, BigNumber, BigNumber, BigNumber, string],
+      {
+        packageId: string;
+        verifiedVersionId: string;
+        patchNodeId: string;
+        major: BigNumber;
+        minor: BigNumber;
+        patch: BigNumber;
+        location: string;
+      }
     >;
 
     VersionPublished(
@@ -345,6 +423,14 @@ export class VersionVerificationManager extends BaseContract {
     initialize(
       _registry: string,
       overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    isValidProof(
+      proof: BytesLike[],
+      sides: boolean[],
+      patchNodeId: BytesLike,
+      location: string,
+      overrides?: CallOverrides
     ): Promise<BigNumber>;
 
     owner(overrides?: CallOverrides): Promise<BigNumber>;
@@ -396,6 +482,14 @@ export class VersionVerificationManager extends BaseContract {
     initialize(
       _registry: string,
       overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    isValidProof(
+      proof: BytesLike[],
+      sides: boolean[],
+      patchNodeId: BytesLike,
+      location: string,
+      overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
     owner(overrides?: CallOverrides): Promise<PopulatedTransaction>;

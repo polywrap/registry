@@ -121,6 +121,30 @@ interface ENSInterface extends ethers.utils.Interface {
   getEvent(nameOrSignatureOrTopic: "Transfer"): EventFragment;
 }
 
+export type ApprovalForAllEvent = TypedEvent<
+  [string, string, boolean] & {
+    owner: string;
+    operator: string;
+    approved: boolean;
+  }
+>;
+
+export type NewOwnerEvent = TypedEvent<
+  [string, string, string] & { node: string; label: string; owner: string }
+>;
+
+export type NewResolverEvent = TypedEvent<
+  [string, string] & { node: string; resolver: string }
+>;
+
+export type NewTTLEvent = TypedEvent<
+  [string, BigNumber] & { node: string; ttl: BigNumber }
+>;
+
+export type TransferEvent = TypedEvent<
+  [string, string] & { node: string; owner: string }
+>;
+
 export class ENS extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
   attach(addressOrName: string): this;
@@ -358,6 +382,15 @@ export class ENS extends BaseContract {
   };
 
   filters: {
+    "ApprovalForAll(address,address,bool)"(
+      owner?: string | null,
+      operator?: string | null,
+      approved?: null
+    ): TypedEventFilter<
+      [string, string, boolean],
+      { owner: string; operator: string; approved: boolean }
+    >;
+
     ApprovalForAll(
       owner?: string | null,
       operator?: string | null,
@@ -365,6 +398,15 @@ export class ENS extends BaseContract {
     ): TypedEventFilter<
       [string, string, boolean],
       { owner: string; operator: string; approved: boolean }
+    >;
+
+    "NewOwner(bytes32,bytes32,address)"(
+      node?: BytesLike | null,
+      label?: BytesLike | null,
+      owner?: null
+    ): TypedEventFilter<
+      [string, string, string],
+      { node: string; label: string; owner: string }
     >;
 
     NewOwner(
@@ -376,15 +418,30 @@ export class ENS extends BaseContract {
       { node: string; label: string; owner: string }
     >;
 
+    "NewResolver(bytes32,address)"(
+      node?: BytesLike | null,
+      resolver?: null
+    ): TypedEventFilter<[string, string], { node: string; resolver: string }>;
+
     NewResolver(
       node?: BytesLike | null,
       resolver?: null
     ): TypedEventFilter<[string, string], { node: string; resolver: string }>;
 
+    "NewTTL(bytes32,uint64)"(
+      node?: BytesLike | null,
+      ttl?: null
+    ): TypedEventFilter<[string, BigNumber], { node: string; ttl: BigNumber }>;
+
     NewTTL(
       node?: BytesLike | null,
       ttl?: null
     ): TypedEventFilter<[string, BigNumber], { node: string; ttl: BigNumber }>;
+
+    "Transfer(bytes32,address)"(
+      node?: BytesLike | null,
+      owner?: null
+    ): TypedEventFilter<[string, string], { node: string; owner: string }>;
 
     Transfer(
       node?: BytesLike | null,
