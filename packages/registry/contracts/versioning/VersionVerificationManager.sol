@@ -98,6 +98,7 @@ contract VersionVerificationManager is OwnableUpgradeable {
     bytes32 verifiedVersionId = keccak256(
       abi.encodePacked(patchNodeId, keccak256(abi.encodePacked(location)))
     );
+    return verifiedVersionId;
   }
 
   function isValidProof(
