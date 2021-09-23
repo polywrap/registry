@@ -1,4 +1,7 @@
+import { EnsDomain } from "@polywrap/registry-core-js";
+
 export type PolywrapperInfo = {
-  domainName: string;
-  domainRegistry: "ens";
+  domain: EnsDomain;
+  polywrapOwner: string;
+  domainPolywrapOwner: string;
 };

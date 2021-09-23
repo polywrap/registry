@@ -1,10 +1,13 @@
 import { useState } from "react";
 import { VersionInfo } from "../../../../types/VersionInfo";
 import { PolywrapperInfo } from "../../../../types/PolywrapperInfo";
+import { usePolywrapRegistry } from "../../../../hooks/usePolywrapRegistry";
 
 const VersionsTabComponent: React.FC<{
   polywrapperInfo: PolywrapperInfo;
 }> = ({ polywrapperInfo }) => {
+  const { packageOwner } = usePolywrapRegistry();
+
   const [versionNumber, setVersionNumber] = useState("");
   const [latestVersion, setLatestVersion] = useState<VersionInfo | undefined>();
 
@@ -19,6 +22,18 @@ const VersionsTabComponent: React.FC<{
           setVersionNumber(e.target.value);
         }}
       />
+      <button
+        className="find-btn"
+        onClick={async () => {
+          const versionInfo = await packageOwner.getLatestVersionInfo(
+            polywrapperInfo.domain.packageId
+          );
+
+          setLatestVersion(versionInfo);
+        }}
+      >
+        Find latest
+      </button>
       <div>Latest version</div>
       {latestVersion ? (
         <>

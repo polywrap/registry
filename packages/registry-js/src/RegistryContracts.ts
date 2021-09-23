@@ -1,6 +1,8 @@
 import { ethers, Signer } from "ethers";
 import { contractAddressesTestnet } from "./constants";
 import {
+  EnsLink,
+  EnsLink__factory,
   PackageOwnershipManager,
   PackageOwnershipManager__factory,
   PolywrapRegistrar,
@@ -23,6 +25,8 @@ export class RegistryContracts {
   verificationTreeManager: VerificationTreeManager;
   registrar: PolywrapRegistrar;
   votingMachine: VotingMachine;
+  ensLinkL1: EnsLink;
+  ensLinkL2: EnsLink;
 
   constructor(contracts: {
     versionVerificationManagerL2: VersionVerificationManager;
@@ -32,6 +36,8 @@ export class RegistryContracts {
     verificationTreeManager: VerificationTreeManager;
     registrar: PolywrapRegistrar;
     votingMachine: VotingMachine;
+    ensLinkL1: EnsLink;
+    ensLinkL2: EnsLink;
   }) {
     this.versionVerificationManagerL2 = contracts.versionVerificationManagerL2;
     this.packageOwnershipManagerL1 = contracts.packageOwnershipManagerL1;
@@ -40,6 +46,8 @@ export class RegistryContracts {
     this.verificationTreeManager = contracts.verificationTreeManager;
     this.registrar = contracts.registrar;
     this.votingMachine = contracts.votingMachine;
+    this.ensLinkL1 = contracts.ensLinkL1;
+    this.ensLinkL2 = contracts.ensLinkL2;
   }
 
   connect(signer: Signer): RegistryContracts {
@@ -54,6 +62,8 @@ export class RegistryContracts {
     this.verificationTreeManager = this.verificationTreeManager.connect(signer);
     this.registrar = this.registrar.connect(signer);
     this.votingMachine = this.votingMachine.connect(signer);
+    this.ensLinkL1 = this.ensLinkL1.connect(signer);
+    this.ensLinkL2 = this.ensLinkL2.connect(signer);
 
     return this;
   }
@@ -67,6 +77,8 @@ export class RegistryContracts {
       registryL1: string;
       registryL2: string;
       votingMachine: string;
+      ensLinkL1: string;
+      ensLinkL2: string;
     },
     provider: ethers.providers.Provider
   ): RegistryContracts {
@@ -99,6 +111,8 @@ export class RegistryContracts {
         addresses.votingMachine,
         provider
       ),
+      ensLinkL1: EnsLink__factory.connect(addresses.ensLinkL1, provider),
+      ensLinkL2: EnsLink__factory.connect(addresses.ensLinkL2, provider),
     });
   }
 

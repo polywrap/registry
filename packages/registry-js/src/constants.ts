@@ -6,4 +6,6 @@ export const contractAddressesTestnet = {
   registryL1: "0x0",
   registryL2: "0x0",
   votingMachine: "0x0",
+  ensLinkL1: "0x0",
+  ensLinkL2: "0x0",
 };

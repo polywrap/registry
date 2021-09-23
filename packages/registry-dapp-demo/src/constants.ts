@@ -5,10 +5,9 @@ import process from "process";
 export const getPolywrapRegistryContracts = (
   provider: ethers.providers.Provider
 ): RegistryContracts => {
-  if (
-    process.env.NODE_ENV === "development" ||
-    process.env.NODE_ENV === "test"
-  ) {
+  if (process.env.NODE_ENV === "production") {
+    return RegistryContracts.fromTestnet(provider);
+  } else {
     return RegistryContracts.fromAddresses(
       {
         versionVerificationManagerL2:
@@ -19,10 +18,10 @@ export const getPolywrapRegistryContracts = (
         registryL1: "0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e",
         registryL2: "0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e",
         votingMachine: "0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e",
+        ensLinkL1: "0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e",
+        ensLinkL2: "0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e",
       },
       provider
     );
-  } else {
-    return RegistryContracts.fromTestnet(provider);
   }
 };

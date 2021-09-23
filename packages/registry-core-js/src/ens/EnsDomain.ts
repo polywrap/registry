@@ -7,10 +7,12 @@ import {
 import { labelhash } from "./labelhash";
 
 export class EnsDomain {
-  constructor(label: string) {
-    this.label = label;
-    this.labelHash = labelhash(label);
-    this.name = `${label}.${EnsDomain.TLD}`;
+  constructor(labelOrName: string) {
+    this.label = labelOrName.endsWith(EnsDomain.TLD)
+      ? labelOrName.slice(0, -EnsDomain.TLD + 1)
+      : labelOrName;
+    this.labelHash = labelhash(this.label);
+    this.name = `${this.label}.${EnsDomain.TLD}`;
     this.node = namehash(this.name);
     this.packageId = solidityKeccak256(
       ["bytes32", "bytes32"],
@@ -23,6 +25,9 @@ export class EnsDomain {
   name: string;
   node: string;
   packageId: string;
+
+  readonly registry = "ens";
+  readonly registryBytes32 = EnsDomain.RegistryBytes32;
 
   static TLD = "eth";
   static Registry = "ens";
