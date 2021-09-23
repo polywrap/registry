@@ -1,5 +1,4 @@
 import "./Content.scss";
-import Logo from "../../../logo.png";
 import WrapperInfoComponent from "../../wrappers/wrapper-info/WrapperInfoComponent";
 import React from "react";
 import { PolywrapRegistryContext } from "../../../providers/PolywrapRegistryContextProvider";

@@ -1,6 +1,6 @@
 import "./ImplementationRegistryComponent.scss";
 import { useWeb3ApiClient } from "@web3api/react";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { registerImplementation } from "../../../../web3api/implementationRegistry";
 import { useToasts } from "react-toast-notifications";
 

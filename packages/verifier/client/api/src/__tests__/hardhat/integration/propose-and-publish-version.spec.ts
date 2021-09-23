@@ -172,7 +172,7 @@ describe("Start local chain", () => {
 
     await authorizeCurrentVerifier();
 
-    const [votingResult, _] = await Promise.all([
+    const [votingResult] = await Promise.all([
       packageOwner.waitForVotingEnd(
         domain,
         majorNumber,
