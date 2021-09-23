@@ -32,7 +32,6 @@ abstract contract VersionResolver is Registry {
     public
     view
     returns (
-      bytes32 packageId,
       uint256 majorVersion,
       uint256 minorVersion,
       uint256 patchVersion,
@@ -58,6 +57,6 @@ abstract contract VersionResolver is Registry {
     PackageVersion storage patchNode = versionNodes[patchNodeId];
     string memory location = patchNode.location;
 
-    return (packageId, majorVersion, minorVersion, patchVersion, location);
+    return (majorVersion, minorVersion, patchVersion, location);
   }
 }
