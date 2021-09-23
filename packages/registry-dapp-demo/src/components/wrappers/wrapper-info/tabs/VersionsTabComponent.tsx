@@ -29,7 +29,18 @@ const VersionsTabComponent: React.FC<{
             polywrapperInfo.domain.packageId
           );
 
-          setLatestVersion(versionInfo);
+          setLatestVersion({
+            patchNodeId: packageOwner
+              .calculatePatchNodeId(
+                polywrapperInfo.domain,
+                versionInfo.majorVersion,
+                versionInfo.minorVersion,
+                versionInfo.patchVersion
+              )
+              .toString(),
+            number: `${versionInfo.majorVersion}.${versionInfo.minorVersion}.${versionInfo.patchVersion}`,
+            packageLocation: versionInfo.location,
+          });
         }}
       >
         Find latest

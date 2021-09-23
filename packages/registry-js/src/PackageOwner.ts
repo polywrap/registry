@@ -185,9 +185,9 @@ export class PackageOwner {
   async getLatestVersionInfo(
     packageId: string
   ): Promise<{
-    majorVersion: number;
-    minorVersion: number;
-    patchVersion: number;
+    majorVersion: BigNumber;
+    minorVersion: BigNumber;
+    patchVersion: BigNumber;
     location: string;
   }> {
     return await this.registryContracts.registryL1.getLatestVersionInfo(
