@@ -1,7 +1,7 @@
 import { Logger } from "winston";
 import { BytesLike } from "ethers";
 import { Web3ApiClient } from "@web3api/client-js";
-import { PolywrapVotingSystem } from "@polywrap/registry-js";
+import { PolywrapVotingSystem, traceFunc } from "@polywrap/registry-js";
 
 export class SchemaRetrievalService {
   private logger: Logger;
@@ -18,6 +18,7 @@ export class SchemaRetrievalService {
     this.polywrapClient = deps.polywrapClient;
   }
 
+  @traceFunc("SchemaRetrievalService:getMinorVersionSchema")
   async getMinorVersionSchema(patchNodeId: BytesLike): Promise<string> {
     const location = await this.polywrapVotingSystem.getPrevPatchPackageLocation(
       patchNodeId
@@ -28,6 +29,7 @@ export class SchemaRetrievalService {
     return minorVersionSchema;
   }
 
+  @traceFunc("SchemaRetrievalService:getPreviousAndNextVersionSchema")
   async getPreviousAndNextVersionSchema(
     patchNodeId: BytesLike
   ): Promise<{

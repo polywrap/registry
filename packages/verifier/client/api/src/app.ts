@@ -1,10 +1,13 @@
 import { buildDependencyContainer } from "./di/buildDependencyContainer";
 import express from "express";
 import cors from "cors";
+import { Tracer } from "@polywrap/registry-js";
 import fs from "fs";
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 require("custom-env").env(process.env.ENV);
+
+Tracer.enableTracing("verifier-client");
 
 const dependencyContainer = buildDependencyContainer();
 const {

@@ -1,7 +1,7 @@
 import { VersionProcessingService } from "./VersionProcessingService";
 import { VerifierStateManager } from "./VerifierStateManager";
 import { ProposedVersionEventArgs } from "../events/ProposedVersionEventArgs";
-import { PolywrapVotingSystem } from "@polywrap/registry-js";
+import { PolywrapVotingSystem, traceFunc } from "@polywrap/registry-js";
 import { VerifierClientConfig } from "../config/VerifierClientConfig";
 import { Logger } from "winston";
 
@@ -37,6 +37,7 @@ export class VerifierClient {
     this.verifierClientConfig = deps.verifierClientConfig;
   }
 
+  @traceFunc("VerifierClient:run")
   async run(): Promise<void> {
     const processedEventCnt = 0;
 
@@ -50,6 +51,7 @@ export class VerifierClient {
     }
   }
 
+  @traceFunc("VerifierClient:queryAndVerifyVersions")
   async queryAndVerifyVersions(): Promise<number> {
     const proposedVersionEvents = await this.polywrapVotingSystem.queryVersionVotingStarted(
       this.verifierStateManager.state.currentlyProcessingBlock

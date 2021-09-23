@@ -3,6 +3,7 @@ import { Web3ApiClient } from "@web3api/client-js";
 import { SchemaComparisonService } from "./SchemaComparisonService";
 import { SchemaRetrievalService } from "./SchemaRetrievalService";
 import { Logger } from "winston";
+import { traceFunc } from "@polywrap/registry-js";
 
 export class VersionVerifierService {
   private logger: Logger;
@@ -22,6 +23,7 @@ export class VersionVerifierService {
     this.schemaComparisonService = deps.schemaComparisonService;
   }
 
+  @traceFunc("VersionVerifierService:verifyVersion")
   async verifyVersion(
     packageId: BytesLike,
     patchNodeId: BytesLike,
@@ -70,6 +72,7 @@ export class VersionVerifierService {
     };
   }
 
+  @traceFunc("VersionVerifierService:verifyMinorVersion")
   private async verifyMinorVersion(
     proposedVersionSchema: string,
     patchNodeId: BytesLike

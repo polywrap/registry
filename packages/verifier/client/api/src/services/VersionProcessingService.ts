@@ -3,6 +3,7 @@ import { VerifierStateInfo } from "../VerifierStateInfo";
 import { VersionVerifierService } from "./VersionVerifierService";
 import { VotingService } from "./VotingService";
 import { Logger } from "winston";
+import { traceFunc } from "@polywrap/registry-js";
 
 export class VersionProcessingService {
   private logger: Logger;
@@ -19,6 +20,7 @@ export class VersionProcessingService {
     this.versionVerifierService = deps.versionVerifierService;
   }
 
+  @traceFunc("VersionProcessingService:processProposedVersionEvent")
   async processProposedVersionEvent(
     stateInfo: VerifierStateInfo,
     event: {
@@ -56,7 +58,10 @@ export class VersionProcessingService {
     stateInfo.lastProcessedLogIndex = event.logIndex;
   }
 
-  async processProposedVersion(proposedVersion: ProposedVersionEventArgs) {
+  @traceFunc("VersionProcessingService:processProposedVersion")
+  async processProposedVersion(
+    proposedVersion: ProposedVersionEventArgs
+  ): Promise<void> {
     const {
       packageId,
       patchNodeId,
