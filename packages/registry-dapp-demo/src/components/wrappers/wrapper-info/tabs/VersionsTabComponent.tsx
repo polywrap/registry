@@ -2,7 +2,8 @@ import { useState } from "react";
 import { VersionInfo } from "../../../../types/VersionInfo";
 import { PolywrapperInfo } from "../../../../types/PolywrapperInfo";
 import { usePolywrapRegistry } from "../../../../hooks/usePolywrapRegistry";
-import { BigNumber } from "ethers";
+import { getLatestVersionInfo } from "../../../../helpers/getLatestVersionInfo";
+import { toPrettyHex } from "../../../../helpers/toPrettyHex";
 
 const VersionsTabComponent: React.FC<{
   polywrapperInfo: PolywrapperInfo;
@@ -26,22 +27,9 @@ const VersionsTabComponent: React.FC<{
       <button
         className="find-btn"
         onClick={async () => {
-          const versionInfo = await packageOwner.getLatestVersionInfo(
-            polywrapperInfo.domain.packageId
+          setLatestVersion(
+            await getLatestVersionInfo(polywrapperInfo.domain, packageOwner)
           );
-
-          setLatestVersion({
-            patchNodeId: packageOwner
-              .calculatePatchNodeId(
-                polywrapperInfo.domain,
-                versionInfo.majorVersion.toNumber(),
-                versionInfo.minorVersion.toNumber(),
-                versionInfo.patchVersion.toNumber()
-              )
-              .toString(),
-            number: `${versionInfo.majorVersion}.${versionInfo.minorVersion}.${versionInfo.patchVersion}`,
-            packageLocation: versionInfo.location,
-          });
         }}
       >
         Find latest
@@ -49,7 +37,7 @@ const VersionsTabComponent: React.FC<{
       <div>Latest version</div>
       {latestVersion ? (
         <>
-          <div>Id: {latestVersion.patchNodeId}</div>
+          <div>Id: {toPrettyHex(latestVersion.patchNodeId)}</div>
           <div>Number: {latestVersion.number}</div>
           <div>
             IPFS:{" "}
@@ -61,7 +49,6 @@ const VersionsTabComponent: React.FC<{
       ) : (
         <></>
       )}
-      <button>Publishing</button>
     </div>
   );
 };

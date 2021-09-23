@@ -11,10 +11,6 @@ const WrapperInfoComponent: React.FC = () => {
 
   return (
     <div className="WrapperInfoComponent widget">
-      <div>
-        <h4 className="component-title">Polywrap Registry</h4>
-      </div>
-
       <PolywrapperDefinitionComponent
         setPolywrapperInfo={setPolywrapperInfo}
       ></PolywrapperDefinitionComponent>

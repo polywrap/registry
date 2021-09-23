@@ -9,7 +9,7 @@ import { labelhash } from "./labelhash";
 export class EnsDomain {
   constructor(labelOrName: string) {
     this.label = labelOrName.endsWith(EnsDomain.TLD)
-      ? labelOrName.slice(0, -EnsDomain.TLD + 1)
+      ? labelOrName.slice(0, -EnsDomain.TLD.length - 1)
       : labelOrName;
     this.labelHash = labelhash(this.label);
     this.name = `${this.label}.${EnsDomain.TLD}`;

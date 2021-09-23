@@ -11,8 +11,7 @@ const Content: React.FC = () => {
     <div className="Content">
       <div className="row">
         <div>
-          <img src={Logo} className="main__logo" />
-          <h3 className="title">Polywrap Registry dApp</h3>
+          <h3 className="title">Wrappers</h3>
         </div>
 
         <div className="widget-container">
