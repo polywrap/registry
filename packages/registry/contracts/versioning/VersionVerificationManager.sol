@@ -57,12 +57,10 @@ contract VersionVerificationManager is OwnableUpgradeable {
     bytes32[] memory proof,
     bool[] memory sides
   ) public packageOwner(packageId) {
-    bytes32 verifiedVersionId = keccak256(
-      abi.encodePacked(patchNodeId, keccak256(abi.encodePacked(location)))
-    );
+    bytes32 verifiedVersionId = getVerifiedVersionId(patchNodeId, location);
 
     require(
-      proveVerifiedVersion(proof, sides, verifiedVersionId, verificationRoot),
+      _isValidProof(proof, sides, verifiedVersionId, verificationRoot),
       "Invalid proof"
     );
 
@@ -90,7 +88,28 @@ contract VersionVerificationManager is OwnableUpgradeable {
     );
   }
 
-  function proveVerifiedVersion(
+  function getVerifiedVersionId(bytes32 patchNodeId, string memory location)
+    private
+    pure
+    returns (bytes32)
+  {
+    bytes32 verifiedVersionId = keccak256(
+      abi.encodePacked(patchNodeId, keccak256(abi.encodePacked(location)))
+    );
+    return verifiedVersionId;
+  }
+
+  function isValidProof(
+    bytes32[] memory proof,
+    bool[] memory sides,
+    bytes32 patchNodeId,
+    string memory location
+  ) public view returns (bool) {
+    bytes32 verifiedVersionId = getVerifiedVersionId(patchNodeId, location);
+    return _isValidProof(proof, sides, verifiedVersionId, verificationRoot);
+  }
+
+  function _isValidProof(
     bytes32[] memory proof,
     bool[] memory sides,
     bytes32 verifiedVersionId,
