@@ -90,10 +90,11 @@ contract VersionVerificationManager is OwnableUpgradeable {
     );
   }
 
-  function getVerifiedVersionId(
-    bytes32 patchNodeId,
-    string memory location,
-  ) private pure returns (bytes32) {
+  function getVerifiedVersionId(bytes32 patchNodeId, string memory location)
+    private
+    pure
+    returns (bytes32)
+  {
     bytes32 verifiedVersionId = keccak256(
       abi.encodePacked(patchNodeId, keccak256(abi.encodePacked(location)))
     );
@@ -103,7 +104,7 @@ contract VersionVerificationManager is OwnableUpgradeable {
     bytes32[] memory proof,
     bool[] memory sides,
     bytes32 patchNodeId,
-    string memory location,
+    string memory location
   ) public view returns (bool) {
     bytes32 verifiedVersionId = getVerifiedVersionId(patchNodeId, location);
     return _isValidProof(proof, sides, verifiedVersionId, verificationRoot);
