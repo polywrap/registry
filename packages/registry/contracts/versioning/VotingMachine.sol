@@ -543,4 +543,9 @@ contract VotingMachine is OwnableUpgradeable {
       nextPackageLocation
     );
   }
+
+  function isDecided(bytes32 patchNodeId) public view returns (bool) {
+    ProposedVersion storage proposedVersion = proposedVersions[patchNodeId];
+    return proposedVersion.decided;
+  }
 }

@@ -71,4 +71,11 @@ export class PolywrapVotingSystem {
 
     return (resp as unknown) as VersionVotingStartedEvent[];
   }
+
+  async isDecided(patchNodeId: BytesLike): Promise<boolean> {
+    const resp = await this.registryContracts.votingMachine.isDecided(
+      patchNodeId
+    );
+    return (resp as unknown) as boolean;
+  }
 }

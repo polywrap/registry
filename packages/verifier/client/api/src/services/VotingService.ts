@@ -40,4 +40,9 @@ export class VotingService {
       `Voted on proposed version ${patchNodeId}, approved: ${approved}`
     );
   }
+
+  @traceFunc("voting-service:is_decided")
+  async isDecided(patchNodeId: BytesLike): Promise<boolean> {
+    return this.polywrapVotingSystem.isDecided(patchNodeId);
+  }
 }

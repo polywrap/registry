@@ -73,6 +73,10 @@ export class VersionProcessingService {
       isPatch,
     } = proposedVersion;
 
+    if (this.votingService.isDecided(patchNodeId)) {
+      return;
+    }
+
     this.logger.info(
       `Version proposed: ${patchNodeId}, ${majorVersion}, ${minorVersion}, ${patchVersion}`
     );
