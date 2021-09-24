@@ -42,11 +42,14 @@ export class VotingService {
 
       await voteTx.wait(this.verifierClientConfig.numOfConfirmationsToWait);
 
-    this.logger.info(
-      `Voted on proposed version ${toPrettyHex(
-        patchNodeId.toString()
-      )}, approved: ${approved}`
-    );
+      this.logger.info(
+        `Voted on proposed version ${patchNodeId}, approved: ${approved}`
+      );
+    } catch (error) {
+      this.logger.warn(
+        `Voting failed for proposed version: ${patchNodeId} - Error: ${error}`
+      );
+    }
   }
 
   @traceFunc("voting-service:is_decided")
