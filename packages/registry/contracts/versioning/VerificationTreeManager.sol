@@ -34,8 +34,13 @@ contract VerificationTreeManager is
 
   uint256 public verifiedVersionCount;
 
-  constructor(address _registry, address _votingMachine) {
+  constructor(
+    address owner,
+    address _registry, 
+    address _votingMachine
+  ) {
     initialize(_registry, _votingMachine);
+    transferOwnership(owner);
   }
 
   function initialize(address _registry, address _votingMachine)

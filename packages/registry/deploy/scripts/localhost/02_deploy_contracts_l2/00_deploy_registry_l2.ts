@@ -1,17 +1,20 @@
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
+import { ethers } from "ethers";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deployer } = await hre.getNamedAccounts();
-  const { deploy } = hre.deployments;
+  const { deterministic } = hre.deployments;
   const useProxy = !hre.network.live;
 
-  await deploy("PolywrapRegistryL2", {
-    contract: "PolywrapRegistry",
-    from: deployer,
-    args: [],
-    log: true,
-  });
+  await (
+    await deterministic("PolywrapRegistryL2", {
+      contract: "PolywrapRegistry",
+      from: deployer,
+      args: [deployer],
+      log: true
+    })
+  ).deploy();
 
   return !useProxy;
 };

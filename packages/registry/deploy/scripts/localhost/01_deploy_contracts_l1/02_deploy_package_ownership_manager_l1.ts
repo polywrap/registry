@@ -4,22 +4,25 @@ import { formatBytes32String } from "ethers/lib/utils";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deployer } = await hre.getNamedAccounts();
-  const { deploy } = hre.deployments;
+  const { deterministic } = hre.deployments;
   const useProxy = !hre.network.live;
 
   const registryL1 = await hre.deployments.get("PolywrapRegistryL1");
   const ensLinkL1 = await hre.deployments.get("EnsLinkL1");
 
-  await deploy("PackageOwnershipManagerL1", {
-    contract: "PackageOwnershipManager",
-    from: deployer,
-    args: [
-      registryL1.address,
-      [formatBytes32String("ens")],
-      [ensLinkL1.address],
-    ],
-    log: true,
-  });
+  await(
+    await deterministic("PackageOwnershipManagerL1", {
+      contract: "PackageOwnershipManager",
+      from: deployer,
+      args: [
+        deployer,
+        registryL1.address,
+        [formatBytes32String("ens")],
+        [ensLinkL1.address],
+      ],
+      log: true,
+    })
+  ).deploy();
 
   return !useProxy;
 };

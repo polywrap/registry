@@ -1,0 +1,20 @@
+{
+  "deploy_ens_l1": 1632249361,
+  "setup_ens_l1": 1632249371,
+  "deploy_registry_l1": 1632249381,
+  "deploy_ens_link_l1": 1632249394,
+  "deploy_package_ownership_manager_l1": 1632249412,
+  "deploy_ownership_bridge_link_l1": 1632249425,
+  "deploy_verification_root_bridge_link_l1": 1632249442,
+  "deploy_version_verification_manager_l1": 1632249456,
+  "connect_contracts": 1632249474,
+  "deploy_registry_l2": 1632249474,
+  "deploy_registrar": 1632249475,
+  "deploy_voting_machine": 1632249476,
+  "deploy_package_ownership_manager_l2": 1632249484,
+  "deploy_ownership_bridge_link_l2": 1632249502,
+  "deploy_verification_tree_manager": 1632249503,
+  "deploy_version_verification_manager_l2": 1632249504,
+  "deploy_verification_root_bridge_link_l2": 1632249505,
+  "deploy_verification_root_relayer": 1632249506
+}

@@ -7,6 +7,7 @@ import "../OwnershipBridgeLink.sol";
 
 contract OwnershipBridgeLinkMock is OwnershipBridgeLink {
   constructor(
+    address owner,
     address _bridge,
     address _packageOwnershipManager,
     bytes32 _blockchainName,
@@ -14,6 +15,7 @@ contract OwnershipBridgeLinkMock is OwnershipBridgeLink {
     uint256 _relayOwnershipGasLimit
   )
     OwnershipBridgeLink(
+      owner,
       _bridge,
       _packageOwnershipManager,
       _blockchainName,

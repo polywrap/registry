@@ -3,4 +3,6 @@ pragma solidity ^0.8.4;
 
 import "./VersionResolver.sol";
 
-contract PolywrapRegistry is VersionResolver {}
+contract PolywrapRegistry is VersionResolver {
+  constructor(address owner) Registry(owner) {}
+}

@@ -15,6 +15,7 @@ contract OwnershipBridgeLink is IOwnershipBridgeLink, OwnableUpgradeable {
   uint256 public relayOwnershipGasLimit;
 
   constructor(
+    address owner,
     address _bridge,
     address _packageOwnershipManager,
     bytes32 _blockchainName,
@@ -28,6 +29,7 @@ contract OwnershipBridgeLink is IOwnershipBridgeLink, OwnableUpgradeable {
       _bridgeChainId,
       _relayOwnershipGasLimit
     );
+    transferOwnership(owner);
   }
 
   function initialize(

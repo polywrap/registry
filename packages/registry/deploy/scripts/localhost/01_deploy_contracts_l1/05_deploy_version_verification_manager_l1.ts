@@ -3,17 +3,19 @@ import { DeployFunction } from "hardhat-deploy/types";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deployer } = await hre.getNamedAccounts();
-  const { deploy } = hre.deployments;
+  const { deterministic } = hre.deployments;
   const useProxy = !hre.network.live;
 
   const registryL1 = await hre.deployments.get("PolywrapRegistryL1");
 
-  await deploy("VersionVerificationManagerL1", {
-    contract: "VersionVerificationManager",
-    from: deployer,
-    args: [registryL1.address],
-    log: true,
-  });
+  await(
+    await deterministic("VersionVerificationManagerL1", {
+      contract: "VersionVerificationManager",
+      from: deployer,
+      args: [deployer, registryL1.address],
+      log: true,
+    })
+  ).deploy();
 
   return !useProxy;
 };

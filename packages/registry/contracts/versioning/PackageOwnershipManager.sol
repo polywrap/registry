@@ -16,11 +16,13 @@ contract PackageOwnershipManager is OwnableUpgradeable {
   mapping(bytes32 => address) public outgoingBridgeLinks;
 
   constructor(
+    address owner,
     address _registry,
     bytes32[] memory _domainRegistries,
     address[] memory _domainRegistryLinks
   ) {
     initialize(_registry, _domainRegistries, _domainRegistryLinks);
+    transferOwnership(owner);
   }
 
   function initialize(

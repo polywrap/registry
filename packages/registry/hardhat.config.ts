@@ -37,8 +37,7 @@ const config: HardhatUserConfig = {
     hardhat: {
       live: false,
       forking: {
-        url:
-          "https://eth-mainnet.alchemyapi.io/v2/MnO3SuHlzuCydPWE1XhsYZM_pHZP8_ix",
+        url: "https://eth-mainnet.alchemyapi.io/v2/MnO3SuHlzuCydPWE1XhsYZM_pHZP8_ix",
         blockNumber: 11845661,
       },
       deploy: ["./deploy/scripts/localhost"],
@@ -53,6 +52,11 @@ const config: HardhatUserConfig = {
       accounts: {
         mnemonic: "test test test test test test test test test test test test",
       },
+      deploy: ["./deploy/scripts/localhost"],
+    },
+    rinkeby: {
+      accounts: [`0x${process.env.DEPLOYER_KEY_RINKEBY}`],
+      url: "https://rinkeby.infura.io/v3/77c3d733140f4c12a77699e24cb30c27",
       deploy: ["./deploy/scripts/localhost"],
     },
   },

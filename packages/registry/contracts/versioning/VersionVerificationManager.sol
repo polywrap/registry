@@ -20,8 +20,12 @@ contract VersionVerificationManager is OwnableUpgradeable {
 
   bytes32 public verificationRoot;
 
-  constructor(address _registry) {
+  constructor(
+    address owner,
+    address _registry
+  ) {
     initialize(_registry);
+    transferOwnership(owner);
   }
 
   function initialize(address _registry) public initializer {

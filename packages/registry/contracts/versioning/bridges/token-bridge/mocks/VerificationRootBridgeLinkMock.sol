@@ -9,11 +9,13 @@ import "../../interfaces/IVerificationRootBridgeLink.sol";
 
 contract VerificationRootBridgeLinkMock is VerificationRootBridgeLink {
   constructor(
+    address owner,
     address _bridge,
     bytes32 _bridgeChainId,
     uint256 _relayVerificationRootGasLimit
   )
     VerificationRootBridgeLink(
+      owner,
       _bridge,
       _bridgeChainId,
       _relayVerificationRootGasLimit

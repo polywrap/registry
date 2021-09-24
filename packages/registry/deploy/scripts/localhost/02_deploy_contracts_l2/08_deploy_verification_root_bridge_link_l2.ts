@@ -5,15 +5,22 @@ import { ethers } from "hardhat";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deployer } = await hre.getNamedAccounts();
-  const { deploy } = hre.deployments;
+  const { deterministic } = hre.deployments;
   const useProxy = !hre.network.live;
 
-  await deploy("VerificationRootBridgeLinkL2", {
-    contract: "VerificationRootBridgeLinkMock",
-    from: deployer,
-    args: [ethers.constants.AddressZero, formatBytes32String("1"), 1],
-    log: true,
-  });
+  await(
+    await deterministic("VerificationRootBridgeLinkL2", {
+      contract: "VerificationRootBridgeLinkMock",
+      from: deployer,
+      args: [
+        deployer,
+        ethers.constants.AddressZero,
+        formatBytes32String("1"),
+        1,
+      ],
+      log: true,
+    })
+  ).deploy();
 
   return !useProxy;
 };

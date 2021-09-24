@@ -107,4 +107,13 @@ export class RegistryContracts {
   ): RegistryContracts {
     return RegistryContracts.fromAddresses(contractAddressesTestnet, provider);
   }
+
+  static fromLocalhost(
+    provider: ethers.providers.BaseProvider
+  ): RegistryContracts {
+    return RegistryContracts.fromAddresses(
+      contractAddressesLocalhost,
+      provider
+    );
+  }
 }

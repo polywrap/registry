@@ -17,7 +17,6 @@ import {
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deployer } = await hre.getNamedAccounts();
-  const { deploy } = hre.deployments;
   const useProxy = !hre.network.live;
   const signer = await ethers.getSigner(deployer);
 

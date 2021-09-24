@@ -3,17 +3,19 @@ import { DeployFunction } from "hardhat-deploy/types";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deployer } = await hre.getNamedAccounts();
-  const { deploy } = hre.deployments;
+  const { deterministic } = hre.deployments;
   const useProxy = !hre.network.live;
 
   const ensRegistry = await hre.deployments.get("EnsRegistryL1");
 
-  await deploy("EnsLinkL1", {
-    contract: "EnsLink",
-    from: deployer,
-    args: [ensRegistry.address],
-    log: true,
-  });
+  await(
+    await deterministic("EnsLinkL1", {
+      contract: "EnsLink",
+      from: deployer,
+      args: [ensRegistry.address],
+      log: true,
+    })
+  ).deploy();
 
   return !useProxy;
 };

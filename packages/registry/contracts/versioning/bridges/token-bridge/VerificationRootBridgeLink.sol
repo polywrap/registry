@@ -19,11 +19,13 @@ contract VerificationRootBridgeLink is
   uint256 public relayVerificationRootGasLimit;
 
   constructor(
+    address owner,
     address _bridge,
     bytes32 _bridgeChainId,
     uint256 _relayVerificationRootGasLimit
   ) {
     initialize(_bridge, _bridgeChainId, _relayVerificationRootGasLimit);
+    transferOwnership(owner);
   }
 
   function initialize(

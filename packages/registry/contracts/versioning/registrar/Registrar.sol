@@ -15,8 +15,12 @@ abstract contract Registrar is OwnableUpgradeable {
 
   mapping(bytes32 => bool) public managers;
 
-  constructor(address _registry) {
+  constructor(
+    address owner,
+    address _registry
+  ) {
     initialize(_registry);
+    transferOwnership(owner);
   }
 
   function initialize(address _registry) public initializer {

@@ -5,25 +5,28 @@ import { ethers } from "hardhat";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deployer } = await hre.getNamedAccounts();
-  const { deploy } = hre.deployments;
+  const { deterministic } = hre.deployments;
   const useProxy = !hre.network.live;
 
   const packageOwnershipManagerL1 = await hre.deployments.get(
     "PackageOwnershipManagerL1"
   );
 
-  await deploy("OwnershipBridgeLinkL1", {
-    contract: "OwnershipBridgeLinkMock",
-    from: deployer,
-    args: [
-      ethers.constants.AddressZero,
-      packageOwnershipManagerL1.address,
-      formatBytes32String("l2-chain-name"),
-      formatBytes32String("2"),
-      1,
-    ],
-    log: true,
-  });
+  await(
+    await deterministic("OwnershipBridgeLinkL1", {
+      contract: "OwnershipBridgeLinkMock",
+      from: deployer,
+      args: [
+        deployer,
+        ethers.constants.AddressZero,
+        packageOwnershipManagerL1.address,
+        formatBytes32String("l2-chain-name"),
+        formatBytes32String("2"),
+        1,
+      ],
+      log: true,
+    })
+  ).deploy();
 
   return !useProxy;
 };

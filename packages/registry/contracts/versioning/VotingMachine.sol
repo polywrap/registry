@@ -99,8 +99,12 @@ contract VotingMachine is OwnableUpgradeable {
   mapping(address => bool) public authorizedVerifiers;
   uint256 public authorizedVerifierCount;
 
-  constructor(address _registrar) {
+  constructor(
+    address owner,
+    address _registrar
+  ) {
     initialize(_registrar);
+    transferOwnership(owner);
   }
 
   function initialize(address _registrar) public initializer {

@@ -14,9 +14,13 @@ contract VerificationRootRelayer is OwnableUpgradeable {
 
   uint256 public lastRootRelayBlock;
 
-  constructor(address _versionVerificationManager, uint256 _blocksPerRootRelay)
-  {
+  constructor(
+    address owner,
+    address _versionVerificationManager, 
+    uint256 _blocksPerRootRelay
+  ) {
     initialize(_versionVerificationManager, _blocksPerRootRelay);
+    transferOwnership(owner);
   }
 
   function initialize(
