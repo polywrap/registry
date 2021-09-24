@@ -18,7 +18,7 @@ export class VotingService {
     this.verifierClientConfig = deps.verifierClientConfig;
   }
 
-  @traceFunc("VotingService:voteOnVersion")
+  @traceFunc("voting-service:vote_on_version")
   async voteOnVersion(
     patchNodeId: BytesLike,
     prevMinorNodeId: BytesLike,

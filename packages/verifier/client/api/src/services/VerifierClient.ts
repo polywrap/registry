@@ -37,7 +37,7 @@ export class VerifierClient {
     this.verifierClientConfig = deps.verifierClientConfig;
   }
 
-  @traceFunc("VerifierClient:run")
+  @traceFunc("verifier-client:run")
   async run(): Promise<void> {
     const processedEventCnt = 0;
 
@@ -51,7 +51,7 @@ export class VerifierClient {
     }
   }
 
-  @traceFunc("VerifierClient:queryAndVerifyVersions")
+  @traceFunc("verifier-client:query_and_verify_versions")
   async queryAndVerifyVersions(): Promise<number> {
     const proposedVersionEvents = await this.polywrapVotingSystem.queryVersionVotingStarted(
       this.verifierStateManager.state.currentlyProcessingBlock

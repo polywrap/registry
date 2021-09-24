@@ -20,7 +20,7 @@ export class VersionProcessingService {
     this.versionVerifierService = deps.versionVerifierService;
   }
 
-  @traceFunc("VersionProcessingService:processProposedVersionEvent")
+  @traceFunc("version-processing-service:process_proposed_version_event")
   async processProposedVersionEvent(
     stateInfo: VerifierStateInfo,
     event: {
@@ -58,7 +58,7 @@ export class VersionProcessingService {
     stateInfo.lastProcessedLogIndex = event.logIndex;
   }
 
-  @traceFunc("VersionProcessingService:processProposedVersion")
+  @traceFunc("version-processing-service:process_proposed_version")
   async processProposedVersion(
     proposedVersion: ProposedVersionEventArgs
   ): Promise<void> {
