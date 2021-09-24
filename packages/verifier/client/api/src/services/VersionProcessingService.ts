@@ -73,7 +73,7 @@ export class VersionProcessingService {
       isPatch,
     } = proposedVersion;
 
-    if (this.votingService.isDecided(patchNodeId)) {
+    if (await this.votingService.isDecided(patchNodeId)) {
       return;
     }
 
