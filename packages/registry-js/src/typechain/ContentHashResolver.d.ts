@@ -59,6 +59,10 @@ interface ContentHashResolverInterface extends ethers.utils.Interface {
   getEvent(nameOrSignatureOrTopic: "ContenthashChanged"): EventFragment;
 }
 
+export type ContenthashChangedEvent = TypedEvent<
+  [string, string] & { node: string; hash: string }
+>;
+
 export class ContentHashResolver extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
   attach(addressOrName: string): this;
@@ -146,6 +150,11 @@ export class ContentHashResolver extends BaseContract {
   };
 
   filters: {
+    "ContenthashChanged(bytes32,bytes)"(
+      node?: BytesLike | null,
+      hash?: null
+    ): TypedEventFilter<[string, string], { node: string; hash: string }>;
+
     ContenthashChanged(
       node?: BytesLike | null,
       hash?: null

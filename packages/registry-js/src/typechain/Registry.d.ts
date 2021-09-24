@@ -138,6 +138,29 @@ interface RegistryInterface extends ethers.utils.Interface {
   getEvent(nameOrSignatureOrTopic: "VersionPublished"): EventFragment;
 }
 
+export type OwnershipTransferredEvent = TypedEvent<
+  [string, string] & { previousOwner: string; newOwner: string }
+>;
+
+export type OwnershipUpdatedEvent = TypedEvent<
+  [string, string, string, string] & {
+    domainRegistryNode: string;
+    packageId: string;
+    domainRegistry: string;
+    owner: string;
+  }
+>;
+
+export type VersionPublishedEvent = TypedEvent<
+  [string, BigNumber, BigNumber, BigNumber, string] & {
+    packageId: string;
+    major: BigNumber;
+    minor: BigNumber;
+    patch: BigNumber;
+    location: string;
+  }
+>;
+
 export class Registry extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
   attach(addressOrName: string): this;
@@ -401,12 +424,35 @@ export class Registry extends BaseContract {
   };
 
   filters: {
+    "OwnershipTransferred(address,address)"(
+      previousOwner?: string | null,
+      newOwner?: string | null
+    ): TypedEventFilter<
+      [string, string],
+      { previousOwner: string; newOwner: string }
+    >;
+
     OwnershipTransferred(
       previousOwner?: string | null,
       newOwner?: string | null
     ): TypedEventFilter<
       [string, string],
       { previousOwner: string; newOwner: string }
+    >;
+
+    "OwnershipUpdated(bytes32,bytes32,bytes32,address)"(
+      domainRegistryNode?: BytesLike | null,
+      packageId?: null,
+      domainRegistry?: null,
+      owner?: string | null
+    ): TypedEventFilter<
+      [string, string, string, string],
+      {
+        domainRegistryNode: string;
+        packageId: string;
+        domainRegistry: string;
+        owner: string;
+      }
     >;
 
     OwnershipUpdated(
@@ -421,6 +467,23 @@ export class Registry extends BaseContract {
         packageId: string;
         domainRegistry: string;
         owner: string;
+      }
+    >;
+
+    "VersionPublished(bytes32,uint256,uint256,uint256,string)"(
+      packageId?: BytesLike | null,
+      major?: null,
+      minor?: null,
+      patch?: null,
+      location?: null
+    ): TypedEventFilter<
+      [string, BigNumber, BigNumber, BigNumber, string],
+      {
+        packageId: string;
+        major: BigNumber;
+        minor: BigNumber;
+        patch: BigNumber;
+        location: string;
       }
     >;
 

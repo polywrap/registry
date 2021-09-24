@@ -23,6 +23,7 @@ export const buildHelpersDependencyExtensions = (
     registryL1: string;
     registryL2: string;
     votingMachine: string;
+    ensLinkL1: string;
   },
   testEnsContractAddresses: {
     ensRegistryL1: string;

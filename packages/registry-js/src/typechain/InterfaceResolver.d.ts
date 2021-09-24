@@ -72,6 +72,26 @@ interface InterfaceResolverInterface extends ethers.utils.Interface {
   getEvent(nameOrSignatureOrTopic: "InterfaceChanged"): EventFragment;
 }
 
+export type AddrChangedEvent = TypedEvent<
+  [string, string] & { node: string; a: string }
+>;
+
+export type AddressChangedEvent = TypedEvent<
+  [string, BigNumber, string] & {
+    node: string;
+    coinType: BigNumber;
+    newAddress: string;
+  }
+>;
+
+export type InterfaceChangedEvent = TypedEvent<
+  [string, string, string] & {
+    node: string;
+    interfaceID: string;
+    implementer: string;
+  }
+>;
+
 export class InterfaceResolver extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
   attach(addressOrName: string): this;
@@ -243,10 +263,24 @@ export class InterfaceResolver extends BaseContract {
   };
 
   filters: {
+    "AddrChanged(bytes32,address)"(
+      node?: BytesLike | null,
+      a?: null
+    ): TypedEventFilter<[string, string], { node: string; a: string }>;
+
     AddrChanged(
       node?: BytesLike | null,
       a?: null
     ): TypedEventFilter<[string, string], { node: string; a: string }>;
+
+    "AddressChanged(bytes32,uint256,bytes)"(
+      node?: BytesLike | null,
+      coinType?: null,
+      newAddress?: null
+    ): TypedEventFilter<
+      [string, BigNumber, string],
+      { node: string; coinType: BigNumber; newAddress: string }
+    >;
 
     AddressChanged(
       node?: BytesLike | null,
@@ -255,6 +289,15 @@ export class InterfaceResolver extends BaseContract {
     ): TypedEventFilter<
       [string, BigNumber, string],
       { node: string; coinType: BigNumber; newAddress: string }
+    >;
+
+    "InterfaceChanged(bytes32,bytes4,address)"(
+      node?: BytesLike | null,
+      interfaceID?: BytesLike | null,
+      implementer?: null
+    ): TypedEventFilter<
+      [string, string, string],
+      { node: string; interfaceID: string; implementer: string }
     >;
 
     InterfaceChanged(

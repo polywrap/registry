@@ -53,6 +53,10 @@ interface ABIResolverInterface extends ethers.utils.Interface {
   getEvent(nameOrSignatureOrTopic: "ABIChanged"): EventFragment;
 }
 
+export type ABIChangedEvent = TypedEvent<
+  [string, BigNumber] & { node: string; contentType: BigNumber }
+>;
+
 export class ABIResolver extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
   attach(addressOrName: string): this;
@@ -155,6 +159,14 @@ export class ABIResolver extends BaseContract {
   };
 
   filters: {
+    "ABIChanged(bytes32,uint256)"(
+      node?: BytesLike | null,
+      contentType?: BigNumberish | null
+    ): TypedEventFilter<
+      [string, BigNumber],
+      { node: string; contentType: BigNumber }
+    >;
+
     ABIChanged(
       node?: BytesLike | null,
       contentType?: BigNumberish | null

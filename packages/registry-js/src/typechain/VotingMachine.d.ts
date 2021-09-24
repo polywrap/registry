@@ -213,6 +213,52 @@ interface VotingMachineInterface extends ethers.utils.Interface {
   getEvent(nameOrSignatureOrTopic: "VersionVotingStarted"): EventFragment;
 }
 
+export type OwnershipTransferredEvent = TypedEvent<
+  [string, string] & { previousOwner: string; newOwner: string }
+>;
+
+export type VersionDecidedEvent = TypedEvent<
+  [string, boolean, string] & {
+    patchNodeId: string;
+    verified: boolean;
+    packageLocationHash: string;
+  }
+>;
+
+export type VersionProposedEvent = TypedEvent<
+  [string, string, BigNumber, BigNumber, BigNumber, string, string] & {
+    packageId: string;
+    patchNodeId: string;
+    majorVersion: BigNumber;
+    minorVersion: BigNumber;
+    patchVersion: BigNumber;
+    packageLocation: string;
+    proposer: string;
+  }
+>;
+
+export type VersionVoteEvent = TypedEvent<
+  [string, string, string, boolean] & {
+    verifier: string;
+    patchNodeId: string;
+    packageLocationHash: string;
+    approved: boolean;
+  }
+>;
+
+export type VersionVotingStartedEvent = TypedEvent<
+  [string, string, BigNumber, BigNumber, BigNumber, string, string, boolean] & {
+    packageId: string;
+    patchNodeId: string;
+    majorVersion: BigNumber;
+    minorVersion: BigNumber;
+    patchVersion: BigNumber;
+    packageLocation: string;
+    proposer: string;
+    isPatch: boolean;
+  }
+>;
+
 export class VotingMachine extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
   attach(addressOrName: string): this;
@@ -682,12 +728,29 @@ export class VotingMachine extends BaseContract {
   };
 
   filters: {
+    "OwnershipTransferred(address,address)"(
+      previousOwner?: string | null,
+      newOwner?: string | null
+    ): TypedEventFilter<
+      [string, string],
+      { previousOwner: string; newOwner: string }
+    >;
+
     OwnershipTransferred(
       previousOwner?: string | null,
       newOwner?: string | null
     ): TypedEventFilter<
       [string, string],
       { previousOwner: string; newOwner: string }
+    >;
+
+    "VersionDecided(bytes32,bool,bytes32)"(
+      patchNodeId?: BytesLike | null,
+      verified?: boolean | null,
+      packageLocationHash?: null
+    ): TypedEventFilter<
+      [string, boolean, string],
+      { patchNodeId: string; verified: boolean; packageLocationHash: string }
     >;
 
     VersionDecided(
@@ -697,6 +760,27 @@ export class VotingMachine extends BaseContract {
     ): TypedEventFilter<
       [string, boolean, string],
       { patchNodeId: string; verified: boolean; packageLocationHash: string }
+    >;
+
+    "VersionProposed(bytes32,bytes32,uint256,uint256,uint256,string,address)"(
+      packageId?: BytesLike | null,
+      patchNodeId?: null,
+      majorVersion?: null,
+      minorVersion?: null,
+      patchVersion?: null,
+      packageLocation?: null,
+      proposer?: null
+    ): TypedEventFilter<
+      [string, string, BigNumber, BigNumber, BigNumber, string, string],
+      {
+        packageId: string;
+        patchNodeId: string;
+        majorVersion: BigNumber;
+        minorVersion: BigNumber;
+        patchVersion: BigNumber;
+        packageLocation: string;
+        proposer: string;
+      }
     >;
 
     VersionProposed(
@@ -720,6 +804,21 @@ export class VotingMachine extends BaseContract {
       }
     >;
 
+    "VersionVote(address,bytes32,bytes32,bool)"(
+      verifier?: string | null,
+      patchNodeId?: BytesLike | null,
+      packageLocationHash?: null,
+      approved?: null
+    ): TypedEventFilter<
+      [string, string, string, boolean],
+      {
+        verifier: string;
+        patchNodeId: string;
+        packageLocationHash: string;
+        approved: boolean;
+      }
+    >;
+
     VersionVote(
       verifier?: string | null,
       patchNodeId?: BytesLike | null,
@@ -732,6 +831,38 @@ export class VotingMachine extends BaseContract {
         patchNodeId: string;
         packageLocationHash: string;
         approved: boolean;
+      }
+    >;
+
+    "VersionVotingStarted(bytes32,bytes32,uint256,uint256,uint256,string,address,bool)"(
+      packageId?: BytesLike | null,
+      patchNodeId?: BytesLike | null,
+      majorVersion?: null,
+      minorVersion?: null,
+      patchVersion?: null,
+      packageLocation?: null,
+      proposer?: null,
+      isPatch?: null
+    ): TypedEventFilter<
+      [
+        string,
+        string,
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        string,
+        string,
+        boolean
+      ],
+      {
+        packageId: string;
+        patchNodeId: string;
+        majorVersion: BigNumber;
+        minorVersion: BigNumber;
+        patchVersion: BigNumber;
+        packageLocation: string;
+        proposer: string;
+        isPatch: boolean;
       }
     >;
 

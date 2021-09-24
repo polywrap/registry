@@ -126,6 +126,18 @@ interface RegistrarInterface extends ethers.utils.Interface {
   getEvent(nameOrSignatureOrTopic: "OwnershipTransferred"): EventFragment;
 }
 
+export type ManagerAddedEvent = TypedEvent<
+  [string, string] & { packageId: string; manager: string }
+>;
+
+export type ManagerRemovedEvent = TypedEvent<
+  [string, string] & { packageId: string; manager: string }
+>;
+
+export type OwnershipTransferredEvent = TypedEvent<
+  [string, string] & { previousOwner: string; newOwner: string }
+>;
+
 export class Registrar extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
   attach(addressOrName: string): this;
@@ -343,7 +355,23 @@ export class Registrar extends BaseContract {
   };
 
   filters: {
+    "ManagerAdded(bytes32,address)"(
+      packageId?: BytesLike | null,
+      manager?: string | null
+    ): TypedEventFilter<
+      [string, string],
+      { packageId: string; manager: string }
+    >;
+
     ManagerAdded(
+      packageId?: BytesLike | null,
+      manager?: string | null
+    ): TypedEventFilter<
+      [string, string],
+      { packageId: string; manager: string }
+    >;
+
+    "ManagerRemoved(bytes32,address)"(
       packageId?: BytesLike | null,
       manager?: string | null
     ): TypedEventFilter<
@@ -357,6 +385,14 @@ export class Registrar extends BaseContract {
     ): TypedEventFilter<
       [string, string],
       { packageId: string; manager: string }
+    >;
+
+    "OwnershipTransferred(address,address)"(
+      previousOwner?: string | null,
+      newOwner?: string | null
+    ): TypedEventFilter<
+      [string, string],
+      { previousOwner: string; newOwner: string }
     >;
 
     OwnershipTransferred(

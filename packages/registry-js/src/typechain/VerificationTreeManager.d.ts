@@ -138,6 +138,25 @@ interface VerificationTreeManagerInterface extends ethers.utils.Interface {
   getEvent(nameOrSignatureOrTopic: "VersionVerified"): EventFragment;
 }
 
+export type OwnershipTransferredEvent = TypedEvent<
+  [string, string] & { previousOwner: string; newOwner: string }
+>;
+
+export type VerificationRootCalculatedEvent = TypedEvent<
+  [string, BigNumber] & {
+    verificationRoot: string;
+    verifiedVersionCount: BigNumber;
+  }
+>;
+
+export type VersionVerifiedEvent = TypedEvent<
+  [string, string, BigNumber] & {
+    patchNodeId: string;
+    packageLocationHash: string;
+    verifiedVersionIndex: BigNumber;
+  }
+>;
+
 export class VerificationTreeManager extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
   attach(addressOrName: string): this;
@@ -329,6 +348,14 @@ export class VerificationTreeManager extends BaseContract {
   };
 
   filters: {
+    "OwnershipTransferred(address,address)"(
+      previousOwner?: string | null,
+      newOwner?: string | null
+    ): TypedEventFilter<
+      [string, string],
+      { previousOwner: string; newOwner: string }
+    >;
+
     OwnershipTransferred(
       previousOwner?: string | null,
       newOwner?: string | null
@@ -337,12 +364,33 @@ export class VerificationTreeManager extends BaseContract {
       { previousOwner: string; newOwner: string }
     >;
 
+    "VerificationRootCalculated(bytes32,uint256)"(
+      verificationRoot?: BytesLike | null,
+      verifiedVersionCount?: null
+    ): TypedEventFilter<
+      [string, BigNumber],
+      { verificationRoot: string; verifiedVersionCount: BigNumber }
+    >;
+
     VerificationRootCalculated(
       verificationRoot?: BytesLike | null,
       verifiedVersionCount?: null
     ): TypedEventFilter<
       [string, BigNumber],
       { verificationRoot: string; verifiedVersionCount: BigNumber }
+    >;
+
+    "VersionVerified(bytes32,bytes32,uint256)"(
+      patchNodeId?: BytesLike | null,
+      packageLocationHash?: null,
+      verifiedVersionIndex?: null
+    ): TypedEventFilter<
+      [string, string, BigNumber],
+      {
+        patchNodeId: string;
+        packageLocationHash: string;
+        verifiedVersionIndex: BigNumber;
+      }
     >;
 
     VersionVerified(

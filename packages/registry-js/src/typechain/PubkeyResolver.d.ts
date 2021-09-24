@@ -50,6 +50,10 @@ interface PubkeyResolverInterface extends ethers.utils.Interface {
   getEvent(nameOrSignatureOrTopic: "PubkeyChanged"): EventFragment;
 }
 
+export type PubkeyChangedEvent = TypedEvent<
+  [string, string, string] & { node: string; x: string; y: string }
+>;
+
 export class PubkeyResolver extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
   attach(addressOrName: string): this;
@@ -149,6 +153,15 @@ export class PubkeyResolver extends BaseContract {
   };
 
   filters: {
+    "PubkeyChanged(bytes32,bytes32,bytes32)"(
+      node?: BytesLike | null,
+      x?: null,
+      y?: null
+    ): TypedEventFilter<
+      [string, string, string],
+      { node: string; x: string; y: string }
+    >;
+
     PubkeyChanged(
       node?: BytesLike | null,
       x?: null,

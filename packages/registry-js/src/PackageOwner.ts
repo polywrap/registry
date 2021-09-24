@@ -19,6 +19,17 @@ export class PackageOwner {
   signer: Signer;
   private registryContracts: RegistryContracts;
 
+  async getPolywrapOwner(domain: EnsDomain): Promise<string> {
+    return await this.registryContracts.packageOwnershipManagerL1.getPolywrapOwner(
+      domain.registryBytes32,
+      domain.node
+    );
+  }
+
+  async getDomainPolywrapOwner(domain: EnsDomain): Promise<string> {
+    return await this.registryContracts.ensLinkL1.getPolywrapOwner(domain.node);
+  }
+
   async updateOwnership(domain: EnsDomain): Promise<void> {
     const tx = await this.registryContracts.packageOwnershipManagerL1.updateOwnership(
       EnsDomain.RegistryBytes32,
@@ -169,6 +180,19 @@ export class PackageOwner {
     location: string;
   }> {
     return await this.registryContracts.registryL2.versionNodes(nodeId);
+  }
+
+  async getLatestVersionInfo(
+    packageId: string
+  ): Promise<{
+    majorVersion: BigNumber;
+    minorVersion: BigNumber;
+    patchVersion: BigNumber;
+    location: string;
+  }> {
+    return await this.registryContracts.registryL1.getLatestVersionInfo(
+      packageId
+    );
   }
 
   async getVersionNodeInfo(

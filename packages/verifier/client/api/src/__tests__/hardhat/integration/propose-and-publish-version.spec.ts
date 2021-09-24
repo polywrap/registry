@@ -122,6 +122,7 @@ describe("Start local chain", () => {
             .address,
           votingMachine: await (await ethers.getContract("VotingMachine"))
             .address,
+          ensLinkL1: await (await ethers.getContract("EnsLinkL1")).address,
         },
         {
           ensRegistryL1: await (await ethers.getContract("EnsRegistryL1"))
@@ -176,7 +177,7 @@ describe("Start local chain", () => {
 
     await authorizeCurrentVerifier();
 
-    const [votingResult, _] = await Promise.all([
+    const [votingResult] = await Promise.all([
       packageOwner.waitForVotingEnd(
         domain,
         majorNumber,

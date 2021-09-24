@@ -1,0 +1,27 @@
+.WrapperInfoComponent {
+  .tabs {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+  }
+
+  h4 {
+    margin-top: 5px;
+  }
+
+  .find-btn {
+    margin-left: 10px;
+  }
+
+  .polywrapper-definition {
+    margin-bottom: 20px;
+  }
+
+  .error {
+    color: orangered;
+  }
+
+  .success {
+    color: yellowgreen;
+  }
+}
