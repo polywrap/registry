@@ -28,7 +28,7 @@ const ImplementationsComponent: React.FC = () => {
               autoDismiss: false,
             });
 
-            speak(implementation, client)
+            await speak(implementation, client)
               .then((result) => {
                 addToast(result, {
                   appearance: "success",
@@ -82,7 +82,7 @@ const ImplementationsComponent: React.FC = () => {
           onClick={async () => {
             setAreImplementationsLoading(true);
 
-            getImplementations(interfaceUri, client)
+            await getImplementations(interfaceUri, client)
               .then((result) => {
                 setImplementationsList(result);
               })
@@ -99,7 +99,7 @@ const ImplementationsComponent: React.FC = () => {
           className="all-speak-btn"
           onClick={async () => {
             for (const implementation of implementationsList) {
-              speak(implementation, client)
+              await speak(implementation, client)
                 .then((result) => {
                   addToast(result, {
                     appearance: "success",
