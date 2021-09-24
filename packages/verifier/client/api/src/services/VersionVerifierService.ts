@@ -23,7 +23,7 @@ export class VersionVerifierService {
     this.schemaComparisonService = deps.schemaComparisonService;
   }
 
-  @traceFunc("VersionVerifierService:verifyVersion")
+  @traceFunc("version-verifier-service:verify_version")
   async verifyVersion(
     packageId: BytesLike,
     patchNodeId: BytesLike,
@@ -72,7 +72,7 @@ export class VersionVerifierService {
     };
   }
 
-  @traceFunc("VersionVerifierService:verifyMinorVersion")
+  @traceFunc("version-verifier-service:verify_minor_version")
   private async verifyMinorVersion(
     proposedVersionSchema: string,
     patchNodeId: BytesLike
@@ -99,6 +99,7 @@ export class VersionVerifierService {
     };
   }
 
+  @traceFunc("version-verifier-service:verify_minor_version")
   private async verifyPatchVersion(
     proposedVersionSchema: string,
     patchNodeId: BytesLike

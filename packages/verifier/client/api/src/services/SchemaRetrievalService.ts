@@ -18,7 +18,7 @@ export class SchemaRetrievalService {
     this.polywrapClient = deps.polywrapClient;
   }
 
-  @traceFunc("SchemaRetrievalService:getMinorVersionSchema")
+  @traceFunc("schema-retrieval-service:get_minor_version_schema")
   async getMinorVersionSchema(patchNodeId: BytesLike): Promise<string> {
     const location = await this.polywrapVotingSystem.getPrevPatchPackageLocation(
       patchNodeId
@@ -29,7 +29,7 @@ export class SchemaRetrievalService {
     return minorVersionSchema;
   }
 
-  @traceFunc("SchemaRetrievalService:getPreviousAndNextVersionSchema")
+  @traceFunc("schema-retrieval-service:get_previous_and_next_version_schema")
   async getPreviousAndNextVersionSchema(
     patchNodeId: BytesLike
   ): Promise<{
