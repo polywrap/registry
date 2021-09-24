@@ -1,5 +1,8 @@
 import { ethers, Signer } from "ethers";
-import { contractAddressesTestnet } from "./constants";
+import {
+  contractAddressesDefaultLocalhost,
+  contractAddressesTestnet,
+} from "./constants";
 import {
   EnsLink,
   EnsLink__factory,
@@ -112,5 +115,14 @@ export class RegistryContracts {
 
   static fromTestnet(provider: ethers.providers.Provider): RegistryContracts {
     return RegistryContracts.fromAddresses(contractAddressesTestnet, provider);
+  }
+
+  static fromDefaultLocalhost(
+    provider: ethers.providers.Provider
+  ): RegistryContracts {
+    return RegistryContracts.fromAddresses(
+      contractAddressesDefaultLocalhost,
+      provider
+    );
   }
 }
