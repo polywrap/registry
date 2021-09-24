@@ -1,7 +1,28 @@
-import { CallOverrides, ContractTransaction, Overrides, Signer } from "ethers";
+import {
+  BigNumber,
+  CallOverrides,
+  ContractTransaction,
+  Overrides,
+  Signer,
+} from "ethers";
 import { BytesLike } from "ethers/lib/utils";
 import { RegistryContracts } from "./RegistryContracts";
 import { VersionVotingStartedEvent } from "./VersionVotingStartedEvent";
+
+export interface ProposedVersion {
+  decided: boolean;
+  verified: boolean;
+  votingStarted: boolean;
+  packageId: string;
+  majorNodeId: string;
+  minorNodeId: string;
+  patchNodeId: string;
+  packageLocation: string;
+  majorVersion: BigNumber;
+  minorVersion: BigNumber;
+  patchVersion: BigNumber;
+  proposer: string;
+}
 
 export class PolywrapVotingSystem {
   constructor(signer: Signer, registryContracts: RegistryContracts) {
@@ -72,10 +93,10 @@ export class PolywrapVotingSystem {
     return (resp as unknown) as VersionVotingStartedEvent[];
   }
 
-  async isDecided(patchNodeId: BytesLike): Promise<boolean> {
-    const resp = await this.registryContracts.votingMachine.isDecided(
+  async getProposedVersion(patchNodeId: BytesLike): Promise<ProposedVersion> {
+    const resp = await this.registryContracts.votingMachine.proposedVersions(
       patchNodeId
     );
-    return (resp as unknown) as boolean;
+    return resp as ProposedVersion;
   }
 }

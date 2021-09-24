@@ -27,7 +27,6 @@ interface VotingMachineInterface extends ethers.utils.Interface {
     "getPrevAndNextMinorPackageLocations(bytes32)": FunctionFragment;
     "getPrevPatchPackageLocation(bytes32)": FunctionFragment;
     "initialize(address)": FunctionFragment;
-    "isDecided(bytes32)": FunctionFragment;
     "majorVersionQueueContainers(bytes32)": FunctionFragment;
     "owner()": FunctionFragment;
     "proposeVersion(bytes32,uint256,uint256,uint256,string,address)": FunctionFragment;
@@ -65,10 +64,6 @@ interface VotingMachineInterface extends ethers.utils.Interface {
     values: [BytesLike]
   ): string;
   encodeFunctionData(functionFragment: "initialize", values: [string]): string;
-  encodeFunctionData(
-    functionFragment: "isDecided",
-    values: [BytesLike]
-  ): string;
   encodeFunctionData(
     functionFragment: "majorVersionQueueContainers",
     values: [BytesLike]
@@ -155,7 +150,6 @@ interface VotingMachineInterface extends ethers.utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "initialize", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "isDecided", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "majorVersionQueueContainers",
     data: BytesLike
@@ -343,11 +337,6 @@ export class VotingMachine extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    isDecided(
-      patchNodeId: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<[boolean]>;
-
     majorVersionQueueContainers(
       arg0: BytesLike,
       overrides?: CallOverrides
@@ -491,11 +480,6 @@ export class VotingMachine extends BaseContract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  isDecided(
-    patchNodeId: BytesLike,
-    overrides?: CallOverrides
-  ): Promise<boolean>;
-
   majorVersionQueueContainers(
     arg0: BytesLike,
     overrides?: CallOverrides
@@ -635,11 +619,6 @@ export class VotingMachine extends BaseContract {
     ): Promise<string>;
 
     initialize(_registrar: string, overrides?: CallOverrides): Promise<void>;
-
-    isDecided(
-      patchNodeId: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<boolean>;
 
     majorVersionQueueContainers(
       arg0: BytesLike,
@@ -948,11 +927,6 @@ export class VotingMachine extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    isDecided(
-      patchNodeId: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
     majorVersionQueueContainers(
       arg0: BytesLike,
       overrides?: CallOverrides
@@ -1052,11 +1026,6 @@ export class VotingMachine extends BaseContract {
     initialize(
       _registrar: string,
       overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    isDecided(
-      patchNodeId: BytesLike,
-      overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
     majorVersionQueueContainers(

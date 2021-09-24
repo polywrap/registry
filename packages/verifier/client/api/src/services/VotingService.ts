@@ -1,5 +1,9 @@
 import { BytesLike } from "ethers";
-import { PolywrapVotingSystem, traceFunc } from "@polywrap/registry-js";
+import {
+  PolywrapVotingSystem,
+  ProposedVersion,
+  traceFunc,
+} from "@polywrap/registry-js";
 import { VerifierClientConfig } from "../config/VerifierClientConfig";
 import { Logger } from "winston";
 
@@ -42,7 +46,7 @@ export class VotingService {
   }
 
   @traceFunc("voting-service:is_decided")
-  async isDecided(patchNodeId: BytesLike): Promise<boolean> {
-    return this.polywrapVotingSystem.isDecided(patchNodeId);
+  async getProposedVersion(patchNodeId: BytesLike): Promise<ProposedVersion> {
+    return this.polywrapVotingSystem.getProposedVersion(patchNodeId);
   }
 }

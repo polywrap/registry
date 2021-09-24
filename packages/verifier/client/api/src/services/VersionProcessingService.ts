@@ -73,7 +73,10 @@ export class VersionProcessingService {
       isPatch,
     } = proposedVersion;
 
-    if (await this.votingService.isDecided(patchNodeId)) {
+    const _proposedVersion = await this.votingService.getProposedVersion(
+      patchNodeId
+    );
+    if (_proposedVersion.decided) {
       return;
     }
 
