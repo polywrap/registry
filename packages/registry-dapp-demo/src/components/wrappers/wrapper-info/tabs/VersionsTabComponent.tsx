@@ -34,18 +34,30 @@ const VersionsTabComponent: React.FC<{
       >
         Find latest
       </button>
-      <div>Latest version</div>
       {latestVersion ? (
-        <>
-          <div>Id: {toPrettyHex(latestVersion.patchNodeId)}</div>
-          <div>Number: {latestVersion.number}</div>
-          <div>
-            IPFS:{" "}
-            <a href={`https://dweb.link/ipfs/{latestVersion.number}`}>
-              ipfs://{latestVersion.packageLocation}
-            </a>
-          </div>
-        </>
+        <table className="polywrapper-table">
+          <tbody>
+            <tr>
+              <td colSpan={2}>Latest version</td>
+            </tr>
+            <tr>
+              <td>Id</td>
+              <td>{toPrettyHex(latestVersion.patchNodeId)}</td>
+            </tr>
+            <tr>
+              <td>Number</td>
+              <td>{latestVersion.number}</td>
+            </tr>
+            <tr>
+              <td> IPFS</td>
+              <td>
+                <a href={`https://dweb.link/ipfs/{latestVersion.number}`}>
+                  ipfs://{latestVersion.packageLocation}
+                </a>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       ) : (
         <></>
       )}

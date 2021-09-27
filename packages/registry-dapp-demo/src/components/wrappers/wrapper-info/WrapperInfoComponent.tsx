@@ -5,6 +5,7 @@ import VersionsTab from "./tabs/VersionsTabComponent";
 import React from "react";
 import PolywrapperDefinitionComponent from "./PolywrapperDefinitionComponent";
 import { PolywrapperInfo } from "../../../types/PolywrapperInfo";
+import VersionPublishComponent from "../../publishing/VersionPublishComponent";
 
 const WrapperInfoComponent: React.FC = () => {
   const [polywrapperInfo, setPolywrapperInfo] = useState<PolywrapperInfo>();
@@ -24,6 +25,12 @@ const WrapperInfoComponent: React.FC = () => {
       ) : (
         <></>
       )}
+      <div>
+        <VersionPublishComponent
+          defaultDomainName={polywrapperInfo?.domain.name}
+          defaultVersionNumber=""
+        />
+      </div>
     </div>
   );
 };

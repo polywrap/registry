@@ -19,14 +19,13 @@ const PolywrapperDefinitionComponent: React.FC<{
   return (
     <div className="PolywrapperDefinitionComponent polywrapper-definition">
       <select
+        className="domain-registry"
         value={domainRegistry}
         onChange={async (e) => {
           setDomainRegistry(e.target.value);
         }}
       >
-        <option selected value="ens">
-          ens
-        </option>
+        <option value="ens">ens</option>
       </select>
       <input
         type="text"

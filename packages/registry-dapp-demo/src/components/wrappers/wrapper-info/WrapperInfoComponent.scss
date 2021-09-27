@@ -24,4 +24,29 @@
   .success {
     color: yellowgreen;
   }
+
+  .domain-registry {
+    margin-right: 10px;
+  }
+
+  table {
+    min-width: 18em;
+  }
+
+  table, th, td {
+    border: 1px solid #2d8623;
+    border-collapse: collapse;
+  }
+
+  td {
+    padding: 10px;
+  }
+
+  .polywrapper-table {
+    margin: 10px 0 0 0;
+  }
+
+  .relay-chain {
+    margin: 0 5px 0 0;
+  }
 }
