@@ -62,21 +62,22 @@ export class VersionProcessingService {
   async processProposedVersion(
     proposedVersion: ProposedVersionEventArgs
   ): Promise<void> {
-    const {
-      packageId,
-      patchNodeId,
-      majorVersion,
-      minorVersion,
-      patchVersion,
-      packageLocation,
-      proposer,
-      isPatch,
-    } = proposedVersion;
+    const { patchNodeId, isPatch } = proposedVersion;
 
     const _proposedVersion = await this.votingService.getProposedVersion(
       patchNodeId
     );
-    if (_proposedVersion.decided) {
+
+    const {
+      packageId,
+      majorVersion,
+      minorVersion,
+      patchVersion,
+      packageLocation,
+      decided,
+    } = _proposedVersion;
+
+    if (decided) {
       return;
     }
 
@@ -91,9 +92,9 @@ export class VersionProcessingService {
     } = await this.versionVerifierService.verifyVersion(
       packageId,
       patchNodeId,
-      majorVersion,
-      minorVersion,
-      patchVersion,
+      majorVersion.toNumber(),
+      minorVersion.toNumber(),
+      patchVersion.toNumber(),
       packageLocation,
       isPatch
     );
