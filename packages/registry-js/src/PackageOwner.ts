@@ -7,19 +7,29 @@ import {
 import { computeMerkleProof } from "@polywrap/registry-core-js";
 import { EnsDomain } from "@polywrap/registry-core-js";
 import { RegistryContracts } from "./RegistryContracts";
+import { Logger } from "winston";
+import { ErrorHandler, LogLevel } from "./errorHandler";
 import { ProposedVersion } from "./ProposedVersion";
 
 export type BlockchainsWithRegistry = "l2-chain-name" | "ethereum" | "xdai";
 
-export class PackageOwner {
-  constructor(signer: Signer, registryContracts: RegistryContracts) {
+export class PackageOwner extends ErrorHandler {
+  constructor(
+    signer: Signer,
+    registryContracts: RegistryContracts,
+    logger: Logger
+  ) {
+    super();
     this.signer = signer;
     this.registryContracts = registryContracts.connect(signer);
+    this.logger = logger;
   }
 
+  logger: Logger;
   signer: Signer;
   private registryContracts: RegistryContracts;
 
+  @PackageOwner.errorHandler(LogLevel.warn)
   async getPolywrapOwner(domain: EnsDomain): Promise<string> {
     return await this.registryContracts.packageOwnershipManagerL1.getPolywrapOwner(
       domain.registryBytes32,
@@ -27,10 +37,12 @@ export class PackageOwner {
     );
   }
 
+  @PackageOwner.errorHandler(LogLevel.warn)
   async getDomainPolywrapOwner(domain: EnsDomain): Promise<string> {
     return await this.registryContracts.ensLinkL1.getPolywrapOwner(domain.node);
   }
 
+  @PackageOwner.errorHandler(LogLevel.warn)
   async updateOwnership(domain: EnsDomain): Promise<void> {
     const tx = await this.registryContracts.packageOwnershipManagerL1.updateOwnership(
       EnsDomain.RegistryBytes32,
@@ -40,6 +52,7 @@ export class PackageOwner {
     await tx.wait();
   }
 
+  @PackageOwner.errorHandler(LogLevel.warn)
   async relayOwnership(
     domain: EnsDomain,
     chainName: BlockchainsWithRegistry
@@ -53,6 +66,7 @@ export class PackageOwner {
     await tx.wait();
   }
 
+  @PackageOwner.errorHandler(LogLevel.warn)
   async proposeVersion(
     domain: EnsDomain,
     major: number,
@@ -71,10 +85,12 @@ export class PackageOwner {
     await proposeTx.wait();
   }
 
+  @PackageOwner.errorHandler(LogLevel.warn)
   async getVerificationRoot(): Promise<BytesLike> {
     return await this.registryContracts.versionVerificationManagerL2.verificationRoot();
   }
 
+  @PackageOwner.errorHandler(LogLevel.warn)
   async getLeafCountForRoot(verificationRoot: BytesLike): Promise<number> {
     const rootCalculatedEvents = await this.registryContracts.verificationTreeManager.queryFilter(
       this.registryContracts.verificationTreeManager.filters.VerificationRootCalculated(
@@ -87,6 +103,7 @@ export class PackageOwner {
     return rootCalculatedEvents[0].args.verifiedVersionCount.toNumber();
   }
 
+  @PackageOwner.errorHandler(LogLevel.warn)
   async publishVersion(
     domain: EnsDomain,
     packageLocation: string,
@@ -156,10 +173,12 @@ export class PackageOwner {
     await publishTx.wait();
   }
 
+  @PackageOwner.errorHandler(LogLevel.warn)
   async getPackageLocation(nodeId: BytesLike): Promise<string> {
     return await this.registryContracts.registryL2.getPackageLocation(nodeId);
   }
 
+  @PackageOwner.errorHandler(LogLevel.warn)
   async resolveToPackageLocation(
     domain: EnsDomain,
     major: number,
@@ -172,6 +191,7 @@ export class PackageOwner {
     );
   }
 
+  @PackageOwner.errorHandler(LogLevel.warn)
   async getNodeInfo(
     nodeId: BytesLike
   ): Promise<{
@@ -183,6 +203,7 @@ export class PackageOwner {
     return await this.registryContracts.registryL2.versionNodes(nodeId);
   }
 
+  @PackageOwner.errorHandler(LogLevel.warn)
   async getLatestVersionInfo(
     packageId: string
   ): Promise<{
@@ -196,6 +217,7 @@ export class PackageOwner {
     );
   }
 
+  @PackageOwner.errorHandler(LogLevel.warn)
   async getVersionNodeInfo(
     domain: EnsDomain,
     major: number,
@@ -211,6 +233,7 @@ export class PackageOwner {
     return await this.getNodeInfo(patchNodeId);
   }
 
+  @PackageOwner.errorHandler(LogLevel.warn)
   async waitForVotingEnd(
     domain: EnsDomain,
     major: number,
