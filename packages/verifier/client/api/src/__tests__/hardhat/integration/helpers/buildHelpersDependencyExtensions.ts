@@ -1,6 +1,6 @@
 import * as awilix from "awilix";
 import { NameAndRegistrationPair } from "awilix";
-import { EnsApi } from "./ens/EnsApi";
+import { EnsApi } from "../../../../helpers/EnsApi";
 import { PackageOwner, PolywrapVotingSystem } from "@polywrap/registry-js";
 import { Signer } from "ethers";
 import { VerifierStateManager } from "../../../../services/VerifierStateManager";

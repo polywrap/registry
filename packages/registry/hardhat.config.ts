@@ -36,12 +36,21 @@ const config: HardhatUserConfig = {
   networks: {
     hardhat: {
       live: false,
-      forking: {
-        url:
-          "https://eth-mainnet.alchemyapi.io/v2/MnO3SuHlzuCydPWE1XhsYZM_pHZP8_ix",
-        blockNumber: 11845661,
+      gas: "auto",
+      gasPrice: "auto",
+      gasMultiplier: 1,
+      chainId: 1337,
+      accounts: {
+        mnemonic: "test test test test test test test test test test test test",
       },
       deploy: ["./deploy/scripts/localhost"],
+
+      // live: false,
+      // forking: {
+      //   url: "https://eth-mainnet.alchemyapi.io/v2/MnO3SuHlzuCydPWE1XhsYZM_pHZP8_ix",
+      //   blockNumber: 11845661,
+      // },
+      // deploy: ["./deploy/scripts/localhosdsdst"],
     },
     localhost: {
       live: false,

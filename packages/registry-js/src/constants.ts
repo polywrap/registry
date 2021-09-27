@@ -1,3 +1,12 @@
+import * as VersionVerificationManagerL2 from "./deployments/localhost/VersionVerificationManagerL2.json";
+import * as PackageOwnershipManagerL1 from "./deployments/localhost/PackageOwnershipManagerL1.json";
+import * as PolywrapRegistrar from "./deployments/localhost/PolywrapRegistrar.json";
+import * as VerificationTreeManager from "./deployments/localhost/PolywrapRegistrar.json";
+import * as VotingMachine from "./deployments/localhost/VotingMachine.json";
+import * as EnsLinkL1 from "./deployments/localhost/EnsLinkL1.json";
+import * as PolywrapRegistryL1 from "./deployments/localhost/PolywrapRegistryL1.json";
+import * as PolywrapRegistryL2 from "./deployments/localhost/PolywrapRegistryL2.json";
+
 export const contractAddressesTestnet = {
   versionVerificationManagerL2: "0x0",
   packageOwnershipManagerL1: "0x0",
@@ -10,12 +19,12 @@ export const contractAddressesTestnet = {
 };
 
 export const contractAddressesDefaultLocalhost = {
-  versionVerificationManagerL2: "0x8d54644bC13d08Fd9CAbe6DD84f7034d44c7B1B5",
-  packageOwnershipManagerL1: "0xC95639fBB0dc0fA87Be357841416d7Ae5eEC7b57",
-  registrar: "0x24C17bf9Af7A0e372D8B3571dBa12C216Bc44E42",
-  verificationTreeManager: "0xE675C14714f532852115e83F58A48BfD2Eb964c5",
-  registryL1: "0x42Cc87749B4031c53181692c537622e5c3b7d061",
-  registryL2: "0x98D669278F61BCC6a5c6c36b2F47b749364beA07",
-  votingMachine: "0x6409eC45617f3f4Ae5C985D6f6C2C04F896519f5",
-  ensLinkL1: "0x8d54644bC13d08Fd9CAbe6DD84f7034d44c7B1B5",
+  versionVerificationManagerL2: VersionVerificationManagerL2.address,
+  packageOwnershipManagerL1: PackageOwnershipManagerL1.address,
+  registrar: PolywrapRegistrar.address,
+  verificationTreeManager: VerificationTreeManager.address,
+  registryL1: PolywrapRegistryL1.address,
+  registryL2: PolywrapRegistryL2.address,
+  votingMachine: VotingMachine.address,
+  ensLinkL1: EnsLinkL1.address,
 };

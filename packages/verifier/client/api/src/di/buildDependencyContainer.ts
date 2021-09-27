@@ -70,7 +70,6 @@ export const buildDependencyContainer = (
       .singleton(),
     verifierSigner: awilix
       .asFunction(({ verifierClientConfig, ethersProvider }) => {
-        console.log(verifierClientConfig);
         return new ethers.Wallet(
           verifierClientConfig.verifierPrivateKey,
           ethersProvider
