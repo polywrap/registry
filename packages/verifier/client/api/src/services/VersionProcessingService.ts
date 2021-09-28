@@ -3,6 +3,7 @@ import { VerifierStateInfo } from "../VerifierStateInfo";
 import { VersionVerifierService } from "./VersionVerifierService";
 import { VotingService } from "./VotingService";
 import { Logger } from "winston";
+import { traceFunc } from "@polywrap/registry-js";
 
 export class VersionProcessingService {
   private logger: Logger;
@@ -19,6 +20,7 @@ export class VersionProcessingService {
     this.versionVerifierService = deps.versionVerifierService;
   }
 
+  @traceFunc("version-processing-service:process_proposed_version_event")
   async processProposedVersionEvent(
     stateInfo: VerifierStateInfo,
     event: {
@@ -56,17 +58,28 @@ export class VersionProcessingService {
     stateInfo.lastProcessedLogIndex = event.logIndex;
   }
 
-  async processProposedVersion(proposedVersion: ProposedVersionEventArgs) {
+  @traceFunc("version-processing-service:process_proposed_version")
+  async processProposedVersion(
+    proposedVersion: ProposedVersionEventArgs
+  ): Promise<void> {
+    const { patchNodeId, isPatch } = proposedVersion;
+
+    const _proposedVersion = await this.votingService.getProposedVersion(
+      patchNodeId
+    );
+
     const {
       packageId,
-      patchNodeId,
       majorVersion,
       minorVersion,
       patchVersion,
       packageLocation,
-      proposer,
-      isPatch,
-    } = proposedVersion;
+      decided,
+    } = _proposedVersion;
+
+    if (decided) {
+      return;
+    }
 
     this.logger.info(
       `Version proposed: ${patchNodeId}, ${majorVersion}, ${minorVersion}, ${patchVersion}`
@@ -79,9 +92,9 @@ export class VersionProcessingService {
     } = await this.versionVerifierService.verifyVersion(
       packageId,
       patchNodeId,
-      majorVersion,
-      minorVersion,
-      patchVersion,
+      majorVersion.toNumber(),
+      minorVersion.toNumber(),
+      patchVersion.toNumber(),
       packageLocation,
       isPatch
     );

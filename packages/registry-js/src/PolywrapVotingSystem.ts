@@ -1,5 +1,6 @@
 import { CallOverrides, ContractTransaction, Overrides, Signer } from "ethers";
 import { BytesLike } from "ethers/lib/utils";
+import { ProposedVersion } from "./ProposedVersionType";
 import { RegistryContracts } from "./RegistryContracts";
 import { VersionVotingStartedEvent } from "./VersionVotingStartedEvent";
 
@@ -70,5 +71,12 @@ export class PolywrapVotingSystem {
     );
 
     return (resp as unknown) as VersionVotingStartedEvent[];
+  }
+
+  async getProposedVersion(patchNodeId: BytesLike): Promise<ProposedVersion> {
+    const resp = await this.registryContracts.votingMachine.proposedVersions(
+      patchNodeId
+    );
+    return resp as ProposedVersion;
   }
 }

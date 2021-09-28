@@ -17,6 +17,7 @@
     "@opentelemetry/instrumentation-winston": "^0.25.0",
     "@opentelemetry/sdk-trace-node": "^0.24.1-alpha.4",
     "@typechain/ethers-v5": "^7.0.1",
+    "@web3api/tracing-js": "^0.0.1-prealpha.44",
     "ethers": "^5.4.6",
     "typechain": "^5.1.2",
     "typescript": "^4.4.2",
