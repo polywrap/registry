@@ -5,14 +5,17 @@ import "./UnproposedStatusView.scss";
 
 const UnproposedStatusView: React.FC<{
   domainName: string;
-}> = ({ domainName }) => {
+  reloadProposedVersion: () => Promise<void>;
+}> = ({ domainName, reloadProposedVersion }) => {
   const { packageOwner } = usePolywrapRegistry();
 
-  const [ipfsHash, setIpfsHash] = useState("");
+  const [ipfsHash, setIpfsHash] = useState(
+    "bafybeidftvdnn4wzpuipdfwqwkegmcm4ktnqrrch3p3web67mtmhu2d6ei"
+  );
 
   return (
     <div className="UnproposedStatusView">
-      <div>Status: Unproposed</div>
+      <div className="status">Status: Unproposed</div>
 
       <div>
         <input
@@ -28,6 +31,8 @@ const UnproposedStatusView: React.FC<{
             const domain = new EnsDomain(domainName);
 
             await packageOwner.proposeVersion(domain, 1, 0, 0, ipfsHash);
+
+            await reloadProposedVersion();
           }}
         >
           Propose version

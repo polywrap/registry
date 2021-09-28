@@ -254,6 +254,45 @@ export class PackageOwner {
     });
   }
 
+  async _waitForVotingEnd(
+    patchNodeId: BytesLike,
+    packageLocation: string
+  ): Promise<{
+    patchNodeId: BytesLike;
+    verified: boolean;
+    packageLocationHash: string;
+  }> {
+    const packageLocationHash = solidityKeccak256(
+      ["string"],
+      [packageLocation]
+    );
+
+    return new Promise((resolve) => {
+      const listener = (
+        decidedPatchNodeId: BytesLike,
+        verified: boolean,
+        decidedPackageLocationHash: BytesLike
+      ) => {
+        if (
+          decidedPatchNodeId !== patchNodeId ||
+          decidedPackageLocationHash != packageLocationHash
+        ) {
+          return;
+        }
+
+        this.registryContracts.votingMachine.off("VersionDecided", listener);
+
+        resolve({
+          patchNodeId,
+          verified,
+          packageLocationHash,
+        });
+      };
+
+      this.registryContracts.votingMachine.on("VersionDecided", listener);
+    });
+  }
+
   async getProposedVersion(patchNodeId: BytesLike): Promise<ProposedVersion> {
     const resp = await this.registryContracts.votingMachine.proposedVersions(
       patchNodeId

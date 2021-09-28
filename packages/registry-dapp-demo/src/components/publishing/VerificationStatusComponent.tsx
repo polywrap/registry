@@ -13,7 +13,8 @@ import RejectedStatusView from "./statuses/rejected/RejectedStatusView";
 const VerificationStatusComponent: React.FC<{
   domainName: string;
   proposedVersion: ProposedVersion;
-}> = ({ domainName, proposedVersion }) => {
+  reloadProposedVersion: () => Promise<void>;
+}> = ({ domainName, proposedVersion, reloadProposedVersion }) => {
   let verificationStatus: VersionVerificationStatus =
     VersionVerificationStatus.Published;
 
@@ -35,7 +36,10 @@ const VerificationStatusComponent: React.FC<{
   switch (verificationStatus) {
     case VersionVerificationStatus.Unproposed:
       status = (
-        <UnproposedStatusView domainName={domainName}></UnproposedStatusView>
+        <UnproposedStatusView
+          domainName={domainName}
+          reloadProposedVersion={reloadProposedVersion}
+        ></UnproposedStatusView>
       );
       break;
     case VersionVerificationStatus.Queued:
@@ -45,6 +49,8 @@ const VerificationStatusComponent: React.FC<{
       status = (
         <VerifyingStatusView
           patchNodeId={proposedVersion.patchNodeId}
+          packageLocation={proposedVersion.packageLocation}
+          reloadProposedVersion={reloadProposedVersion}
         ></VerifyingStatusView>
       );
       break;

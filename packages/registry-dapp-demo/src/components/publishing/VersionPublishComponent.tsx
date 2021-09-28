@@ -20,6 +20,14 @@ const VersionPublishComponent: React.FC<{
     ProposedVersion | undefined
   >();
 
+  const reloadProposedVersion = async () => {
+    const domain = new EnsDomain(domainName);
+    const patchNodeId = packageOwner.calculatePatchNodeId(domain, 1, 0, 0);
+
+    const proposedVersion = await packageOwner.getProposedVersion(patchNodeId);
+    setProposedVersion(proposedVersion);
+  };
+
   return (
     <div className="VersionPublishComponent">
       <h3>Version Publishing</h3>
@@ -44,18 +52,7 @@ const VersionPublishComponent: React.FC<{
       />
       <button
         onClick={async () => {
-          const domain = new EnsDomain(domainName);
-          const patchNodeId = packageOwner.calculatePatchNodeId(
-            domain,
-            1,
-            0,
-            0
-          );
-
-          const proposedVersion = await packageOwner.getProposedVersion(
-            patchNodeId
-          );
-          setProposedVersion(proposedVersion);
+          await reloadProposedVersion();
         }}
       >
         Get status
@@ -65,6 +62,7 @@ const VersionPublishComponent: React.FC<{
           <VerificationStatusComponent
             domainName={domainName}
             proposedVersion={proposedVersion}
+            reloadProposedVersion={reloadProposedVersion}
           />
         ) : (
           <></>

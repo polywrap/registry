@@ -5,7 +5,9 @@ import "./VerifyingStatusView.scss";
 
 const VerifyingStatusView: React.FC<{
   patchNodeId: BytesLike;
-}> = ({ patchNodeId }) => {
+  packageLocation: string;
+  reloadProposedVersion: () => Promise<void>;
+}> = ({ patchNodeId, packageLocation, reloadProposedVersion }) => {
   const { packageOwner } = usePolywrapRegistry();
   const [votingInfo, setVotingInfo] = useState({
     verifierCount: 0,
@@ -13,24 +15,35 @@ const VerifyingStatusView: React.FC<{
     rejectingVerifiers: 0,
   });
 
+  const loadVotingInfo = async () => {
+    const votingInfo = await packageOwner.getProposedVersionVotingInfo(
+      patchNodeId
+    );
+    setVotingInfo({
+      verifierCount: votingInfo.verifierCount.toNumber(),
+      approvingVerifiers: votingInfo.approvingVerifiers.toNumber(),
+      rejectingVerifiers: votingInfo.rejectingVerifiers.toNumber(),
+    });
+  };
+
   const votesNeeded = votingInfo.verifierCount / 2 + 1;
 
   useEffect(() => {
     async () => {
-      const votingInfo = await packageOwner.getProposedVersionVotingInfo(
-        patchNodeId
-      );
-      setVotingInfo({
-        verifierCount: votingInfo.verifierCount.toNumber(),
-        approvingVerifiers: votingInfo.approvingVerifiers.toNumber(),
-        rejectingVerifiers: votingInfo.rejectingVerifiers.toNumber(),
-      });
+      await loadVotingInfo();
     };
+  }, []);
+
+  useEffect(() => {
+    (async () => {
+      await packageOwner._waitForVotingEnd(patchNodeId, packageLocation);
+      await reloadProposedVersion();
+    })();
   }, []);
 
   return (
     <div className="VerifyingStatusView">
-      <div>Status: Verifying</div>
+      <div className="status">Status: Verifying</div>
       <div>
         <div>Verifiers: {votingInfo.verifierCount}</div>
         <div>
