@@ -39,11 +39,11 @@ export class VerifierClient {
 
   @traceFunc("verifier-client:run")
   async run(): Promise<void> {
-    const processedEventCnt = 0;
+    let processedEventCnt = 0;
 
     // eslint-disable-next-line no-constant-condition
     while (true) {
-      // processedEventCnt = await this.queryAndVerifyVersions();
+      processedEventCnt = await this.queryAndVerifyVersions();
 
       this.logger.info(`Processed ${processedEventCnt} events.`);
 

@@ -2,8 +2,8 @@ import "./VerifiedStatusView.scss";
 
 const VerifiedStatusView: React.FC = () => {
   return (
-    <div className="Verified">
-      <div>Status: Verified</div>
+    <div className="VerifiedStatusView">
+      <div className="status">Status: Verified</div>
       <div>
         <button>Publish to xDAI</button>
         <button>Publish to Ethereum</button>

@@ -2,43 +2,26 @@ import "./VersionPublishComponent.scss";
 import { useState } from "react";
 import { VersionVerificationStatus } from "../../types/VersionVerificationStatus";
 import { VersionInfo } from "../../types/VersionInfo";
+import { EnsDomain, ProposedVersion } from "@polywrap/registry-js";
+import { usePolywrapRegistry } from "../../hooks/usePolywrapRegistry";
+import VerificationStatusComponent from "./VerificationStatusComponent";
 
 const VersionPublishComponent: React.FC<{
   defaultDomainName?: string;
   defaultVersionNumber?: string;
 }> = ({ defaultDomainName, defaultVersionNumber }) => {
+  const { packageOwner } = usePolywrapRegistry();
+
   const [domainName, setDomainName] = useState(defaultDomainName ?? "");
   const [versionNumber, setVersionNumber] = useState(
     defaultVersionNumber ?? ""
   );
-  const [latestVersion, setLatestVersion] = useState<VersionInfo | undefined>();
-
-  let status = <></>;
-  let verificationStatus: VersionVerificationStatus | undefined;
-
-  switch (verificationStatus) {
-    case VersionVerificationStatus.Unproposed:
-      status = <div>Unproposed</div>;
-      break;
-    case VersionVerificationStatus.Queued:
-      status = <div>Queued</div>;
-      break;
-    case VersionVerificationStatus.Verified:
-      status = <div>Verified</div>;
-      break;
-    case VersionVerificationStatus.Rejected:
-      status = <div>Rejected</div>;
-      break;
-    case VersionVerificationStatus.Published:
-      status = <div>Published</div>;
-      break;
-    default:
-      status = <div>Loading...</div>;
-      break;
-  }
+  const [proposedVersion, setProposedVersion] = useState<
+    ProposedVersion | undefined
+  >();
 
   return (
-    <>
+    <div className="VersionPublishComponent">
       <h3>Version Publishing</h3>
       <select value="ens">
         <option value="ens">ENS</option>
@@ -54,37 +37,40 @@ const VersionPublishComponent: React.FC<{
       <input
         type="text"
         value={versionNumber}
-        placeholder="Version number (eg. 1.0)..."
+        placeholder="Version number (eg. 1.0.0)..."
         onChange={async (e) => {
           setVersionNumber(e.target.value);
         }}
       />
-      <input
-        type="text"
-        value={versionNumber}
-        placeholder="IPFS hash..."
-        onChange={async (e) => {
-          setVersionNumber(e.target.value);
+      <button
+        onClick={async () => {
+          const domain = new EnsDomain(domainName);
+          const patchNodeId = packageOwner.calculatePatchNodeId(
+            domain,
+            1,
+            0,
+            0
+          );
+
+          const proposedVersion = await packageOwner.getProposedVersion(
+            patchNodeId
+          );
+          setProposedVersion(proposedVersion);
         }}
-      />
-      <button>Get status</button>
-      <div>Latest version</div>
-      {latestVersion ? (
-        <>
-          <div>Id: {latestVersion.patchNodeId}</div>
-          <div>Number: {latestVersion.number}</div>
-          <div>
-            IPFS:{" "}
-            <a href={`https://dweb.link/ipfs/{latestVersion.number}`}>
-              ipfs://{latestVersion.packageLocation}
-            </a>
-          </div>
-        </>
-      ) : (
-        <></>
-      )}
-      <div>{status}</div>
-    </>
+      >
+        Get status
+      </button>
+      <div className="verification-status">
+        {proposedVersion ? (
+          <VerificationStatusComponent
+            domainName={domainName}
+            proposedVersion={proposedVersion}
+          />
+        ) : (
+          <></>
+        )}
+      </div>
+    </div>
   );
 };
 

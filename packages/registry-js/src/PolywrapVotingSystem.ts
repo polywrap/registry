@@ -1,6 +1,6 @@
 import { CallOverrides, ContractTransaction, Overrides, Signer } from "ethers";
 import { BytesLike } from "ethers/lib/utils";
-import { ProposedVersion } from "./ProposedVersionType";
+import { ProposedVersion } from "./ProposedVersion";
 import { RegistryContracts } from "./RegistryContracts";
 import { VersionVotingStartedEvent } from "./VersionVotingStartedEvent";
 

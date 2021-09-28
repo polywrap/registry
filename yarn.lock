@@ -4967,7 +4967,7 @@
     "@web3api/core-js" "0.0.1-prealpha.45"
     js-sha3 "0.8.0"
 
-"@web3api/tracing-js@0.0.1-prealpha.45", "@web3api/tracing-js@^0.0.1-prealpha.45":
+"@web3api/tracing-js@0.0.1-prealpha.45", "@web3api/tracing-js@^0.0.1-prealpha.44", "@web3api/tracing-js@^0.0.1-prealpha.45":
   version "0.0.1-prealpha.45"
   resolved "https://registry.yarnpkg.com/@web3api/tracing-js/-/tracing-js-0.0.1-prealpha.45.tgz#a1e6139a48975f30bf4481efa0e7fb74e6afaad0"
   integrity sha512-6dsfimZv+P1eLSRn36LvxMXuzf+wkQXIvO9ttAxF2m3MugvYC6qHuvhnnB9swPzcDosGHym5PflRv2MFhgA/9w==

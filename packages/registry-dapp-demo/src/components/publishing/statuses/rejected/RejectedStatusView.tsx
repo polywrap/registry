@@ -1,6 +1,6 @@
-import "./PublishedStatusView.scss";
+import "./RejectedStatusView.scss";
 
-const PublishedStatusView: React.FC = () => {
+const RejectedStatusView: React.FC = () => {
   return (
     <div className="RejectedStatusView">
       <div>Status: Rejected</div>
@@ -14,4 +14,4 @@ const PublishedStatusView: React.FC = () => {
   );
 };
 
-export default PublishedStatusView;
+export default RejectedStatusView;

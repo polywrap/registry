@@ -51,7 +51,9 @@ const VersionsTabComponent: React.FC<{
             <tr>
               <td> IPFS</td>
               <td>
-                <a href={`https://dweb.link/ipfs/{latestVersion.number}`}>
+                <a
+                  href={`https://dweb.link/ipfs/${latestVersion.packageLocation}`}
+                >
                   ipfs://{latestVersion.packageLocation}
                 </a>
               </td>
