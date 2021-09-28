@@ -52,12 +52,14 @@ async function run() {
   app.use(cors(corsOptions));
 
   app.get("/info", (_, res) => {
+    this.logger.info(`API request: info`);
     res.send({
       status: "running",
     });
   });
 
   app.get("/dev/configureEnsDomain", async (req, res) => {
+    this.logger.info(`API request: configureEnsDomain`);
     try {
       await configureDomainForPolywrap(
         new ethers.Wallet(req.query.ensOwner as string, ethersProvider),
@@ -67,11 +69,13 @@ async function run() {
       );
       res.send("Success");
     } catch (ex) {
+      this.logger.info(`API request failure: configureEnsDomain`);
       res.send(ex);
     }
   });
 
   app.get("/dev/authorizeVerifier", async (req, res) => {
+    this.logger.info(`API request: authorizeVerifier`);
     try {
       const authority = new RegistryAuthority(
         verifierSigner,
@@ -81,6 +85,7 @@ async function run() {
       await authority.authorizeVerifiers([await verifierSigner.getAddress()]);
       res.send("Success");
     } catch (ex) {
+      this.logger.info(`API request failure: authorizeVerifier`);
       res.send(ex);
     }
   });
