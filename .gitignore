@@ -6,8 +6,6 @@ dist
 #Hardhat deploy
 packages/registry/deployments/localhost
 packages/e2e/src/deployments/localhost
-packages/verifier-client/src/deployments/localhost
-packages/registry-js/src/deployments/localhost
 packages/registry-test-utils/src/deployments/localhost
 
 #Hardhat files
