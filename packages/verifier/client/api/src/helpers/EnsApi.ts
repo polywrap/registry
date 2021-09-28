@@ -23,7 +23,7 @@ export class EnsApi {
       testEthRegistrarL1: string;
       testPublicResolverL1: string;
     },
-    provider: ethers.providers.BaseProvider
+    provider: ethers.providers.Provider
   ) {
     this.ensRegistryL1 = ENSRegistry__factory.connect(
       contractAddresses.ensRegistryL1,
