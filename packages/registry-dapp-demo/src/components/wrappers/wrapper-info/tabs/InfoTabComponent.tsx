@@ -1,9 +1,16 @@
+import { BlockchainsWithRegistry } from "@polywrap/registry-js";
+import { useState } from "react";
+import { relayOwnership } from "../../../../helpers/relayOwnership";
 import { toPrettyHex } from "../../../../helpers/toPrettyHex";
+import { usePolywrapRegistry } from "../../../../hooks/usePolywrapRegistry";
 import { PolywrapperInfo } from "../../../../types/PolywrapperInfo";
 
 const InfoTabComponent: React.FC<{
   polywrapperInfo: PolywrapperInfo;
 }> = ({ polywrapperInfo }) => {
+  const { packageOwner } = usePolywrapRegistry();
+  const [relayChain, setRelayChain] = useState<BlockchainsWithRegistry>("xdai");
+
   return (
     <div className="InfoTab">
       <div>
@@ -51,10 +58,26 @@ const InfoTabComponent: React.FC<{
             </tr>
             <tr>
               <td colSpan={2}>
-                <select className="relay-chain" value="xdai">
+                <select
+                  className="relay-chain"
+                  value={relayChain}
+                  onChange={async (e) => {
+                    setRelayChain(e.target.value as BlockchainsWithRegistry);
+                  }}
+                >
                   <option value="xdai">xDAI</option>
                 </select>
-                <button>Relay ownership</button>
+                <button
+                  onClick={async () => {
+                    await relayOwnership(
+                      polywrapperInfo.domain,
+                      relayChain,
+                      packageOwner
+                    );
+                  }}
+                >
+                  Relay ownership
+                </button>
               </td>
             </tr>
           </tbody>
