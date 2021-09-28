@@ -3,9 +3,14 @@ import { useState } from "react";
 import { VersionVerificationStatus } from "../../types/VersionVerificationStatus";
 import { VersionInfo } from "../../types/VersionInfo";
 
-const VersionPublishComponent: React.FC = () => {
-  const [domainName, setDomainName] = useState("");
-  const [versionNumber, setVersionNumber] = useState("");
+const VersionPublishComponent: React.FC<{
+  defaultDomainName?: string;
+  defaultVersionNumber?: string;
+}> = ({ defaultDomainName, defaultVersionNumber }) => {
+  const [domainName, setDomainName] = useState(defaultDomainName ?? "");
+  const [versionNumber, setVersionNumber] = useState(
+    defaultVersionNumber ?? ""
+  );
   const [latestVersion, setLatestVersion] = useState<VersionInfo | undefined>();
 
   let status = <></>;
@@ -35,10 +40,8 @@ const VersionPublishComponent: React.FC = () => {
   return (
     <>
       <h3>Version Publishing</h3>
-      <select>
-        <option selected value="ens">
-          ENS
-        </option>
+      <select value="ens">
+        <option value="ens">ENS</option>
       </select>
       <input
         type="text"
