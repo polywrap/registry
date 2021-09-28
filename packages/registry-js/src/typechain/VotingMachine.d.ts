@@ -26,6 +26,7 @@ interface VotingMachineInterface extends ethers.utils.Interface {
     "authorizedVerifiers(address)": FunctionFragment;
     "getPrevAndNextMinorPackageLocations(bytes32)": FunctionFragment;
     "getPrevPatchPackageLocation(bytes32)": FunctionFragment;
+    "getProposedVersionVotingInfo(bytes32)": FunctionFragment;
     "initialize(address)": FunctionFragment;
     "majorVersionQueueContainers(bytes32)": FunctionFragment;
     "owner()": FunctionFragment;
@@ -61,6 +62,10 @@ interface VotingMachineInterface extends ethers.utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "getPrevPatchPackageLocation",
+    values: [BytesLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getProposedVersionVotingInfo",
     values: [BytesLike]
   ): string;
   encodeFunctionData(functionFragment: "initialize", values: [string]): string;
@@ -147,6 +152,10 @@ interface VotingMachineInterface extends ethers.utils.Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "getPrevPatchPackageLocation",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "getProposedVersionVotingInfo",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "initialize", data: BytesLike): Result;
@@ -332,6 +341,17 @@ export class VotingMachine extends BaseContract {
       overrides?: CallOverrides
     ): Promise<[string] & { prevPackageLocation: string }>;
 
+    getProposedVersionVotingInfo(
+      patchNodeId: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<
+      [BigNumber, BigNumber, BigNumber] & {
+        verifierCount: BigNumber;
+        approvingVerifiers: BigNumber;
+        rejectingVerifiers: BigNumber;
+      }
+    >;
+
     initialize(
       _registrar: string,
       overrides?: Overrides & { from?: string | Promise<string> }
@@ -475,6 +495,17 @@ export class VotingMachine extends BaseContract {
     overrides?: CallOverrides
   ): Promise<string>;
 
+  getProposedVersionVotingInfo(
+    patchNodeId: BytesLike,
+    overrides?: CallOverrides
+  ): Promise<
+    [BigNumber, BigNumber, BigNumber] & {
+      verifierCount: BigNumber;
+      approvingVerifiers: BigNumber;
+      rejectingVerifiers: BigNumber;
+    }
+  >;
+
   initialize(
     _registrar: string,
     overrides?: Overrides & { from?: string | Promise<string> }
@@ -617,6 +648,17 @@ export class VotingMachine extends BaseContract {
       patchNodeId: BytesLike,
       overrides?: CallOverrides
     ): Promise<string>;
+
+    getProposedVersionVotingInfo(
+      patchNodeId: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<
+      [BigNumber, BigNumber, BigNumber] & {
+        verifierCount: BigNumber;
+        approvingVerifiers: BigNumber;
+        rejectingVerifiers: BigNumber;
+      }
+    >;
 
     initialize(_registrar: string, overrides?: CallOverrides): Promise<void>;
 
@@ -922,6 +964,11 @@ export class VotingMachine extends BaseContract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
+    getProposedVersionVotingInfo(
+      patchNodeId: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
     initialize(
       _registrar: string,
       overrides?: Overrides & { from?: string | Promise<string> }
@@ -1019,6 +1066,11 @@ export class VotingMachine extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     getPrevPatchPackageLocation(
+      patchNodeId: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    getProposedVersionVotingInfo(
       patchNodeId: BytesLike,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;

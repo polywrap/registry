@@ -1,3 +1,9 @@
 .VersionPublishComponent {
-  
+  .verification-status {
+    margin: 2em 0 2em 0;
+
+    .status {
+      margin: 1em 0 1em 0;
+    }
+  }
 }

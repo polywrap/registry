@@ -64,6 +64,8 @@ export class VersionProcessingService {
   ): Promise<void> {
     const { patchNodeId, isPatch } = proposedVersion;
 
+    this.logger.info(`Processing ${patchNodeId} version.`);
+
     const _proposedVersion = await this.votingService.getProposedVersion(
       patchNodeId
     );

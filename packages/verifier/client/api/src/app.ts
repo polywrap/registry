@@ -1,7 +1,7 @@
 import { buildDependencyContainer } from "./di/buildDependencyContainer";
 import express from "express";
 import cors from "cors";
-import { Tracer } from "@polywrap/registry-js";
+import { RegistryAuthority, Tracer } from "@polywrap/registry-js";
 import fs from "fs";
 import { EnsDomain } from "@polywrap/registry-core-js";
 import { ethers } from "ethers";
@@ -15,6 +15,8 @@ Tracer.enableTracing("verifier-client");
 const dependencyContainer = buildDependencyContainer();
 const {
   verifierClient,
+  verifierSigner,
+  registryContracts,
   apiServerConfig,
   webUiServerConfig,
   ethersProvider,
@@ -63,6 +65,20 @@ async function run() {
         new EnsDomain(req.query.domain as string),
         ethersProvider
       );
+      res.send("Success");
+    } catch (ex) {
+      res.send(ex);
+    }
+  });
+
+  app.get("/dev/authorizeVerifier", async (req, res) => {
+    try {
+      const authority = new RegistryAuthority(
+        verifierSigner,
+        registryContracts.votingMachine.address
+      );
+
+      await authority.authorizeVerifiers([await verifierSigner.getAddress()]);
       res.send("Success");
     } catch (ex) {
       res.send(ex);

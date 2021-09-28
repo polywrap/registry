@@ -1,6 +1,6 @@
-import "./PublishedStatusView.scss";
+import "./QueuedStatusView.scss";
 
-const PublishedStatusView: React.FC = () => {
+const QueuedStatusView: React.FC = () => {
   return (
     <div className="QueuedStatusView">
       <div>Status: Queued</div>
@@ -8,4 +8,4 @@ const PublishedStatusView: React.FC = () => {
   );
 };
 
-export default PublishedStatusView;
+export default QueuedStatusView;

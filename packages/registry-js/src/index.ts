@@ -5,4 +5,4 @@ export * from "./RegistryContracts";
 export * from "./VersionVotingStartedEvent";
 export * from "./VersionVotingStartedEvent";
 export * from "./RegistryAuthority";
-export * from "./ProposedVersionType";
+export * from "./ProposedVersion";

@@ -7,6 +7,7 @@ import {
 import { computeMerkleProof } from "@polywrap/registry-core-js";
 import { EnsDomain } from "@polywrap/registry-core-js";
 import { RegistryContracts } from "./RegistryContracts";
+import { ProposedVersion } from "./ProposedVersion";
 
 export type BlockchainsWithRegistry = "l2-chain-name" | "ethereum" | "xdai";
 
@@ -251,6 +252,32 @@ export class PackageOwner {
 
       this.registryContracts.votingMachine.on("VersionDecided", listener);
     });
+  }
+
+  async getProposedVersion(patchNodeId: BytesLike): Promise<ProposedVersion> {
+    const resp = await this.registryContracts.votingMachine.proposedVersions(
+      patchNodeId
+    );
+    return resp as ProposedVersion;
+  }
+
+  async getAuthorizedVerifierCount(): Promise<number> {
+    const resp = await this.registryContracts.votingMachine.authorizedVerifierCount();
+    return resp.toNumber();
+  }
+
+  async getProposedVersionVotingInfo(
+    patchNodeId: BytesLike
+  ): Promise<{
+    verifierCount: BigNumber;
+    approvingVerifiers: BigNumber;
+    rejectingVerifiers: BigNumber;
+  }> {
+    const resp = await this.registryContracts.votingMachine.getProposedVersionVotingInfo(
+      patchNodeId
+    );
+
+    return resp;
   }
 
   calculatePatchNodeId(
