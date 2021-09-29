@@ -3,7 +3,7 @@ import { Web3ApiClient } from "@web3api/client-js";
 import { SchemaComparisonService } from "./SchemaComparisonService";
 import { SchemaRetrievalService } from "./SchemaRetrievalService";
 import { Logger } from "winston";
-import { traceFunc } from "@polywrap/registry-js";
+import { ContractCallResult, traceFunc } from "@polywrap/registry-js";
 import { toPrettyHex } from "../helpers/toPrettyHex";
 
 export class VersionVerifierService {
@@ -33,11 +33,13 @@ export class VersionVerifierService {
     patchVersion: number,
     packageLocation: string,
     isPatch: boolean
-  ): Promise<{
-    prevMinorNodeId: BytesLike;
-    nextMinorNodeId: BytesLike;
-    approved: boolean;
-  }> {
+  ): Promise<
+    ContractCallResult<{
+      prevMinorNodeId: BytesLike;
+      nextMinorNodeId: BytesLike;
+      approved: boolean;
+    }>
+  > {
     this.logger.info(
       `Verifying proposed version: ${toPrettyHex(
         patchNodeId.toString()
@@ -53,25 +55,39 @@ export class VersionVerifierService {
     let nextMinorNodeId: BytesLike = ethers.constants.HashZero;
 
     if (isPatch) {
-      isVersionApproved = await this.verifyPatchVersion(
+      const result = await this.verifyPatchVersion(
         proposedVersionSchema,
         patchNodeId
       );
+      if (result.error) {
+        return {
+          data: null,
+          error: result.error,
+        };
+      }
+
+      isVersionApproved = result.data;
     } else {
       const result = await this.verifyMinorVersion(
         proposedVersionSchema,
         patchNodeId
       );
 
-      isVersionApproved = result.approved;
-      prevMinorNodeId = result.prevMinorNodeId;
-      nextMinorNodeId = result.nextMinorNodeId;
+      if (result.error) {
+        return {
+          data: null,
+          error: result.error,
+        };
+      }
+
+      isVersionApproved = result.data.approved;
+      prevMinorNodeId = result.data.prevMinorNodeId;
+      nextMinorNodeId = result.data.nextMinorNodeId;
     }
 
     return {
-      prevMinorNodeId,
-      nextMinorNodeId,
-      approved: isVersionApproved,
+      data: { prevMinorNodeId, nextMinorNodeId, approved: isVersionApproved },
+      error: null,
     };
   }
 
@@ -79,26 +95,41 @@ export class VersionVerifierService {
   private async verifyMinorVersion(
     proposedVersionSchema: string,
     patchNodeId: BytesLike
-  ): Promise<{
-    prevMinorNodeId: BytesLike;
-    nextMinorNodeId: BytesLike;
-    approved: boolean;
-  }> {
+  ): Promise<
+    ContractCallResult<{
+      prevMinorNodeId: BytesLike;
+      nextMinorNodeId: BytesLike;
+      approved: boolean;
+    }>
+  > {
+    const result = await this.schemaRetrievalService.getPreviousAndNextVersionSchema(
+      patchNodeId
+    );
+
+    if (result.error) {
+      return {
+        data: null,
+        error: result.error,
+      };
+    }
+
     const {
       prevMinorNodeId,
       prevSchema,
       nextMinorNodeId,
       nextSchema,
-    } = await this.schemaRetrievalService.getPreviousAndNextVersionSchema(
-      patchNodeId
-    );
+    } = result.data;
 
-    return {
+    const data = {
       prevMinorNodeId,
       nextMinorNodeId,
       approved: true,
       // approved: areSchemasBacwardCompatible(prevSchema, proposedVersionSchema) &&
       //   areSchemasBacwardCompatible(proposedVersionSchema, nextSchema)
+    };
+    return {
+      data: data,
+      error: null,
     };
   }
 
@@ -106,16 +137,27 @@ export class VersionVerifierService {
   private async verifyPatchVersion(
     proposedVersionSchema: string,
     patchNodeId: BytesLike
-  ): Promise<boolean> {
+  ): Promise<ContractCallResult<boolean>> {
     // return true;
 
-    const minorVersionSchema = await this.schemaRetrievalService.getMinorVersionSchema(
+    const result = await this.schemaRetrievalService.getMinorVersionSchema(
       patchNodeId
     );
 
-    return this.schemaComparisonService.areSchemasFunctionallyIdentical(
+    if (result.error) {
+      return {
+        data: null,
+        error: result.error,
+      };
+    }
+
+    const data = this.schemaComparisonService.areSchemasFunctionallyIdentical(
       proposedVersionSchema,
-      minorVersionSchema
+      result.data
     );
+    return {
+      data: data,
+      error: null,
+    };
   }
 }

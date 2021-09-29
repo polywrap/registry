@@ -1,4 +1,4 @@
-import { BigNumber, Signer } from "ethers";
+import { BigNumber, ContractReceipt, Signer } from "ethers";
 import {
   BytesLike,
   formatBytes32String,
@@ -8,8 +8,10 @@ import { computeMerkleProof } from "@polywrap/registry-core-js";
 import { EnsDomain } from "@polywrap/registry-core-js";
 import { RegistryContracts } from "./RegistryContracts";
 import { Logger } from "winston";
-import { ErrorHandler, LogLevel } from "./errorHandler";
 import { ProposedVersion } from "./ProposedVersion";
+import { ErrorHandler } from "./errorHandler";
+import { LogLevel } from "./logger";
+import { ContractCallResult } from "./contractResultTypes";
 
 export type BlockchainsWithRegistry = "l2-chain-name" | "ethereum" | "xdai";
 
@@ -30,40 +32,62 @@ export class PackageOwner extends ErrorHandler {
   private registryContracts: RegistryContracts;
 
   @PackageOwner.errorHandler(LogLevel.warn)
-  async getPolywrapOwner(domain: EnsDomain): Promise<string> {
-    return await this.registryContracts.packageOwnershipManagerL1.getPolywrapOwner(
+  async getPolywrapOwner(
+    domain: EnsDomain
+  ): Promise<ContractCallResult<string>> {
+    const result = await this.registryContracts.packageOwnershipManagerL1.getPolywrapOwner(
       domain.registryBytes32,
       domain.node
     );
+    return {
+      data: result,
+      error: null,
+    };
   }
 
   @PackageOwner.errorHandler(LogLevel.warn)
-  async getDomainPolywrapOwner(domain: EnsDomain): Promise<string> {
-    return await this.registryContracts.ensLinkL1.getPolywrapOwner(domain.node);
+  async getDomainPolywrapOwner(
+    domain: EnsDomain
+  ): Promise<ContractCallResult<string>> {
+    const result = await this.registryContracts.ensLinkL1.getPolywrapOwner(
+      domain.node
+    );
+    return {
+      data: result,
+      error: null,
+    };
   }
 
   @PackageOwner.errorHandler(LogLevel.warn)
-  async updateOwnership(domain: EnsDomain): Promise<void> {
+  async updateOwnership(
+    domain: EnsDomain
+  ): Promise<ContractCallResult<ContractReceipt>> {
     const tx = await this.registryContracts.packageOwnershipManagerL1.updateOwnership(
       EnsDomain.RegistryBytes32,
       domain.node
     );
-
-    await tx.wait();
+    const receipt = await tx.wait();
+    return {
+      data: receipt,
+      error: null,
+    };
   }
 
   @PackageOwner.errorHandler(LogLevel.warn)
   async relayOwnership(
     domain: EnsDomain,
     chainName: BlockchainsWithRegistry
-  ): Promise<void> {
+  ): Promise<ContractCallResult<ContractReceipt>> {
     const tx = await this.registryContracts.packageOwnershipManagerL1.relayOwnership(
       formatBytes32String(chainName),
       EnsDomain.RegistryBytes32,
       domain.node
     );
-
-    await tx.wait();
+    const receipt = await tx.wait();
+    return {
+      data: receipt,
+      error: null,
+    };
   }
 
   @PackageOwner.errorHandler(LogLevel.warn)
@@ -73,7 +97,7 @@ export class PackageOwner extends ErrorHandler {
     minor: number,
     patch: number,
     packageLocation: string
-  ): Promise<void> {
+  ): Promise<ContractCallResult<ContractReceipt>> {
     const proposeTx = await this.registryContracts.registrar.proposeVersion(
       domain.packageId,
       major,
@@ -81,17 +105,26 @@ export class PackageOwner extends ErrorHandler {
       patch,
       packageLocation
     );
-
-    await proposeTx.wait();
+    const receipt = await proposeTx.wait();
+    return {
+      data: receipt,
+      error: null,
+    };
   }
 
   @PackageOwner.errorHandler(LogLevel.warn)
-  async getVerificationRoot(): Promise<BytesLike> {
-    return await this.registryContracts.versionVerificationManagerL2.verificationRoot();
+  async getVerificationRoot(): Promise<ContractCallResult<BytesLike>> {
+    const result = await this.registryContracts.versionVerificationManagerL2.verificationRoot();
+    return {
+      data: result,
+      error: null,
+    };
   }
 
   @PackageOwner.errorHandler(LogLevel.warn)
-  async getLeafCountForRoot(verificationRoot: BytesLike): Promise<number> {
+  async getLeafCountForRoot(
+    verificationRoot: BytesLike
+  ): Promise<ContractCallResult<number>> {
     const rootCalculatedEvents = await this.registryContracts.verificationTreeManager.queryFilter(
       this.registryContracts.verificationTreeManager.filters.VerificationRootCalculated(
         verificationRoot
@@ -99,8 +132,11 @@ export class PackageOwner extends ErrorHandler {
       0,
       "latest"
     );
-
-    return rootCalculatedEvents[0].args.verifiedVersionCount.toNumber();
+    const result = rootCalculatedEvents[0].args.verifiedVersionCount.toNumber();
+    return {
+      data: result,
+      error: null,
+    };
   }
 
   @PackageOwner.errorHandler(LogLevel.warn)
@@ -110,9 +146,26 @@ export class PackageOwner extends ErrorHandler {
     major: number,
     minor: number,
     patch: number
-  ): Promise<void> {
-    const verificationRoot = await this.getVerificationRoot();
-    const leafCountForRoot = await this.getLeafCountForRoot(verificationRoot);
+  ): Promise<ContractCallResult<ContractReceipt>> {
+    const verificationRootResult = await this.getVerificationRoot();
+    if (verificationRootResult.error) {
+      return {
+        data: null,
+        error: verificationRootResult.error,
+      };
+    }
+    const verificationRoot = verificationRootResult.data as BytesLike;
+
+    const leafCountForRootResult = await this.getLeafCountForRoot(
+      verificationRoot
+    );
+    if (leafCountForRootResult.error) {
+      return {
+        data: null,
+        error: leafCountForRootResult.error,
+      };
+    }
+    const leafCountForRoot = leafCountForRootResult.data as number;
 
     const verifiedVersionEvents = await this.registryContracts.verificationTreeManager.queryFilter(
       this.registryContracts.verificationTreeManager.filters.VersionVerified(),
@@ -170,12 +223,24 @@ export class PackageOwner extends ErrorHandler {
       sides
     );
 
-    await publishTx.wait();
+    const receipt = await publishTx.wait();
+    return {
+      data: receipt,
+      error: null,
+    };
   }
 
   @PackageOwner.errorHandler(LogLevel.warn)
-  async getPackageLocation(nodeId: BytesLike): Promise<string> {
-    return await this.registryContracts.registryL2.getPackageLocation(nodeId);
+  async getPackageLocation(
+    nodeId: BytesLike
+  ): Promise<ContractCallResult<string>> {
+    const result = await this.registryContracts.registryL2.getPackageLocation(
+      nodeId
+    );
+    return {
+      data: result,
+      error: null,
+    };
   }
 
   @PackageOwner.errorHandler(LogLevel.warn)
@@ -184,37 +249,53 @@ export class PackageOwner extends ErrorHandler {
     major: number,
     minor: number,
     patch: number
-  ): Promise<string> {
+  ): Promise<ContractCallResult<string>> {
     const patchNodeId = this.calculatePatchNodeId(domain, major, minor, patch);
-    return await this.registryContracts.registryL2.getPackageLocation(
+    const result = await this.registryContracts.registryL2.getPackageLocation(
       patchNodeId
     );
+    return {
+      data: result,
+      error: null,
+    };
   }
 
   @PackageOwner.errorHandler(LogLevel.warn)
   async getNodeInfo(
     nodeId: BytesLike
-  ): Promise<{
-    leaf: boolean;
-    latestSubVersion: BigNumber;
-    created: boolean;
-    location: string;
-  }> {
-    return await this.registryContracts.registryL2.versionNodes(nodeId);
+  ): Promise<
+    ContractCallResult<{
+      leaf: boolean;
+      latestSubVersion: BigNumber;
+      created: boolean;
+      location: string;
+    }>
+  > {
+    const result = await this.registryContracts.registryL2.versionNodes(nodeId);
+    return {
+      data: result,
+      error: null,
+    };
   }
 
   @PackageOwner.errorHandler(LogLevel.warn)
   async getLatestVersionInfo(
     packageId: string
-  ): Promise<{
-    majorVersion: BigNumber;
-    minorVersion: BigNumber;
-    patchVersion: BigNumber;
-    location: string;
-  }> {
-    return await this.registryContracts.registryL1.getLatestVersionInfo(
+  ): Promise<
+    ContractCallResult<{
+      majorVersion: BigNumber;
+      minorVersion: BigNumber;
+      patchVersion: BigNumber;
+      location: string;
+    }>
+  > {
+    const result = await this.registryContracts.registryL1.getLatestVersionInfo(
       packageId
     );
+    return {
+      data: result,
+      error: null,
+    };
   }
 
   @PackageOwner.errorHandler(LogLevel.warn)
@@ -223,17 +304,23 @@ export class PackageOwner extends ErrorHandler {
     major: number,
     minor: number,
     patch: number
-  ): Promise<{
-    leaf: boolean;
-    latestSubVersion: BigNumber;
-    created: boolean;
-    location: string;
-  }> {
+  ): Promise<
+    ContractCallResult<{
+      leaf: boolean;
+      latestSubVersion: BigNumber;
+      created: boolean;
+      location: string;
+    }>
+  > {
     const patchNodeId = this.calculatePatchNodeId(domain, major, minor, patch);
-    return await this.getNodeInfo(patchNodeId);
+    const { data, error } = await this.getNodeInfo(patchNodeId);
+    if (error) return { data: null, error: error };
+    return {
+      data: data,
+      error: null,
+    };
   }
 
-  @PackageOwner.errorHandler(LogLevel.warn)
   async waitForVotingEnd(
     domain: EnsDomain,
     major: number,

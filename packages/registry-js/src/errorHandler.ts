@@ -1,39 +1,9 @@
-import { LeveledLogMethod, Logger } from "winston";
-
-export type FunctionResult<TReturn> = {
-  data: TReturn | null;
-  error: unknown | null;
-};
-
-type MaybeAsync<T> = Promise<T> | T;
-
-export enum LogLevel {
-  debug = "debug",
-  info = "info",
-  warn = "warn",
-  error = "error",
-}
-
-export function getLogger(
-  logger: Logger,
-  logLevel: LogLevel
-): LeveledLogMethod {
-  switch (logLevel) {
-    case LogLevel.debug:
-      return logger.debug;
-    case LogLevel.info:
-      return logger.info;
-    case LogLevel.warn:
-      return logger.warn;
-    case LogLevel.error:
-      return logger.error;
-  }
-}
-
-const isPromise = <T extends unknown>(
-  test?: MaybeAsync<T>
-): test is Promise<T> =>
-  !!test && typeof (test as Promise<T>).then === "function";
+import { Logger } from "winston";
+import { errors } from "ethers";
+import { getLogger, LogLevel } from "./logger";
+import { ContractCallResult, ErrorResponseBody } from "./contractResultTypes";
+import { isPromise } from "./utils";
+import { BaseContractError, BaseTransactionError } from ".";
 
 export abstract class ErrorHandler {
   protected abstract logger: Logger;
@@ -48,29 +18,58 @@ export abstract class ErrorHandler {
 
       descriptor.value = function <TArgs extends Array<unknown>, TReturn>(
         ...args: TArgs[]
-      ): FunctionResult<TReturn> {
+      ): ContractCallResult<TReturn> {
         try {
-          const result = original.apply(this, args);
+          const res = original.apply(this, args);
 
-          if (isPromise(result)) {
-            return {
-              data: (result.then((res: any) => res) as unknown) as TReturn,
-              error: null,
-            };
+          if (isPromise(res)) {
+            const result = (res.then(
+              (res: any) => res
+            ) as unknown) as ContractCallResult<TReturn>;
+            return result;
           } else {
-            return {
-              data: result,
-              error: null,
-            };
+            return res as ContractCallResult<TReturn>;
           }
-        } catch (error) {
+        } catch (err) {
+          const errorObj = err as Record<string, any>;
+
           const logger = ((this as unknown) as ErrorHandler).logger;
           const log = getLogger(logger, logLevel);
-          log(`Error: ${error}`);
-          return {
-            data: null,
-            error: error,
-          };
+          log(`Error: ${errorObj["message"]}`);
+
+          if (errorObj["code"] in errors) {
+            if ("tx" in errorObj) {
+              const baseError = errorObj as BaseTransactionError;
+              const responseBody = JSON.parse(
+                baseError.error.error.body
+              ) as ErrorResponseBody;
+              if (
+                responseBody.error.message.startsWith("execution reverted: ")
+              ) {
+                const revertMessage = responseBody.error.message
+                  .substring(20)
+                  .trim();
+                const error = { ...baseError, revertMessage: revertMessage };
+                return {
+                  data: null,
+                  error: error,
+                };
+              } else {
+                const error = errorObj as BaseTransactionError;
+                return {
+                  data: null,
+                  error: error,
+                };
+              }
+            } else {
+              return {
+                data: null,
+                error: errorObj as BaseContractError,
+              };
+            }
+          }
+
+          throw err;
         }
       };
 

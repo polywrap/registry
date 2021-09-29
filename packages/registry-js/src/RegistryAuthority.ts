@@ -1,23 +1,34 @@
-import { ethers, Signer } from "ethers";
+import { ContractReceipt, ethers, Signer } from "ethers";
+import { Logger } from "winston";
+import { ContractCallResult } from "./contractResultTypes";
+import { ErrorHandler } from "./errorHandler";
+import { LogLevel } from "./logger";
 import { VotingMachine__factory, VotingMachine } from "./typechain";
 
-export class RegistryAuthority {
-  constructor(signer: Signer, votingMachineAddress: string) {
+export class RegistryAuthority extends ErrorHandler {
+  constructor(signer: Signer, votingMachineAddress: string, logger: Logger) {
+    super();
     this.signer = signer;
     this.votingMachine = VotingMachine__factory.connect(
       votingMachineAddress,
       this.signer
     );
+    this.logger = logger;
   }
 
+  logger: Logger;
   signer: ethers.Signer;
   private votingMachine: VotingMachine;
 
-  async authorizeVerifiers(verifierAddresses: string[]): Promise<void> {
-    const receipt = await this.votingMachine.authorizeVerifiers(
-      verifierAddresses
-    );
-
-    await receipt.wait();
+  @RegistryAuthority.errorHandler(LogLevel.warn)
+  async authorizeVerifiers(
+    verifierAddresses: string[]
+  ): Promise<ContractCallResult<ContractReceipt>> {
+    const tx = await this.votingMachine.authorizeVerifiers(verifierAddresses);
+    const receipt = await tx.wait();
+    return {
+      data: receipt,
+      error: null,
+    };
   }
 }

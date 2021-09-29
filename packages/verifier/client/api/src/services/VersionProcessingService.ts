@@ -93,11 +93,7 @@ export class VersionProcessingService {
       )}, ${majorVersion}, ${minorVersion}, ${patchVersion}`
     );
 
-    const {
-      prevMinorNodeId,
-      nextMinorNodeId,
-      approved,
-    } = await this.versionVerifierService.verifyVersion(
+    const result = await this.versionVerifierService.verifyVersion(
       packageId,
       patchNodeId,
       majorVersion.toNumber(),
@@ -106,6 +102,10 @@ export class VersionProcessingService {
       packageLocation,
       isPatch
     );
+
+    if (result.error) return;
+
+    const { prevMinorNodeId, nextMinorNodeId, approved } = result.data;
 
     await this.votingService.voteOnVersion(
       patchNodeId,

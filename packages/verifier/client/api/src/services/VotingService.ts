@@ -1,8 +1,8 @@
 import { BytesLike } from "ethers";
 import {
   PolywrapVotingSystem,
-  ProposedVersion,
   traceFunc,
+  TransactionError,
 } from "@polywrap/registry-js";
 import { VerifierClientConfig } from "../config/VerifierClientConfig";
 import { Logger } from "winston";
@@ -30,24 +30,31 @@ export class VotingService {
     nextMinorNodeId: BytesLike,
     approved: boolean
   ): Promise<void> {
-    try {
-      const voteTx = await this.polywrapVotingSystem.vote([
+    const result = await this.polywrapVotingSystem.vote(
+      [
         {
           prevMinorNodeId,
           nextMinorNodeId,
           patchNodeId,
           approved: approved,
         },
-      ]);
+      ],
+      this.verifierClientConfig.numOfConfirmationsToWait
+    );
 
-      await voteTx.wait(this.verifierClientConfig.numOfConfirmationsToWait);
-
+    if (result.error) {
+      const txError = result.error as TransactionError;
+      if (
+        txError.revertMessage &&
+        txError.revertMessage in this.polywrapVotingSystem.voteReverts
+      ) {
+        return;
+      } else {
+        process.exit(1);
+      }
+    } else {
       this.logger.info(
         `Voted on proposed version ${patchNodeId}, approved: ${approved}`
-      );
-    } catch (error) {
-      this.logger.warn(
-        `Voting failed for proposed version: ${patchNodeId} - Error: ${error}`
       );
     }
   }

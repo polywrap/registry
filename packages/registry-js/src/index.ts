@@ -5,4 +5,8 @@ export * from "./RegistryContracts";
 export * from "./VersionVotingStartedEvent";
 export * from "./VersionVotingStartedEvent";
 export * from "./RegistryAuthority";
+export * from "./contractResultTypes";
+export * from "./logger";
+export * from "./utils";
+export * from "./errorHandler";
 export * from "./ProposedVersion";
