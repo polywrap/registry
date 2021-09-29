@@ -21,8 +21,8 @@ const VerifyingStatusView: React.FC<{
     );
     setVotingInfo({
       verifierCount: votingInfo.verifierCount.toNumber(),
-      approvingVerifiers: votingInfo.approvingVerifiers.toNumber(),
-      rejectingVerifiers: votingInfo.rejectingVerifiers.toNumber(),
+      approvingVerifiers: votingInfo.approvingVerifierCount.toNumber(),
+      rejectingVerifiers: votingInfo.rejectingVerifierCount.toNumber(),
     });
   };
 

@@ -309,8 +309,8 @@ export class PackageOwner {
     patchNodeId: BytesLike
   ): Promise<{
     verifierCount: BigNumber;
-    approvingVerifiers: BigNumber;
-    rejectingVerifiers: BigNumber;
+    approvingVerifierCount: BigNumber;
+    rejectingVerifierCount: BigNumber;
   }> {
     const resp = await this.registryContracts.votingMachine.getProposedVersionVotingInfo(
       patchNodeId

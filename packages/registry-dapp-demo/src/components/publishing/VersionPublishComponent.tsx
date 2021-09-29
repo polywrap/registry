@@ -30,7 +30,6 @@ const VersionPublishComponent: React.FC<{
 
   return (
     <div className="VersionPublishComponent">
-      <h3>Version Publishing</h3>
       <select value="ens">
         <option value="ens">ENS</option>
       </select>
