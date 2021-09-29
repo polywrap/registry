@@ -20,6 +20,7 @@ const {
   apiServerConfig,
   webUiServerConfig,
   ethersProvider,
+  logger,
 } = dependencyContainer.cradle;
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -52,12 +53,14 @@ async function run() {
   app.use(cors(corsOptions));
 
   app.get("/info", (_, res) => {
+    logger.debug(`API request: info`);
     res.send({
       status: "running",
     });
   });
 
   app.get("/dev/configureEnsDomain", async (req, res) => {
+    logger.debug(`API request: configureEnsDomain`);
     try {
       await configureDomainForPolywrap(
         new ethers.Wallet(req.query.ensOwner as string, ethersProvider),
@@ -67,11 +70,13 @@ async function run() {
       );
       res.send("Success");
     } catch (ex) {
+      logger.debug(`API request failure: configureEnsDomain`);
       res.send(ex);
     }
   });
 
   app.get("/dev/authorizeVerifier", async (req, res) => {
+    logger.debug(`API request: authorizeVerifier`);
     try {
       const authority = new RegistryAuthority(
         verifierSigner,
@@ -81,11 +86,13 @@ async function run() {
       await authority.authorizeVerifiers([await verifierSigner.getAddress()]);
       res.send("Success");
     } catch (ex) {
+      logger.debug(`API request failure: authorizeVerifier`);
       res.send(ex);
     }
   });
 
   app.get("/logs", async (_, res) => {
+    logger.debug(`API request: logs`);
     const text = await fs.promises.readFile(
       `${__dirname}/../verifier_client.log`,
       "utf-8"
@@ -106,7 +113,7 @@ async function run() {
   });
 
   app.listen(apiServerConfig.port, () => {
-    console.log(
+    logger.debug(
       `API is running on port ${apiServerConfig.port}. Check status here: http://localhost:${apiServerConfig.port}/info`
     );
   });

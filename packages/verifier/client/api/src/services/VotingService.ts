@@ -6,6 +6,7 @@ import {
 } from "@polywrap/registry-js";
 import { VerifierClientConfig } from "../config/VerifierClientConfig";
 import { Logger } from "winston";
+import { toPrettyHex } from "../helpers/toPrettyHex";
 
 export class VotingService {
   private logger: Logger;
@@ -41,7 +42,9 @@ export class VotingService {
     await voteTx.wait(this.verifierClientConfig.numOfConfirmationsToWait);
 
     this.logger.info(
-      `Voted on proposed version ${patchNodeId}, approved: ${approved}`
+      `Voted on proposed version ${toPrettyHex(
+        patchNodeId.toString()
+      )}, approved: ${approved}`
     );
   }
 

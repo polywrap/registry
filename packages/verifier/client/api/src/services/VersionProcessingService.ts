@@ -4,6 +4,7 @@ import { VersionVerifierService } from "./VersionVerifierService";
 import { VotingService } from "./VotingService";
 import { Logger } from "winston";
 import { traceFunc } from "@polywrap/registry-js";
+import { toPrettyHex } from "../helpers/toPrettyHex";
 
 export class VersionProcessingService {
   private logger: Logger;
@@ -64,7 +65,9 @@ export class VersionProcessingService {
   ): Promise<void> {
     const { patchNodeId, isPatch } = proposedVersion;
 
-    this.logger.info(`Processing ${patchNodeId} version.`);
+    this.logger.info(
+      `Processing ${toPrettyHex(patchNodeId.toString())} version.`
+    );
 
     const _proposedVersion = await this.votingService.getProposedVersion(
       patchNodeId
@@ -80,11 +83,14 @@ export class VersionProcessingService {
     } = _proposedVersion;
 
     if (decided) {
+      this.logger.info(`Version is already decided.`);
       return;
     }
 
     this.logger.info(
-      `Version proposed: ${patchNodeId}, ${majorVersion}, ${minorVersion}, ${patchVersion}`
+      `Version proposed: ${toPrettyHex(
+        patchNodeId.toString()
+      )}, ${majorVersion}, ${minorVersion}, ${patchVersion}`
     );
 
     const {

@@ -19,7 +19,7 @@ packages/registry/typechain
 .env.local
 
 #Verifier
-packages/verifier-client/state-info.json
+packages/verifier/client/api/state-info.json
 
 # OpenZeppelin
 .openzeppelin/dev-*.json

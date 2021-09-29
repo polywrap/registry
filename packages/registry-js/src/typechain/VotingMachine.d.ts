@@ -347,8 +347,8 @@ export class VotingMachine extends BaseContract {
     ): Promise<
       [BigNumber, BigNumber, BigNumber] & {
         verifierCount: BigNumber;
-        approvingVerifiers: BigNumber;
-        rejectingVerifiers: BigNumber;
+        approvingVerifierCount: BigNumber;
+        rejectingVerifierCount: BigNumber;
       }
     >;
 
@@ -501,8 +501,8 @@ export class VotingMachine extends BaseContract {
   ): Promise<
     [BigNumber, BigNumber, BigNumber] & {
       verifierCount: BigNumber;
-      approvingVerifiers: BigNumber;
-      rejectingVerifiers: BigNumber;
+      approvingVerifierCount: BigNumber;
+      rejectingVerifierCount: BigNumber;
     }
   >;
 
@@ -655,8 +655,8 @@ export class VotingMachine extends BaseContract {
     ): Promise<
       [BigNumber, BigNumber, BigNumber] & {
         verifierCount: BigNumber;
-        approvingVerifiers: BigNumber;
-        rejectingVerifiers: BigNumber;
+        approvingVerifierCount: BigNumber;
+        rejectingVerifierCount: BigNumber;
       }
     >;
 
