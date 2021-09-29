@@ -39,13 +39,11 @@ export class VerifierClient {
 
   @traceFunc("verifier-client:run")
   async run(): Promise<void> {
-    let processedEventCnt = 0;
+    this.logger.info(`Listening for VotingStarted events.`);
 
     // eslint-disable-next-line no-constant-condition
     while (true) {
-      processedEventCnt = await this.queryAndVerifyVersions();
-
-      this.logger.info(`Processed ${processedEventCnt} events.`);
+      await this.queryAndVerifyVersions();
 
       await delay(this.verifierClientConfig.pauseTimeInMiliseconds);
     }
@@ -56,6 +54,12 @@ export class VerifierClient {
     const proposedVersionEvents = await this.polywrapVotingSystem.queryVersionVotingStarted(
       this.verifierStateManager.state.currentlyProcessingBlock
     );
+
+    if (proposedVersionEvents.length) {
+      this.logger.info(
+        `Found ${proposedVersionEvents.length} VotingStarted events.`
+      );
+    }
 
     for (const event of proposedVersionEvents) {
       const typedEvent: TypedEvent = (event as unknown) as TypedEvent;

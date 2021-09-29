@@ -4,6 +4,7 @@ import { SchemaComparisonService } from "./SchemaComparisonService";
 import { SchemaRetrievalService } from "./SchemaRetrievalService";
 import { Logger } from "winston";
 import { traceFunc } from "@polywrap/registry-js";
+import { toPrettyHex } from "../helpers/toPrettyHex";
 
 export class VersionVerifierService {
   private logger: Logger;
@@ -38,7 +39,9 @@ export class VersionVerifierService {
     approved: boolean;
   }> {
     this.logger.info(
-      `Verifying proposed version: ${packageId}, v${majorVersion}.${minorVersion}.${patchVersion}`
+      `Verifying proposed version: ${toPrettyHex(
+        patchNodeId.toString()
+      )}, v${majorVersion}.${minorVersion}.${patchVersion}`
     );
 
     const proposedVersionSchema = await this.polywrapClient.getSchema(

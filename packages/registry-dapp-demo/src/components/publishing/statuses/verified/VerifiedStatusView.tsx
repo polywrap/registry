@@ -5,6 +5,7 @@ const VerifiedStatusView: React.FC = () => {
     <div className="VerifiedStatusView">
       <div className="status">Status: Verified</div>
       <div>
+        <div className="publish-buttons"></div>
         <button>Publish to xDAI</button>
         <button>Publish to Ethereum</button>
         <div>
