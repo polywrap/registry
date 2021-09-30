@@ -5,87 +5,83 @@ import { ethereumPlugin } from "@web3api/ethereum-plugin-js";
 import { ToastProvider } from "react-toast-notifications";
 import Sidebar from "../sidebar/Sidebar";
 import { PackageOwner } from "@polywrap/registry-js";
-import { ethers } from "ethers";
 import React from "react";
-import { PolywrapRegistryContext } from "../../providers/PolywrapRegistryContextProvider";
+import { PolywrapRegistryContext } from "../../providers/PolywrapRegistryContext";
 import { getPolywrapRegistryContracts } from "../../constants";
-import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
+import { HashRouter as Router, Route, Switch } from "react-router-dom";
 import ImplementationRegistryPage from "../pages/implementation-registry/ImplementationRegistryPage";
 import VersionPublishPage from "../pages/version-publish/VersionPublishPage";
 import WrappersPage from "../pages/wrappers/WrappersPage";
+import { initWeb3 } from "../../hooks/initWeb3";
+import { Web3Context } from "../../providers/Web3Context";
 
 const App: React.FC = () => {
-  const ethereum = (window as any).ethereum;
-
+  const web3 = initWeb3();
   const [registry, setRegistry] = useState<
     | {
         packageOwner: PackageOwner;
       }
     | undefined
   >();
+  const [redirects, setRedirects] = useState<any[]>();
 
   useEffect(() => {
-    (async () => {
-      if (ethereum) {
-        await ethereum.request({ method: "eth_requestAccounts" });
-        const provider = new ethers.providers.Web3Provider(ethereum);
-        const signer = provider.getSigner(0);
-        console.log(signer);
+    if (!web3) {
+      return;
+    }
 
-        const packageOwner = new PackageOwner(
-          signer,
-          getPolywrapRegistryContracts(provider)
-        );
+    const packageOwner = new PackageOwner(
+      web3.signer,
+      getPolywrapRegistryContracts(web3.provider)
+    );
 
-        setRegistry({
-          packageOwner,
-        });
-      } else {
-        throw Error("Please install Metamask.");
-      }
-    })();
-  }, [ethereum]);
+    setRegistry({
+      packageOwner,
+    });
 
-  const redirects: any[] = [
-    {
-      uri: "w3://ens/ethereum.web3api.eth",
-      plugin: ethereumPlugin({
-        networks: {
-          rinkeby: {
-            provider: ethereum,
+    setRedirects([
+      {
+        uri: "w3://ens/ethereum.web3api.eth",
+        plugin: ethereumPlugin({
+          networks: {
+            rinkeby: {
+              provider: web3.ethereumProvider,
+            },
           },
-        },
-      }),
-    },
-  ];
+        }),
+      },
+    ]);
+  }, [web3]);
 
   return (
     <div className="App">
       <ToastProvider>
         <Web3ApiProvider plugins={redirects}>
-          <PolywrapRegistryContext.Provider value={registry}>
-            <Sidebar />
-            {registry ? (
-              <Router>
-                <Switch>
-                  <Route exact path="/" render={() => <WrappersPage />} />
-                  <Route
-                    exact
-                    path="/version-publish"
-                    render={() => <VersionPublishPage />}
-                  />
-                  <Route
-                    exact
-                    path="/implementation-registry"
-                    render={() => <ImplementationRegistryPage />}
-                  />
-                  <Route path="*" component={() => <div>Not Found </div>} />
-                </Switch>
-              </Router>
-            ) : (
-              <></>
-            )}
-          </PolywrapRegistryContext.Provider>
+          <Web3Context.Provider value={web3}>
+            <PolywrapRegistryContext.Provider value={registry}>
+              <Sidebar />
+              {registry ? (
+                <Router>
+                  <Switch>
+                    <Route exact path="/" render={() => <WrappersPage />} />
+                    <Route
+                      exact
+                      path="/version-publish"
+                      render={() => <VersionPublishPage />}
+                    />
+                    <Route
+                      exact
+                      path="/implementation-registry"
+                      render={() => <ImplementationRegistryPage />}
+                    />
+                    <Route path="*" component={() => <div>Not Found </div>} />
+                  </Switch>
+                </Router>
+              ) : (
+                <></>
+              )}
+            </PolywrapRegistryContext.Provider>
+          </Web3Context.Provider>
         </Web3ApiProvider>
       </ToastProvider>
     </div>
