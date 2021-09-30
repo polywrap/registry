@@ -4,8 +4,10 @@ import { Web3ApiClient } from "@web3api/client-js";
 import {
   ContractCallResult,
   PolywrapVotingSystem,
+  PrevAndNextMinorPackageLocations,
   traceFunc,
 } from "@polywrap/registry-js";
+import { PreviousAndNextVersionSchema } from "../helpers/PreviousAndNextVersionSchema";
 
 export class SchemaRetrievalService {
   private logger: Logger;
@@ -55,14 +57,7 @@ export class SchemaRetrievalService {
   @traceFunc("schema-retrieval-service:get_previous_and_next_version_schema")
   async getPreviousAndNextVersionSchema(
     patchNodeId: BytesLike
-  ): Promise<
-    ContractCallResult<{
-      prevMinorNodeId: BytesLike;
-      prevSchema: string | undefined;
-      nextMinorNodeId: BytesLike;
-      nextSchema: string | undefined;
-    }>
-  > {
+  ): Promise<ContractCallResult<PreviousAndNextVersionSchema>> {
     const result = await this.polywrapVotingSystem.getPrevAndNextMinorPackageLocations(
       patchNodeId
     );
@@ -85,7 +80,7 @@ export class SchemaRetrievalService {
       prevPackageLocation,
       nextMinorNodeId,
       nextPackageLocation,
-    } = result.data;
+    } = result.data as PrevAndNextMinorPackageLocations;
 
     const prevSchema = prevPackageLocation
       ? await this.polywrapClient.getSchema(`ipfs/${prevPackageLocation}`)

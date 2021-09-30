@@ -5,6 +5,8 @@ import { SchemaRetrievalService } from "./SchemaRetrievalService";
 import { Logger } from "winston";
 import { ContractCallResult, traceFunc } from "@polywrap/registry-js";
 import { toPrettyHex } from "../helpers/toPrettyHex";
+import { VerifyVersionInfo } from "../helpers/VerifyVersionInfo";
+import { PreviousAndNextVersionSchema } from "../helpers/PreviousAndNextVersionSchema";
 
 export class VersionVerifierService {
   private logger: Logger;
@@ -33,13 +35,7 @@ export class VersionVerifierService {
     patchVersion: number,
     packageLocation: string,
     isPatch: boolean
-  ): Promise<
-    ContractCallResult<{
-      prevMinorNodeId: BytesLike;
-      nextMinorNodeId: BytesLike;
-      approved: boolean;
-    }>
-  > {
+  ): Promise<ContractCallResult<VerifyVersionInfo>> {
     this.logger.info(
       `Verifying proposed version: ${toPrettyHex(
         patchNodeId.toString()
@@ -66,7 +62,7 @@ export class VersionVerifierService {
         };
       }
 
-      isVersionApproved = result.data;
+      isVersionApproved = result.data as boolean;
     } else {
       const result = await this.verifyMinorVersion(
         proposedVersionSchema,
@@ -80,9 +76,11 @@ export class VersionVerifierService {
         };
       }
 
-      isVersionApproved = result.data.approved;
-      prevMinorNodeId = result.data.prevMinorNodeId;
-      nextMinorNodeId = result.data.nextMinorNodeId;
+      const data = result.data as VerifyVersionInfo;
+
+      isVersionApproved = data.approved;
+      prevMinorNodeId = data.prevMinorNodeId;
+      nextMinorNodeId = data.nextMinorNodeId;
     }
 
     return {
@@ -95,13 +93,7 @@ export class VersionVerifierService {
   private async verifyMinorVersion(
     proposedVersionSchema: string,
     patchNodeId: BytesLike
-  ): Promise<
-    ContractCallResult<{
-      prevMinorNodeId: BytesLike;
-      nextMinorNodeId: BytesLike;
-      approved: boolean;
-    }>
-  > {
+  ): Promise<ContractCallResult<VerifyVersionInfo>> {
     const result = await this.schemaRetrievalService.getPreviousAndNextVersionSchema(
       patchNodeId
     );
@@ -118,7 +110,7 @@ export class VersionVerifierService {
       prevSchema,
       nextMinorNodeId,
       nextSchema,
-    } = result.data;
+    } = result.data as PreviousAndNextVersionSchema;
 
     const data = {
       prevMinorNodeId,
@@ -153,7 +145,7 @@ export class VersionVerifierService {
 
     const data = this.schemaComparisonService.areSchemasFunctionallyIdentical(
       proposedVersionSchema,
-      result.data
+      result.data as string
     );
     return {
       data: data,

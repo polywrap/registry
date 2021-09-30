@@ -9,6 +9,7 @@ import {
   PackageOwner,
   RegistryAuthority,
   Tracer,
+  VersionNodeInfo,
 } from "@polywrap/registry-js";
 import { deployments } from "hardhat";
 import { Signer } from "ethers";
@@ -61,21 +62,25 @@ describe("Start local chain", () => {
       patchNumber
     );
 
-    const versionInfo = await packageOwner.getVersionNodeInfo(
+    const versionInfoResult = await packageOwner.getVersionNodeInfo(
       domain,
       majorNumber,
       minorNumber,
       patchNumber
     );
-    const resolvedPackageLocation = await packageOwner.resolveToPackageLocation(
+    const resolvedPackageLocationResult = await packageOwner.resolveToPackageLocation(
       domain,
       majorNumber,
       minorNumber,
       patchNumber
     );
 
+    expect(versionInfoResult.error).to.eq(null);
+
+    const versionInfo = versionInfoResult.data as VersionNodeInfo;
     expect(versionInfo.location).to.eq(packageLocation);
-    expect(resolvedPackageLocation).to.eq(packageLocation);
+    expect(resolvedPackageLocationResult.error).to.eq(null);
+    expect(resolvedPackageLocationResult.data as string).to.eq(packageLocation);
   };
 
   before(async () => {

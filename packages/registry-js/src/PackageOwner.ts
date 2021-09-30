@@ -8,10 +8,14 @@ import { computeMerkleProof } from "@polywrap/registry-core-js";
 import { EnsDomain } from "@polywrap/registry-core-js";
 import { RegistryContracts } from "./RegistryContracts";
 import { Logger } from "winston";
-import { ProposedVersion } from "./ProposedVersion";
+import { ProposedVersion } from "./helpers/ProposedVersion";
 import { ErrorHandler } from "./errorHandler";
 import { LogLevel } from "./logger";
-import { ContractCallResult } from "./contractResultTypes";
+import { ContractCallResult } from "./helpers/contractResultTypes";
+import { ProposedVersionVotingInfo } from "./helpers/ProposedVersionVotingInfo";
+import { VersionNodeInfo } from "./helpers/VersionNodeInfo";
+import { LatestVersionInfo } from "./helpers/LatestVersionInfo";
+import { NodeInfo } from "./helpers/NodeInfo";
 
 export type BlockchainsWithRegistry = "l2-chain-name" | "ethereum" | "xdai";
 
@@ -261,16 +265,7 @@ export class PackageOwner extends ErrorHandler {
   }
 
   @PackageOwner.errorHandler(LogLevel.warn)
-  async getNodeInfo(
-    nodeId: BytesLike
-  ): Promise<
-    ContractCallResult<{
-      leaf: boolean;
-      latestSubVersion: BigNumber;
-      created: boolean;
-      location: string;
-    }>
-  > {
+  async getNodeInfo(nodeId: BytesLike): Promise<ContractCallResult<NodeInfo>> {
     const result = await this.registryContracts.registryL2.versionNodes(nodeId);
     return {
       data: result,
@@ -281,14 +276,7 @@ export class PackageOwner extends ErrorHandler {
   @PackageOwner.errorHandler(LogLevel.warn)
   async getLatestVersionInfo(
     packageId: string
-  ): Promise<
-    ContractCallResult<{
-      majorVersion: BigNumber;
-      minorVersion: BigNumber;
-      patchVersion: BigNumber;
-      location: string;
-    }>
-  > {
+  ): Promise<ContractCallResult<LatestVersionInfo>> {
     const result = await this.registryContracts.registryL1.getLatestVersionInfo(
       packageId
     );
@@ -304,19 +292,48 @@ export class PackageOwner extends ErrorHandler {
     major: number,
     minor: number,
     patch: number
-  ): Promise<
-    ContractCallResult<{
-      leaf: boolean;
-      latestSubVersion: BigNumber;
-      created: boolean;
-      location: string;
-    }>
-  > {
+  ): Promise<ContractCallResult<VersionNodeInfo>> {
     const patchNodeId = this.calculatePatchNodeId(domain, major, minor, patch);
     const { data, error } = await this.getNodeInfo(patchNodeId);
     if (error) return { data: null, error: error };
     return {
       data: data,
+      error: null,
+    };
+  }
+
+  @PackageOwner.errorHandler(LogLevel.warn)
+  async getProposedVersion(
+    patchNodeId: BytesLike
+  ): Promise<ContractCallResult<ProposedVersion>> {
+    const resp = await this.registryContracts.votingMachine.proposedVersions(
+      patchNodeId
+    );
+    return {
+      data: resp as ProposedVersion,
+      error: null,
+    };
+  }
+
+  @PackageOwner.errorHandler(LogLevel.warn)
+  async getAuthorizedVerifierCount(): Promise<ContractCallResult<number>> {
+    const resp = await this.registryContracts.votingMachine.authorizedVerifierCount();
+    return {
+      data: resp.toNumber(),
+      error: null,
+    };
+  }
+
+  @PackageOwner.errorHandler(LogLevel.warn)
+  async getProposedVersionVotingInfo(
+    patchNodeId: BytesLike
+  ): Promise<ContractCallResult<ProposedVersionVotingInfo>> {
+    const resp = await this.registryContracts.votingMachine.getProposedVersionVotingInfo(
+      patchNodeId
+    );
+
+    return {
+      data: (resp as unknown) as ProposedVersionVotingInfo,
       error: null,
     };
   }

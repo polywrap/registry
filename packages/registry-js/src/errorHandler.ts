@@ -1,7 +1,10 @@
 import { Logger } from "winston";
 import { errors } from "ethers";
 import { getLogger, LogLevel } from "./logger";
-import { ContractCallResult, ErrorResponseBody } from "./contractResultTypes";
+import {
+  ContractCallResult,
+  ErrorResponseBody,
+} from "./helpers/contractResultTypes";
 import { isPromise } from "./utils";
 import { BaseContractError, BaseTransactionError } from ".";
 

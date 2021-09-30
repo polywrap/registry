@@ -1,12 +1,13 @@
 import { CallOverrides, ContractReceipt, Overrides, Signer } from "ethers";
 import { BytesLike } from "ethers/lib/utils";
 import { Logger } from "winston";
-import { ContractCallResult } from "./contractResultTypes";
+import { ContractCallResult } from "./helpers/contractResultTypes";
 import { ErrorHandler } from "./errorHandler";
 import { LogLevel } from "./logger";
-import { ProposedVersion } from "./ProposedVersion";
+import { PrevAndNextMinorPackageLocations } from "./helpers/PrevAndNextMinorPackageLocations";
+import { ProposedVersion } from "./helpers/ProposedVersion";
 import { RegistryContracts } from "./RegistryContracts";
-import { VersionVotingStartedEvent } from "./VersionVotingStartedEvent";
+import { VersionVotingStartedEvent } from "./helpers/VersionVotingStartedEvent";
 
 export class PolywrapVotingSystem extends ErrorHandler {
   constructor(
@@ -83,16 +84,7 @@ export class PolywrapVotingSystem extends ErrorHandler {
   async getPrevAndNextMinorPackageLocations(
     patchNodeId: BytesLike,
     overrides?: CallOverrides
-  ): Promise<
-    ContractCallResult<
-      [string, string, string, string] & {
-        prevMinorNodeId: string;
-        prevPackageLocation: string;
-        nextMinorNodeId: string;
-        nextPackageLocation: string;
-      }
-    >
-  > {
+  ): Promise<ContractCallResult<PrevAndNextMinorPackageLocations>> {
     const result = await (overrides
       ? this.registryContracts.votingMachine.getPrevAndNextMinorPackageLocations(
           patchNodeId,
@@ -102,7 +94,20 @@ export class PolywrapVotingSystem extends ErrorHandler {
           patchNodeId
         ));
     return {
-      data: result,
+      data: result as PrevAndNextMinorPackageLocations,
+      error: null,
+    };
+  }
+
+  @PolywrapVotingSystem.errorHandler(LogLevel.warn)
+  async getProposedVersion(
+    patchNodeId: BytesLike
+  ): Promise<ContractCallResult<ProposedVersion>> {
+    const resp = await this.registryContracts.votingMachine.proposedVersions(
+      patchNodeId
+    );
+    return {
+      data: resp as ProposedVersion,
       error: null,
     };
   }
@@ -116,13 +121,6 @@ export class PolywrapVotingSystem extends ErrorHandler {
     );
 
     return (resp as unknown) as VersionVotingStartedEvent[];
-  }
-
-  async getProposedVersion(patchNodeId: BytesLike): Promise<ProposedVersion> {
-    const resp = await this.registryContracts.votingMachine.proposedVersions(
-      patchNodeId
-    );
-    return resp as ProposedVersion;
   }
 
   get prevPatchPackageLocationReverts(): string[] {

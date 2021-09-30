@@ -1,5 +1,5 @@
 import { errors } from "ethers";
-import { HTTPMethod, JSONString } from "./utils";
+import { HTTPMethod, JSONString } from "../utils";
 
 export type ContractCallResult<TReturn> = {
   data: TReturn | null;

@@ -1,6 +1,6 @@
 import { ContractReceipt, ethers, Signer } from "ethers";
 import { Logger } from "winston";
-import { ContractCallResult } from "./contractResultTypes";
+import { ContractCallResult } from "./helpers/contractResultTypes";
 import { ErrorHandler } from "./errorHandler";
 import { LogLevel } from "./logger";
 import { VotingMachine__factory, VotingMachine } from "./typechain";

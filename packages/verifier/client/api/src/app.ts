@@ -86,7 +86,8 @@ async function run() {
     try {
       const authority = new RegistryAuthority(
         verifierSigner,
-        registryContracts.votingMachine.address
+        registryContracts.votingMachine.address,
+        logger
       );
 
       await authority.authorizeVerifiers([await verifierSigner.getAddress()]);

@@ -1,6 +1,8 @@
 import { BytesLike } from "ethers";
 import {
+  ContractCallResult,
   PolywrapVotingSystem,
+  ProposedVersion,
   traceFunc,
   TransactionError,
 } from "@polywrap/registry-js";
@@ -60,7 +62,9 @@ export class VotingService {
   }
 
   @traceFunc("voting-service:is_decided")
-  async getProposedVersion(patchNodeId: BytesLike): Promise<ProposedVersion> {
+  async getProposedVersion(
+    patchNodeId: BytesLike
+  ): Promise<ContractCallResult<ProposedVersion>> {
     return this.polywrapVotingSystem.getProposedVersion(patchNodeId);
   }
 }

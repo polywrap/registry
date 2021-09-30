@@ -92,10 +92,11 @@ export const buildDependencyContainer = (
     schemaRetrievalService: awilix.asClass(SchemaRetrievalService),
     schemaComparisonService: awilix.asClass(SchemaComparisonService),
     polywrapVotingSystem: awilix.asFunction(
-      ({ verifierSigner, ethersProvider }) => {
+      ({ verifierSigner, ethersProvider, logger }) => {
         return new PolywrapVotingSystem(
           verifierSigner,
-          RegistryContracts.fromDefaultLocalhost(ethersProvider)
+          RegistryContracts.fromDefaultLocalhost(ethersProvider),
+          logger
         );
       }
     ),
