@@ -4,6 +4,7 @@ import { PolywrapperInfo } from "../../../../types/PolywrapperInfo";
 import { usePolywrapRegistry } from "../../../../hooks/usePolywrapRegistry";
 import { getLatestVersionInfo } from "../../../../helpers/getLatestVersionInfo";
 import { toPrettyHex } from "../../../../helpers/toPrettyHex";
+import { ethers } from "ethers";
 
 const VersionsTabComponent: React.FC<{
   polywrapperInfo: PolywrapperInfo;
@@ -34,7 +35,22 @@ const VersionsTabComponent: React.FC<{
       >
         Find latest
       </button>
-      {latestVersion ? (
+      {latestVersion && !latestVersion.packageLocation ? (
+        <div className="version-not-published">
+          <div>
+            Version not published. Click{" "}
+            <a
+              href={`/version-publish?domain=${polywrapperInfo.domain.name}&version=${versionNumber}`}
+            >
+              here
+            </a>{" "}
+            to start the publish process.
+          </div>
+        </div>
+      ) : (
+        <></>
+      )}
+      {latestVersion && latestVersion.packageLocation ? (
         <table className="polywrapper-table">
           <tbody>
             <tr>

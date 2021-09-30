@@ -25,12 +25,6 @@ const WrapperInfoComponent: React.FC = () => {
       ) : (
         <></>
       )}
-      <div>
-        <VersionPublishComponent
-          defaultDomainName={polywrapperInfo?.domain.name}
-          defaultVersionNumber=""
-        />
-      </div>
     </div>
   );
 };
