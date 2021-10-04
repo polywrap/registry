@@ -11,11 +11,28 @@
 
   .widget-container {
     width: 100%;
+    padding: 0.3rem;
 
     .inner-container {
       display: flex;
       justify-content: space-evenly;
     }
+  }
+
+  .main-container {
+    background-color: #1f3053;
+    width: 80%;
+    padding: 0.2rem;
+  }
+
+  .box {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px 2em;
+  }
+
+  .box :first-child {
+    align-self: center;
   }
 
   h3 {
@@ -31,5 +48,71 @@
   .main__logo {
     width: 150px;
     margin-top: 20px;
+  }
+
+  .log-level:before {
+    content: " ";
+    display: inline-block;
+    width: 32px;
+  }
+
+  .log-level-debug {
+    all: revert;
+    color: #ffffff;
+    border: 2px solid #8628b1;
+    background-color: transparent;
+
+    text-decoration: none;
+    display: inline-block;
+    white-space: nowrap;
+    padding: 0.5rem 0.75rem;
+    font-size: 1rem;
+    border-radius: 0.25em;
+    text-align: center;
+  }
+
+  .log-level-info {
+    all: revert;
+    color: #ffffff;
+    border: 2px solid #28b128;
+    background-color: transparent;
+
+    text-decoration: none;
+    display: inline-block;
+    white-space: nowrap;
+    padding: 0.5rem 0.75rem;
+    font-size: 1rem;
+    border-radius: 0.25em;
+    text-align: center;
+  }
+
+  .log-level-warn {
+    all: revert;
+    color: #ffffff;
+    border: 2px solid #eeb53a;
+    background-color: transparent;
+
+    text-decoration: none;
+    display: inline-block;
+    white-space: nowrap;
+    padding: 0.5rem 0.75rem;
+    font-size: 1rem;
+    border-radius: 0.25em;
+    text-align: center;
+  }
+
+  .log-level-error {
+    all: revert;
+    color: #ffffff;
+    border: 2px solid #fc1b1b;
+    background-color: transparent;
+
+    text-decoration: none;
+    display: inline-block;
+    white-space: nowrap;
+    padding: 0.5rem 0.75rem;
+    font-size: 1rem;
+    border-radius: 0.25em;
+    text-align: center;
   }
 }
