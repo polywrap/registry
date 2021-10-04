@@ -40,7 +40,7 @@ const VersionsTabComponent: React.FC<{
           <div>
             Version not published. Click{" "}
             <a
-              href={`/version-publish?domain=${polywrapperInfo.domain.name}&version=${versionNumber}`}
+              href={`/#/version-publish?domain=${polywrapperInfo.domain.name}&version=${versionNumber}`}
             >
               here
             </a>{" "}
