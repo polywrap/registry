@@ -20,6 +20,7 @@ export const buildHelpersDependencyExtensions = (
     packageOwnershipManagerL1: string;
     registrar: string;
     verificationTreeManager: string;
+    verificationRootRelayer: string;
     registryL1: string;
     registryL2: string;
     votingMachine: string;
