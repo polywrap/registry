@@ -3,22 +3,25 @@ import { VerifierStateInfo } from "../VerifierStateInfo";
 import { VersionVerifierService } from "./VersionVerifierService";
 import { VotingService } from "./VotingService";
 import { Logger } from "winston";
-import { traceFunc } from "@polywrap/registry-js";
+import { PolywrapVotingSystem, traceFunc } from "@polywrap/registry-js";
 import { toPrettyHex } from "../helpers/toPrettyHex";
 
 export class VersionProcessingService {
   private logger: Logger;
   private votingService: VotingService;
   private versionVerifierService: VersionVerifierService;
+  private polywrapVotingSystem: PolywrapVotingSystem;
 
   constructor(deps: {
     logger: Logger;
     votingService: VotingService;
     versionVerifierService: VersionVerifierService;
+    polywrapVotingSystem: PolywrapVotingSystem;
   }) {
     this.logger = deps.logger;
     this.votingService = deps.votingService;
     this.versionVerifierService = deps.versionVerifierService;
+    this.polywrapVotingSystem = deps.polywrapVotingSystem;
   }
 
   @traceFunc("version-processing-service:process_proposed_version_event")
@@ -69,7 +72,7 @@ export class VersionProcessingService {
       `Processing ${toPrettyHex(patchNodeId.toString())} version.`
     );
 
-    const _proposedVersion = await this.votingService.getProposedVersion(
+    const _proposedVersion = await this.polywrapVotingSystem.getProposedVersion(
       patchNodeId
     );
 

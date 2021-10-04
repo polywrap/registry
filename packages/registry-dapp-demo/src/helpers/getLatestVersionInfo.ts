@@ -8,6 +8,7 @@ export const getLatestVersionInfo = async (
   const versionInfo = await packageOwner.getLatestVersionInfo(domain.packageId);
 
   return {
+    domain,
     patchNodeId: packageOwner
       .calculatePatchNodeId(
         domain,

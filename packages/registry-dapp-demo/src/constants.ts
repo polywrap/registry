@@ -11,3 +11,11 @@ export const getPolywrapRegistryContracts = (
     return RegistryContracts.fromDefaultLocalhost(provider);
   }
 };
+
+export type SupportedNetwork = "xDAI" | "Rinkeby";
+
+export const hasDomainRegistry = (networkName: SupportedNetwork): boolean => {
+  return networksWithDomainRegistries.includes(networkName);
+};
+
+export const networksWithDomainRegistries: SupportedNetwork[] = ["Rinkeby"];

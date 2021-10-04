@@ -116,6 +116,9 @@ describe("Start local chain", () => {
           verificationTreeManager: await (
             await ethers.getContract("VerificationTreeManager")
           ).address,
+          verificationRootRelayer: await (
+            await ethers.getContract("VerificationRootRelayer")
+          ).address,
           registryL1: await (await ethers.getContract("PolywrapRegistryL1"))
             .address,
           registryL2: await (await ethers.getContract("PolywrapRegistryL2"))

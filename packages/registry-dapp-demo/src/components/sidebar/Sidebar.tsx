@@ -3,9 +3,27 @@ import SidebarMenuItems from "./SidebarMenuItems";
 import Logo from "../../logo.png";
 import { useWeb3 } from "../../hooks/useWeb3";
 import { toPrettyHex } from "../../helpers/toPrettyHex";
+import { SupportedNetwork } from "../../constants";
+import { useEffect, useState } from "react";
 
 const Sidebar: React.FC = () => {
-  const web3 = useWeb3();
+  const [web3, setWeb3] = useWeb3();
+  const [networkName, setNetworkName] = useState<SupportedNetwork>();
+
+  useEffect(() => {
+    if (web3) {
+      setNetworkName(web3.networkName);
+    }
+  }, [web3]);
+
+  useEffect(() => {
+    if (web3 && networkName) {
+      setWeb3({
+        ...web3,
+        networkName: networkName,
+      });
+    }
+  }, [networkName]);
 
   return (
     <div className="sidebar row">
@@ -18,7 +36,19 @@ const Sidebar: React.FC = () => {
         <div className="account-details">
           {web3 ? (
             <div>
-              <div>Network: {web3.networkName}</div>
+              <div>
+                <span className="network-label">Network: </span>
+                <select
+                  className="relay-chain"
+                  value={networkName}
+                  onChange={async (e) => {
+                    setNetworkName(e.target.value as SupportedNetwork);
+                  }}
+                >
+                  <option value="xDAI">xDAI</option>
+                  <option value="Rinkeby">Rinkeby</option>
+                </select>
+              </div>
               <div>Account: {toPrettyHex(web3.account)}</div>
             </div>
           ) : (

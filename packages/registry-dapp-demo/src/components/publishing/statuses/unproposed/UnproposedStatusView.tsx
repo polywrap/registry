@@ -5,8 +5,8 @@ import "./UnproposedStatusView.scss";
 
 const UnproposedStatusView: React.FC<{
   domainName: string;
-  reloadProposedVersion: () => Promise<void>;
-}> = ({ domainName, reloadProposedVersion }) => {
+  reloadVersionStatusInfo: () => Promise<void>;
+}> = ({ domainName, reloadVersionStatusInfo }) => {
   const { packageOwner } = usePolywrapRegistry();
 
   const [ipfsHash, setIpfsHash] = useState(
@@ -32,7 +32,7 @@ const UnproposedStatusView: React.FC<{
 
             await packageOwner.proposeVersion(domain, 1, 0, 0, ipfsHash);
 
-            await reloadProposedVersion();
+            await reloadVersionStatusInfo();
           }}
         >
           Propose version

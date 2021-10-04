@@ -1,10 +1,11 @@
 import "./VersionPublishComponent.scss";
-import { useState } from "react";
-import { VersionVerificationStatus } from "../../types/VersionVerificationStatus";
-import { VersionInfo } from "../../types/VersionInfo";
+import { useEffect, useState } from "react";
 import { EnsDomain, ProposedVersion } from "@polywrap/registry-js";
 import { usePolywrapRegistry } from "../../hooks/usePolywrapRegistry";
 import VerificationStatusComponent from "./VerificationStatusComponent";
+import { VersionVerificationStatusInfo } from "../../types/VersionVerificationStatusInfo";
+import { VersionVerificationStatus } from "../../types/VersionVerificationStatus";
+import { ethers } from "ethers";
 
 const VersionPublishComponent: React.FC<{
   defaultDomainName?: string;
@@ -16,16 +17,57 @@ const VersionPublishComponent: React.FC<{
   const [versionNumber, setVersionNumber] = useState(
     defaultVersionNumber ?? ""
   );
-  const [proposedVersion, setProposedVersion] = useState<
-    ProposedVersion | undefined
+  const [versionStatusInfo, setVersionStatusInfo] = useState<
+    VersionVerificationStatusInfo | undefined
   >();
 
-  const reloadProposedVersion = async () => {
+  useEffect(() => {
+    if (defaultDomainName && defaultVersionNumber) {
+      (async () => {
+        await reloadVersionStatusInfo();
+      })();
+    }
+  }, []);
+
+  const getProposedVersionStatus = async (
+    proposedVersion: ProposedVersion
+  ): Promise<VersionVerificationStatus> => {
+    let verificationStatus: VersionVerificationStatus =
+      VersionVerificationStatus.Published;
+
+    if (proposedVersion.patchNodeId === ethers.constants.HashZero) {
+      verificationStatus = VersionVerificationStatus.Unproposed;
+    } else if (!proposedVersion.decided && !proposedVersion.votingStarted) {
+      verificationStatus = VersionVerificationStatus.Queued;
+    } else if (!proposedVersion.decided && proposedVersion.votingStarted) {
+      verificationStatus = VersionVerificationStatus.Verifying;
+    } else if (proposedVersion.decided && proposedVersion.verified) {
+      verificationStatus = VersionVerificationStatus.Verified;
+      const domain = new EnsDomain(domainName);
+
+      const nodeInfo = await packageOwner.getVersionNodeInfo(domain, 1, 0, 0);
+
+      if (nodeInfo.created) {
+        verificationStatus = VersionVerificationStatus.Published;
+      }
+    } else if (proposedVersion.decided && !proposedVersion.verified) {
+      verificationStatus = VersionVerificationStatus.Rejected;
+    } else {
+      throw "";
+    }
+
+    return verificationStatus;
+  };
+
+  const reloadVersionStatusInfo = async () => {
     const domain = new EnsDomain(domainName);
     const patchNodeId = packageOwner.calculatePatchNodeId(domain, 1, 0, 0);
 
     const proposedVersion = await packageOwner.getProposedVersion(patchNodeId);
-    setProposedVersion(proposedVersion);
+    setVersionStatusInfo({
+      proposedVersion,
+      status: await getProposedVersionStatus(proposedVersion),
+    });
   };
 
   return (
@@ -51,17 +93,17 @@ const VersionPublishComponent: React.FC<{
       />
       <button
         onClick={async () => {
-          await reloadProposedVersion();
+          await reloadVersionStatusInfo();
         }}
       >
         Get status
       </button>
       <div className="verification-status">
-        {proposedVersion ? (
+        {versionStatusInfo ? (
           <VerificationStatusComponent
             domainName={domainName}
-            proposedVersion={proposedVersion}
-            reloadProposedVersion={reloadProposedVersion}
+            versionStatusInfo={versionStatusInfo}
+            reloadVersionStatusInfo={reloadVersionStatusInfo}
           />
         ) : (
           <></>

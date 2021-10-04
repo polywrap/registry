@@ -1,15 +1,31 @@
 import { BlockchainsWithRegistry } from "@polywrap/registry-js";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { hasDomainRegistry } from "../../../../constants";
 import { relayOwnership } from "../../../../helpers/relayOwnership";
 import { toPrettyHex } from "../../../../helpers/toPrettyHex";
 import { usePolywrapRegistry } from "../../../../hooks/usePolywrapRegistry";
+import { useWeb3 } from "../../../../hooks/useWeb3";
 import { PolywrapperInfo } from "../../../../types/PolywrapperInfo";
 
 const InfoTabComponent: React.FC<{
   polywrapperInfo: PolywrapperInfo;
 }> = ({ polywrapperInfo }) => {
   const { packageOwner } = usePolywrapRegistry();
-  const [relayChain, setRelayChain] = useState<BlockchainsWithRegistry>("xdai");
+  const [web3] = useWeb3();
+  const name = web3?.networkName;
+  const [relayChain, setRelayChain] = useState<BlockchainsWithRegistry>(
+    "l2-chain-name"
+  );
+
+  const [showRelayOwnershipButton, setShowRelayOwnershipButton] = useState(
+    false
+  );
+
+  useEffect(() => {
+    if (name) {
+      setShowRelayOwnershipButton(hasDomainRegistry(web3.networkName));
+    }
+  }, [name]);
 
   return (
     <div className="InfoTab">
@@ -56,30 +72,34 @@ const InfoTabComponent: React.FC<{
                 )}
               </td>
             </tr>
-            <tr>
-              <td colSpan={2}>
-                <select
-                  className="relay-chain"
-                  value={relayChain}
-                  onChange={async (e) => {
-                    setRelayChain(e.target.value as BlockchainsWithRegistry);
-                  }}
-                >
-                  <option value="xdai">xDAI</option>
-                </select>
-                <button
-                  onClick={async () => {
-                    await relayOwnership(
-                      polywrapperInfo.domain,
-                      relayChain,
-                      packageOwner
-                    );
-                  }}
-                >
-                  Relay ownership
-                </button>
-              </td>
-            </tr>
+            {showRelayOwnershipButton ? (
+              <tr>
+                <td colSpan={2}>
+                  <select
+                    className="relay-chain"
+                    value={relayChain}
+                    onChange={async (e) => {
+                      setRelayChain(e.target.value as BlockchainsWithRegistry);
+                    }}
+                  >
+                    <option value="l2-chain-name">xDAI</option>
+                  </select>
+                  <button
+                    onClick={async () => {
+                      await relayOwnership(
+                        polywrapperInfo.domain,
+                        relayChain,
+                        packageOwner
+                      );
+                    }}
+                  >
+                    Relay ownership
+                  </button>
+                </td>
+              </tr>
+            ) : (
+              <></>
+            )}
           </tbody>
         </table>
       </div>

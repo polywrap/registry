@@ -1,44 +1,26 @@
 import "./VersionPublishComponent.scss";
-import { useState } from "react";
 import { VersionVerificationStatus } from "../../types/VersionVerificationStatus";
-import { EnsDomain, ProposedVersion } from "@polywrap/registry-js";
-import { usePolywrapRegistry } from "../../hooks/usePolywrapRegistry";
-import { ethers } from "ethers";
+import { EnsDomain } from "@polywrap/registry-js";
 import UnproposedStatusView from "./statuses/unproposed/UnproposedStatusView";
 import QueuedStatusView from "./statuses/queued/QueuedStatusView";
 import VerifyingStatusView from "./statuses/verifying/VerifyingStatusView";
 import VerifiedStatusView from "./statuses/verified/VerifiedStatusView";
 import RejectedStatusView from "./statuses/rejected/RejectedStatusView";
+import { VersionVerificationStatusInfo } from "../../types/VersionVerificationStatusInfo";
+import PublishedStatusView from "./statuses/published/PublishedStatusView";
 
 const VerificationStatusComponent: React.FC<{
   domainName: string;
-  proposedVersion: ProposedVersion;
-  reloadProposedVersion: () => Promise<void>;
-}> = ({ domainName, proposedVersion, reloadProposedVersion }) => {
-  let verificationStatus: VersionVerificationStatus =
-    VersionVerificationStatus.Published;
-
-  if (proposedVersion.patchNodeId === ethers.constants.HashZero) {
-    verificationStatus = VersionVerificationStatus.Unproposed;
-  } else if (!proposedVersion.decided && !proposedVersion.votingStarted) {
-    verificationStatus = VersionVerificationStatus.Queued;
-  } else if (!proposedVersion.decided && proposedVersion.votingStarted) {
-    verificationStatus = VersionVerificationStatus.Verifying;
-  } else if (proposedVersion.decided && proposedVersion.verified) {
-    verificationStatus = VersionVerificationStatus.Verified;
-  } else if (proposedVersion.decided && !proposedVersion.verified) {
-    verificationStatus = VersionVerificationStatus.Rejected;
-  } else {
-    throw "";
-  }
-
+  versionStatusInfo: VersionVerificationStatusInfo;
+  reloadVersionStatusInfo: () => Promise<void>;
+}> = ({ domainName, versionStatusInfo, reloadVersionStatusInfo }) => {
   let status = <></>;
-  switch (verificationStatus) {
+  switch (versionStatusInfo.status) {
     case VersionVerificationStatus.Unproposed:
       status = (
         <UnproposedStatusView
           domainName={domainName}
-          reloadProposedVersion={reloadProposedVersion}
+          reloadVersionStatusInfo={reloadVersionStatusInfo}
         ></UnproposedStatusView>
       );
       break;
@@ -48,21 +30,39 @@ const VerificationStatusComponent: React.FC<{
     case VersionVerificationStatus.Verifying:
       status = (
         <VerifyingStatusView
-          patchNodeId={proposedVersion.patchNodeId}
-          packageLocation={proposedVersion.packageLocation}
-          reloadProposedVersion={reloadProposedVersion}
+          patchNodeId={versionStatusInfo.proposedVersion.patchNodeId}
+          packageLocation={versionStatusInfo.proposedVersion.packageLocation}
+          reloadVersionStatusInfo={reloadVersionStatusInfo}
         ></VerifyingStatusView>
       );
       break;
     case VersionVerificationStatus.Verified:
-      status = <VerifiedStatusView></VerifiedStatusView>;
+      status = (
+        <VerifiedStatusView
+          domainName={domainName}
+          majorNumber={versionStatusInfo.proposedVersion.majorVersion.toNumber()}
+          minorNumber={versionStatusInfo.proposedVersion.minorVersion.toNumber()}
+          patchNumber={versionStatusInfo.proposedVersion.patchVersion.toNumber()}
+          packageLocation={versionStatusInfo.proposedVersion.packageLocation}
+          reloadVersionStatusInfo={reloadVersionStatusInfo}
+        ></VerifiedStatusView>
+      );
       break;
     case VersionVerificationStatus.Rejected:
       status = <RejectedStatusView></RejectedStatusView>;
       break;
-    // case VersionVerificationStatus.Published:
-    //   status = <div>Published</div>;
-    //   break;
+    case VersionVerificationStatus.Published:
+      status = (
+        <PublishedStatusView
+          versionInfo={{
+            domain: new EnsDomain(domainName),
+            packageLocation: versionStatusInfo.proposedVersion.packageLocation,
+            number: "1.0.0",
+            patchNodeId: versionStatusInfo.proposedVersion.patchNodeId,
+          }}
+        ></PublishedStatusView>
+      );
+      break;
     default:
       status = <div>Loading...</div>;
       break;

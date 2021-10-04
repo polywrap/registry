@@ -6,8 +6,8 @@ import "./VerifyingStatusView.scss";
 const VerifyingStatusView: React.FC<{
   patchNodeId: BytesLike;
   packageLocation: string;
-  reloadProposedVersion: () => Promise<void>;
-}> = ({ patchNodeId, packageLocation, reloadProposedVersion }) => {
+  reloadVersionStatusInfo: () => Promise<void>;
+}> = ({ patchNodeId, packageLocation, reloadVersionStatusInfo }) => {
   const { packageOwner } = usePolywrapRegistry();
   const [votingInfo, setVotingInfo] = useState({
     verifierCount: 0,
@@ -37,7 +37,7 @@ const VerifyingStatusView: React.FC<{
   useEffect(() => {
     (async () => {
       await packageOwner._waitForVotingEnd(patchNodeId, packageLocation);
-      await reloadProposedVersion();
+      await reloadVersionStatusInfo();
     })();
   }, []);
 

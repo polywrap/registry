@@ -12,6 +12,8 @@ import {
   PolywrapRegistrar__factory,
   PolywrapRegistry,
   PolywrapRegistry__factory,
+  VerificationRootRelayer,
+  VerificationRootRelayer__factory,
   VerificationTreeManager,
   VerificationTreeManager__factory,
   VersionVerificationManager,
@@ -26,6 +28,7 @@ export class RegistryContracts {
   registryL1: PolywrapRegistry;
   registryL2: PolywrapRegistry;
   verificationTreeManager: VerificationTreeManager;
+  verificationRootRelayer: VerificationRootRelayer;
   registrar: PolywrapRegistrar;
   votingMachine: VotingMachine;
   ensLinkL1: EnsLink;
@@ -36,6 +39,7 @@ export class RegistryContracts {
     registryL1: PolywrapRegistry;
     registryL2: PolywrapRegistry;
     verificationTreeManager: VerificationTreeManager;
+    verificationRootRelayer: VerificationRootRelayer;
     registrar: PolywrapRegistrar;
     votingMachine: VotingMachine;
     ensLinkL1: EnsLink;
@@ -45,6 +49,7 @@ export class RegistryContracts {
     this.registryL1 = contracts.registryL1;
     this.registryL2 = contracts.registryL2;
     this.verificationTreeManager = contracts.verificationTreeManager;
+    this.verificationRootRelayer = contracts.verificationRootRelayer;
     this.registrar = contracts.registrar;
     this.votingMachine = contracts.votingMachine;
     this.ensLinkL1 = contracts.ensLinkL1;
@@ -60,6 +65,7 @@ export class RegistryContracts {
     this.registryL1 = this.registryL1.connect(signer);
     this.registryL2 = this.registryL2.connect(signer);
     this.verificationTreeManager = this.verificationTreeManager.connect(signer);
+    this.verificationRootRelayer = this.verificationRootRelayer.connect(signer);
     this.registrar = this.registrar.connect(signer);
     this.votingMachine = this.votingMachine.connect(signer);
     this.ensLinkL1 = this.ensLinkL1.connect(signer);
@@ -73,6 +79,7 @@ export class RegistryContracts {
       packageOwnershipManagerL1: string;
       registrar: string;
       verificationTreeManager: string;
+      verificationRootRelayer: string;
       registryL1: string;
       registryL2: string;
       votingMachine: string;
@@ -95,6 +102,10 @@ export class RegistryContracts {
       ),
       verificationTreeManager: VerificationTreeManager__factory.connect(
         addresses.verificationTreeManager,
+        provider
+      ),
+      verificationRootRelayer: VerificationRootRelayer__factory.connect(
+        addresses.verificationRootRelayer,
         provider
       ),
       registryL1: PolywrapRegistry__factory.connect(

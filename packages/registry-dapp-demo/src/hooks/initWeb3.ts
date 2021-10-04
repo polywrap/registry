@@ -2,7 +2,10 @@ import { ethers } from "ethers";
 import { useEffect, useState } from "react";
 import { Web3 } from "../types/Web3";
 
-export const initWeb3 = (): Web3 | undefined => {
+export const initWeb3 = (): [
+  Web3 | undefined,
+  (web3: Web3 | undefined) => void
+] => {
   const ethereum = (window as any).ethereum;
   const [web3, setWeb3] = useState<Web3>();
 
@@ -16,24 +19,13 @@ export const initWeb3 = (): Web3 | undefined => {
         const address = await signer.getAddress();
         const { chainId } = await provider.getNetwork();
 
-        let networkName = "";
-
-        switch (chainId) {
-          case 1337:
-            networkName = "Localhost";
-            break;
-          default:
-            networkName = "Unknown";
-            break;
-        }
-
         setWeb3({
           account: address,
           ethereumProvider: ethereum,
           provider: provider,
           signer: signer,
           chainId: chainId,
-          networkName: networkName,
+          networkName: "Rinkeby",
         });
       } else {
         throw Error("Please install Metamask.");
@@ -41,5 +33,5 @@ export const initWeb3 = (): Web3 | undefined => {
     })();
   }, [ethereum]);
 
-  return web3;
+  return [web3, setWeb3];
 };
