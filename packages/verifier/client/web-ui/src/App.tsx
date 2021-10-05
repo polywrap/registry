@@ -6,21 +6,7 @@ import { ToastProvider } from "react-toast-notifications";
 import Logo from "./logo.png";
 import { getClientInfo, getClientLogs } from "./services/verifier-client-api";
 import { Log, LogFilterOptions, LogLevel } from "./types";
-
-function classByLogLevel(loglevel: LogLevel) {
-  switch (loglevel) {
-    case LogLevel.all:
-      return "";
-    case LogLevel.debug:
-      return "log-level-debug";
-    case LogLevel.info:
-      return "log-level-info";
-    case LogLevel.warn:
-      return "log-level-warn";
-    case LogLevel.error:
-      return "log-level-error";
-  }
-}
+import { classByLogLevel } from "./helpers/classByLogLevel";
 
 function App(): JSX.Element {
   const ethereum = (window as any).ethereum;
@@ -56,12 +42,9 @@ function App(): JSX.Element {
   }, []);
 
   useEffect(() => {
-    console.log("Hello");
     const logFetcher = () => {
-      console.log("World");
       getClientLogs(logFilterOptions)
         .then((logs) => {
-          console.log("2");
           setLogs(logs);
         })
         .catch((error) => {
@@ -70,10 +53,8 @@ function App(): JSX.Element {
     };
 
     logFetcher();
-    console.log(3);
 
     const logFetcherId = setInterval(logFetcher, 10000);
-    // setLogFetcherId(logFetcherId);
     return () => {
       clearInterval(logFetcherId);
     };
@@ -98,7 +79,6 @@ function App(): JSX.Element {
       newOptions.search = e.target.value;
       return newOptions;
     });
-    // setSubmitted(true);
   }
 
   function onLogLevel(e: React.ChangeEvent<HTMLInputElement>) {
@@ -107,7 +87,6 @@ function App(): JSX.Element {
       newOptions.filterBy = e.target.value as LogLevel;
       return newOptions;
     });
-    // setSubmitted(true);
   }
 
   function onChangeRecords(e: React.ChangeEvent<HTMLSelectElement>) {
@@ -116,7 +95,6 @@ function App(): JSX.Element {
       newOptions.limit = +e.target.value;
       return newOptions;
     });
-    // setSubmitted(true);
   }
 
   return (
