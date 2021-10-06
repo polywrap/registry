@@ -1,14 +1,4 @@
-export type JSONString = string;
-
-export enum HTTPMethod {
-  GET,
-  POST,
-  PUT,
-  DELETE,
-  PATCH,
-}
-
-export type MaybeAsync<T> = Promise<T> | T;
+import { MaybeAsync } from "../types";
 
 export const isPromise = <T extends unknown>(
   test?: MaybeAsync<T>

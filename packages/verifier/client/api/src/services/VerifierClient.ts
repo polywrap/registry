@@ -1,7 +1,11 @@
 import { VersionProcessingService } from "./VersionProcessingService";
 import { VerifierStateManager } from "./VerifierStateManager";
 import { ProposedVersionEventArgs } from "../events/ProposedVersionEventArgs";
-import { PolywrapVotingSystem, traceFunc } from "@polywrap/registry-js";
+import {
+  handleContractError,
+  PolywrapVotingSystem,
+  traceFunc,
+} from "@polywrap/registry-js";
 import { VerifierClientConfig } from "../config/VerifierClientConfig";
 import { Logger } from "winston";
 
@@ -43,7 +47,16 @@ export class VerifierClient {
 
     // eslint-disable-next-line no-constant-condition
     while (true) {
-      await this.queryAndVerifyVersions();
+      const [processedEvents, error] = await handleContractError(
+        this.queryAndVerifyVersions
+      )();
+
+      this.logger.info(`${processedEvents} proposed version events processed.`);
+
+      if (error) {
+        this.logger.error(error.message);
+        process.exit(1);
+      }
 
       await delay(this.verifierClientConfig.pauseTimeInMiliseconds);
     }

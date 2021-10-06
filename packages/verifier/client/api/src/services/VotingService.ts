@@ -44,27 +44,13 @@ export class VotingService {
       this.verifierClientConfig.numOfConfirmationsToWait
     );
 
-    if (result.error) {
-      const txError = result.error as TransactionError;
-      if (
-        txError.revertMessage &&
-        txError.revertMessage in this.polywrapVotingSystem.voteReverts
-      ) {
-        return;
-      } else {
-        process.exit(1);
-      }
-    } else {
-      this.logger.info(
-        `Voted on proposed version ${patchNodeId}, approved: ${approved}`
-      );
-    }
+    this.logger.info(
+      `Voted on proposed version ${patchNodeId}, approved: ${approved}`
+    );
   }
 
   @traceFunc("voting-service:is_decided")
-  async getProposedVersion(
-    patchNodeId: BytesLike
-  ): Promise<ContractCallResult<ProposedVersion>> {
+  async getProposedVersion(patchNodeId: BytesLike): Promise<ProposedVersion> {
     return this.polywrapVotingSystem.getProposedVersion(patchNodeId);
   }
 }

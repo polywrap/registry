@@ -5,7 +5,6 @@ import { VotingService } from "./VotingService";
 import { Logger } from "winston";
 import { ProposedVersion, traceFunc } from "@polywrap/registry-js";
 import { toPrettyHex } from "../helpers/toPrettyHex";
-import { VerifyVersionInfo } from "../helpers/VerifyVersionInfo";
 
 export class VersionProcessingService {
   private logger: Logger;
@@ -70,13 +69,9 @@ export class VersionProcessingService {
       `Processing ${toPrettyHex(patchNodeId.toString())} version.`
     );
 
-    const proposedVersionResult = await this.votingService.getProposedVersion(
+    const latestProposedVersion = await this.votingService.getProposedVersion(
       patchNodeId
     );
-
-    if (proposedVersionResult.error) {
-      return;
-    }
 
     const {
       packageId,
@@ -85,7 +80,7 @@ export class VersionProcessingService {
       patchVersion,
       packageLocation,
       decided,
-    } = proposedVersionResult.data as ProposedVersion;
+    } = latestProposedVersion as ProposedVersion;
 
     if (decided) {
       this.logger.info(`Version is already decided.`);
@@ -98,7 +93,7 @@ export class VersionProcessingService {
       )}, ${majorVersion}, ${minorVersion}, ${patchVersion}`
     );
 
-    const verifyVersionResult = await this.versionVerifierService.verifyVersion(
+    const verifyVersion = await this.versionVerifierService.verifyVersion(
       packageId,
       patchNodeId,
       majorVersion.toNumber(),
@@ -108,13 +103,7 @@ export class VersionProcessingService {
       isPatch
     );
 
-    if (verifyVersionResult.error) return;
-
-    const {
-      prevMinorNodeId,
-      nextMinorNodeId,
-      approved,
-    } = verifyVersionResult.data as VerifyVersionInfo;
+    const { prevMinorNodeId, nextMinorNodeId, approved } = verifyVersion;
 
     await this.votingService.voteOnVersion(
       patchNodeId,

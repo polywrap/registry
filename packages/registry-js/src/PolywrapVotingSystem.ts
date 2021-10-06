@@ -1,27 +1,37 @@
 import { CallOverrides, ContractReceipt, Overrides, Signer } from "ethers";
 import { BytesLike } from "ethers/lib/utils";
-import { Logger } from "winston";
-import { ContractCallResult } from "./helpers/contractResultTypes";
-import { ErrorHandler } from "./errorHandler";
-import { LogLevel } from "./logger";
-import { PrevAndNextMinorPackageLocations } from "./helpers/PrevAndNextMinorPackageLocations";
-import { ProposedVersion } from "./helpers/ProposedVersion";
 import { RegistryContracts } from "./RegistryContracts";
-import { VersionVotingStartedEvent } from "./helpers/VersionVotingStartedEvent";
+import {
+  PrevAndNextMinorPackageLocations,
+  ProposedVersion,
+  VersionVotingStartedEvent,
+} from "./types";
 
-export class PolywrapVotingSystem extends ErrorHandler {
-  constructor(
-    signer: Signer,
-    registryContracts: RegistryContracts,
-    logger: Logger
-  ) {
-    super();
+type TCanVoteOnVersionReverts =
+  | "Voting has not started"
+  | "Voting for this version has ended"
+  | "You already voted";
+
+type TValidMinorVersionPlacementReverts =
+  | "Previous version number is not less than the current one"
+  | "Previous version does not point to the next version"
+  | "Previous version does not belong to the same major version"
+  | "Next version number is not greater than the current one"
+  | "Next version does not point to the previous version"
+  | "Next version does not belong to the same major version";
+
+export type TPrevPatchPackageLocationReverts = TCanVoteOnVersionReverts;
+export type TPrevAndNextMinorPackageLocationsReverts = TCanVoteOnVersionReverts;
+export type TVoteReverts =
+  | TCanVoteOnVersionReverts
+  | TValidMinorVersionPlacementReverts;
+
+export class PolywrapVotingSystem {
+  constructor(signer: Signer, registryContracts: RegistryContracts) {
     this.signer = signer;
     this.registryContracts = registryContracts.connect(signer);
-    this.logger = logger;
   }
 
-  logger: Logger;
   signer: Signer;
   private registryContracts: RegistryContracts;
 
@@ -40,7 +50,6 @@ export class PolywrapVotingSystem extends ErrorHandler {
     "Next version does not belong to the same major version",
   ];
 
-  @PolywrapVotingSystem.errorHandler(LogLevel.warn)
   async vote(
     votes: {
       patchNodeId: BytesLike;
@@ -50,23 +59,19 @@ export class PolywrapVotingSystem extends ErrorHandler {
     }[],
     numOfConfirmationsToWait: number,
     overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractCallResult<ContractReceipt>> {
+  ): Promise<ContractReceipt> {
     const tx = await (overrides
       ? this.registryContracts.votingMachine.vote(votes, overrides)
       : this.registryContracts.votingMachine.vote(votes));
     const receipt = await tx.wait(numOfConfirmationsToWait);
-    return {
-      data: receipt,
-      error: null,
-    };
+    return receipt;
   }
 
-  @PolywrapVotingSystem.errorHandler(LogLevel.warn)
   async getPrevPatchPackageLocation(
     patchNodeId: BytesLike,
     overrides?: CallOverrides
-  ): Promise<ContractCallResult<string>> {
-    const result = await (overrides
+  ): Promise<string> {
+    return await (overrides
       ? this.registryContracts.votingMachine.getPrevPatchPackageLocation(
           patchNodeId,
           overrides
@@ -74,18 +79,13 @@ export class PolywrapVotingSystem extends ErrorHandler {
       : this.registryContracts.votingMachine.getPrevPatchPackageLocation(
           patchNodeId
         ));
-    return {
-      data: result,
-      error: null,
-    };
   }
 
-  @PolywrapVotingSystem.errorHandler(LogLevel.warn)
   async getPrevAndNextMinorPackageLocations(
     patchNodeId: BytesLike,
     overrides?: CallOverrides
-  ): Promise<ContractCallResult<PrevAndNextMinorPackageLocations>> {
-    const result = await (overrides
+  ): Promise<PrevAndNextMinorPackageLocations> {
+    return await (overrides
       ? this.registryContracts.votingMachine.getPrevAndNextMinorPackageLocations(
           patchNodeId,
           overrides
@@ -93,34 +93,23 @@ export class PolywrapVotingSystem extends ErrorHandler {
       : this.registryContracts.votingMachine.getPrevAndNextMinorPackageLocations(
           patchNodeId
         ));
-    return {
-      data: result as PrevAndNextMinorPackageLocations,
-      error: null,
-    };
   }
 
-  @PolywrapVotingSystem.errorHandler(LogLevel.warn)
-  async getProposedVersion(
-    patchNodeId: BytesLike
-  ): Promise<ContractCallResult<ProposedVersion>> {
-    const resp = await this.registryContracts.votingMachine.proposedVersions(
+  async getProposedVersion(patchNodeId: BytesLike): Promise<ProposedVersion> {
+    return await this.registryContracts.votingMachine.proposedVersions(
       patchNodeId
     );
-    return {
-      data: resp as ProposedVersion,
-      error: null,
-    };
   }
 
   async queryVersionVotingStarted(
     blockNumber: number
   ): Promise<VersionVotingStartedEvent[]> {
-    const resp = await this.registryContracts.votingMachine.queryFilter(
+    const result = await this.registryContracts.votingMachine.queryFilter(
       this.registryContracts.votingMachine.filters.VersionVotingStarted(),
       blockNumber
     );
 
-    return (resp as unknown) as VersionVotingStartedEvent[];
+    return (result as unknown) as VersionVotingStartedEvent[];
   }
 
   get prevPatchPackageLocationReverts(): string[] {

@@ -1,12 +1,18 @@
 import { errors } from "ethers";
-import { HTTPMethod, JSONString } from "../utils";
+import { HTTPMethod } from "./HTTPMethod";
+import { JSONString } from "./JSONString";
 
-export type ContractCallResult<TReturn> = {
-  data: TReturn | null;
-  error: BaseContractError | BaseTransactionError | TransactionError | null;
-};
+export type TData<TReturn> = TReturn | null;
+export type TError =
+  | BaseContractError
+  | BaseTransactionError
+  | TransactionError
+  | null;
+
+export type ContractCallResult<TReturn> = [TData<TReturn>, TError];
 
 export type BaseContractError = {
+  message: string;
   reason: string;
   code: errors;
 };

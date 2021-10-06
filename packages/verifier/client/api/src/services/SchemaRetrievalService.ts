@@ -3,11 +3,12 @@ import { BytesLike, errors } from "ethers";
 import { Web3ApiClient } from "@web3api/client-js";
 import {
   ContractCallResult,
+  handleContractError,
   PolywrapVotingSystem,
   PrevAndNextMinorPackageLocations,
   traceFunc,
 } from "@polywrap/registry-js";
-import { PreviousAndNextVersionSchema } from "../helpers/PreviousAndNextVersionSchema";
+import { PreviousAndNextVersionSchema } from "../types/PreviousAndNextVersionSchema";
 
 export class SchemaRetrievalService {
   private logger: Logger;
@@ -25,62 +26,31 @@ export class SchemaRetrievalService {
   }
 
   @traceFunc("schema-retrieval-service:get_minor_version_schema")
-  async getMinorVersionSchema(
-    patchNodeId: BytesLike
-  ): Promise<ContractCallResult<string>> {
-    const locationResult = await this.polywrapVotingSystem.getPrevPatchPackageLocation(
+  async getMinorVersionSchema(patchNodeId: BytesLike): Promise<string> {
+    const location = await this.polywrapVotingSystem.getPrevPatchPackageLocation(
       patchNodeId
     );
-    if (locationResult.error) {
-      if (
-        locationResult.error.reason in
-        this.polywrapVotingSystem.prevPatchPackageLocationReverts
-      ) {
-        return {
-          data: null,
-          error: locationResult.error,
-        };
-      } else {
-        process.exit(1);
-      }
-    }
-    const location = locationResult.data as string;
+
     const minorVersionSchema = await this.polywrapClient.getSchema(
       `ipfs/${location}`
     );
-    return {
-      data: minorVersionSchema,
-      error: null,
-    };
+    return minorVersionSchema;
   }
 
   @traceFunc("schema-retrieval-service:get_previous_and_next_version_schema")
   async getPreviousAndNextVersionSchema(
     patchNodeId: BytesLike
-  ): Promise<ContractCallResult<PreviousAndNextVersionSchema>> {
+  ): Promise<PreviousAndNextVersionSchema> {
     const result = await this.polywrapVotingSystem.getPrevAndNextMinorPackageLocations(
       patchNodeId
     );
-    if (result.error) {
-      if (
-        result.error.reason in
-        this.polywrapVotingSystem.prevAndNextMinorPackageLocationsReverts
-      ) {
-        return {
-          data: null,
-          error: result.error,
-        };
-      } else {
-        process.exit(1);
-      }
-    }
 
     const {
       prevMinorNodeId,
       prevPackageLocation,
       nextMinorNodeId,
       nextPackageLocation,
-    } = result.data as PrevAndNextMinorPackageLocations;
+    } = result as PrevAndNextMinorPackageLocations;
 
     const prevSchema = prevPackageLocation
       ? await this.polywrapClient.getSchema(`ipfs/${prevPackageLocation}`)
@@ -91,13 +61,10 @@ export class SchemaRetrievalService {
       : undefined;
 
     return {
-      data: {
-        prevMinorNodeId,
-        prevSchema,
-        nextMinorNodeId,
-        nextSchema,
-      },
-      error: null,
+      prevMinorNodeId,
+      prevSchema,
+      nextMinorNodeId,
+      nextSchema,
     };
   }
 }

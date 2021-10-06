@@ -35,7 +35,7 @@ export class VersionVerifierService {
     patchVersion: number,
     packageLocation: string,
     isPatch: boolean
-  ): Promise<ContractCallResult<VerifyVersionInfo>> {
+  ): Promise<VerifyVersionInfo> {
     this.logger.info(
       `Verifying proposed version: ${toPrettyHex(
         patchNodeId.toString()
@@ -55,73 +55,44 @@ export class VersionVerifierService {
         proposedVersionSchema,
         patchNodeId
       );
-      if (result.error) {
-        return {
-          data: null,
-          error: result.error,
-        };
-      }
 
-      isVersionApproved = result.data as boolean;
+      isVersionApproved = result as boolean;
     } else {
-      const result = await this.verifyMinorVersion(
+      const verifyVersionInfo = await this.verifyMinorVersion(
         proposedVersionSchema,
         patchNodeId
       );
 
-      if (result.error) {
-        return {
-          data: null,
-          error: result.error,
-        };
-      }
-
-      const data = result.data as VerifyVersionInfo;
-
-      isVersionApproved = data.approved;
-      prevMinorNodeId = data.prevMinorNodeId;
-      nextMinorNodeId = data.nextMinorNodeId;
+      isVersionApproved = verifyVersionInfo.approved;
+      prevMinorNodeId = verifyVersionInfo.prevMinorNodeId;
+      nextMinorNodeId = verifyVersionInfo.nextMinorNodeId;
     }
 
-    return {
-      data: { prevMinorNodeId, nextMinorNodeId, approved: isVersionApproved },
-      error: null,
-    };
+    return { prevMinorNodeId, nextMinorNodeId, approved: isVersionApproved };
   }
 
   @traceFunc("version-verifier-service:verify_minor_version")
   private async verifyMinorVersion(
     proposedVersionSchema: string,
     patchNodeId: BytesLike
-  ): Promise<ContractCallResult<VerifyVersionInfo>> {
-    const result = await this.schemaRetrievalService.getPreviousAndNextVersionSchema(
+  ): Promise<VerifyVersionInfo> {
+    const previousAndNextVersionSchema = await this.schemaRetrievalService.getPreviousAndNextVersionSchema(
       patchNodeId
     );
-
-    if (result.error) {
-      return {
-        data: null,
-        error: result.error,
-      };
-    }
 
     const {
       prevMinorNodeId,
       prevSchema,
       nextMinorNodeId,
       nextSchema,
-    } = result.data as PreviousAndNextVersionSchema;
+    } = previousAndNextVersionSchema;
 
-    const data = {
+    return {
       prevMinorNodeId,
       nextMinorNodeId,
       approved: true,
       // approved: areSchemasBacwardCompatible(prevSchema, proposedVersionSchema) &&
       //   areSchemasBacwardCompatible(proposedVersionSchema, nextSchema)
-    };
-    return {
-      data: data,
-      error: null,
     };
   }
 
@@ -129,27 +100,16 @@ export class VersionVerifierService {
   private async verifyPatchVersion(
     proposedVersionSchema: string,
     patchNodeId: BytesLike
-  ): Promise<ContractCallResult<boolean>> {
+  ): Promise<boolean> {
     // return true;
 
-    const result = await this.schemaRetrievalService.getMinorVersionSchema(
+    const minorVersionSchema = await this.schemaRetrievalService.getMinorVersionSchema(
       patchNodeId
     );
 
-    if (result.error) {
-      return {
-        data: null,
-        error: result.error,
-      };
-    }
-
-    const data = this.schemaComparisonService.areSchemasFunctionallyIdentical(
+    return this.schemaComparisonService.areSchemasFunctionallyIdentical(
       proposedVersionSchema,
-      result.data as string
+      minorVersionSchema
     );
-    return {
-      data: data,
-      error: null,
-    };
   }
 }
