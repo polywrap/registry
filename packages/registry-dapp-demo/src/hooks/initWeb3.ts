@@ -25,7 +25,7 @@ export const initWeb3 = (): [
           provider: provider,
           signer: signer,
           chainId: chainId,
-          networkName: "Rinkeby",
+          networkName: "rinkeby",
         });
       } else {
         throw Error("Please install Metamask.");

@@ -33,7 +33,7 @@ const App: React.FC = () => {
 
     const packageOwner = new PackageOwner(
       web3.signer,
-      getPolywrapRegistryContracts(web3.provider)
+      getPolywrapRegistryContracts(web3.provider, web3.networkName)
     );
 
     setRegistry({
@@ -52,7 +52,7 @@ const App: React.FC = () => {
         }),
       },
     ]);
-  }, [web3]);
+  }, [web3, web3?.networkName]);
 
   const a: [Web3 | undefined, (web3: Web3 | undefined) => void] = [
     web3,

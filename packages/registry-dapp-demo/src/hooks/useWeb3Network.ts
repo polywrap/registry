@@ -5,7 +5,7 @@ export const useWeb3Network = (): [
   SupportedNetwork,
   (networkName: SupportedNetwork) => void
 ] => {
-  const [networkName, setNetworkName] = useState<SupportedNetwork>("xDAI");
+  const [networkName, setNetworkName] = useState<SupportedNetwork>("xdai");
 
   return [networkName, setNetworkName];
 };

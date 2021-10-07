@@ -1,5 +1,6 @@
 import { EnsDomain } from "@polywrap/registry-js";
 import { usePolywrapRegistry } from "../../../../hooks/usePolywrapRegistry";
+import ChainSpecificView from "../../../chain-specific-view/ChainSpecificView";
 import "./VerifiedStatusView.scss";
 
 const VerifiedStatusView: React.FC<{
@@ -23,30 +24,35 @@ const VerifiedStatusView: React.FC<{
     <div className="VerifiedStatusView">
       <div className="status">Status: Verified</div>
       <div>
-        <div className="publish-buttons"></div>
-        <button
-          onClick={async () => {
-            const domain = new EnsDomain(domainName);
+        <ChainSpecificView chainName="xdai">
+          <button
+            onClick={async () => {
+              const domain = new EnsDomain(domainName);
 
-            await packageOwner.publishVersion(
-              domain,
-              packageLocation,
-              majorNumber,
-              minorNumber,
-              patchNumber
-            );
+              await packageOwner.publishVersion(
+                domain,
+                packageLocation,
+                majorNumber,
+                minorNumber,
+                patchNumber
+              );
 
-            await reloadVersionStatusInfo();
-          }}
-        >
-          Publish to xDAI
-        </button>
-        <button>Publish to Ethereum</button>
-        <div>
-          <button>Fetch and calculate proof</button>
-          <input type="text" disabled placeholder="Proof..." />
-          <button>Copy to clipboard</button>
-        </div>
+              await reloadVersionStatusInfo();
+            }}
+          >
+            Publish to xDAI
+          </button>
+
+          <div>
+            <button>Fetch and calculate proof</button>
+            <input type="text" disabled placeholder="Proof..." />
+            <button>Copy to clipboard</button>
+          </div>
+        </ChainSpecificView>
+
+        <ChainSpecificView chainName="rinkeby">
+          <button>Publish to Ethereum</button>
+        </ChainSpecificView>
       </div>
     </div>
   );

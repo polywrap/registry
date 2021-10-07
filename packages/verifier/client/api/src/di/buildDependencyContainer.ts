@@ -34,7 +34,7 @@ export const buildDependencyContainer = (
     webUiServerConfig: awilix.asClass(WebUiServerConfig).singleton(),
     registryContracts: awilix
       .asFunction(({ ethersProvider }) => {
-        return RegistryContracts.fromDefaultLocalhost(ethersProvider);
+        return RegistryContracts.fromDefaultLocalhost(ethersProvider, "xdai");
       })
       .singleton(),
     ethersProvider: awilix
@@ -95,7 +95,7 @@ export const buildDependencyContainer = (
       ({ verifierSigner, ethersProvider }) => {
         return new PolywrapVotingSystem(
           verifierSigner,
-          RegistryContracts.fromDefaultLocalhost(ethersProvider)
+          RegistryContracts.fromDefaultLocalhost(ethersProvider, "xdai")
         );
       }
     ),

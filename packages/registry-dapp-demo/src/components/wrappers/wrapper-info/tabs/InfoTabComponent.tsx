@@ -1,18 +1,20 @@
-import { BlockchainsWithRegistry } from "@polywrap/registry-js";
+import { BlockchainsWithRegistry, EnsDomain } from "@polywrap/registry-js";
 import { useEffect, useState } from "react";
 import { hasDomainRegistry } from "../../../../constants";
 import { relayOwnership } from "../../../../helpers/relayOwnership";
 import { toPrettyHex } from "../../../../helpers/toPrettyHex";
+import { updateOwnership } from "../../../../helpers/updateOwnership";
 import { usePolywrapRegistry } from "../../../../hooks/usePolywrapRegistry";
 import { useWeb3 } from "../../../../hooks/useWeb3";
 import { PolywrapperInfo } from "../../../../types/PolywrapperInfo";
 
 const InfoTabComponent: React.FC<{
   polywrapperInfo: PolywrapperInfo;
-}> = ({ polywrapperInfo }) => {
+  loadPolywrapperInfo: (domain: EnsDomain) => Promise<void>;
+}> = ({ polywrapperInfo, loadPolywrapperInfo }) => {
   const { packageOwner } = usePolywrapRegistry();
   const [web3] = useWeb3();
-  const name = web3?.networkName;
+  const networkName = web3?.networkName;
   const [relayChain, setRelayChain] = useState<BlockchainsWithRegistry>(
     "l2-chain-name"
   );
@@ -22,38 +24,16 @@ const InfoTabComponent: React.FC<{
   );
 
   useEffect(() => {
-    if (name) {
-      setShowRelayOwnershipButton(hasDomainRegistry(web3.networkName));
+    if (networkName) {
+      setShowRelayOwnershipButton(hasDomainRegistry(networkName));
     }
-  }, [name]);
+  }, [networkName]);
 
   return (
     <div className="InfoTab">
       <div>
         <h3>Info</h3>
 
-        <table className="info-table">
-          <tbody>
-            <tr>
-              <td colSpan={2}>Domain</td>
-            </tr>
-            <tr>
-              <td>Registry</td>
-              <td>{polywrapperInfo.domain.registry}</td>
-            </tr>
-            <tr>
-              <td>Name</td>
-              <td>{polywrapperInfo.domain.name}</td>
-            </tr>
-            <tr>
-              <td>Polywrap owner</td>
-              <td>
-                {toPrettyHex(polywrapperInfo.domainPolywrapOwner)}
-                {polywrapperInfo.domainPolywrapOwner === "0x0" ? "(you)" : ""}
-              </td>
-            </tr>
-          </tbody>
-        </table>
         <table className="polywrapper-table">
           <tbody>
             <tr>
@@ -63,10 +43,24 @@ const InfoTabComponent: React.FC<{
               <td>Owner</td>
               <td>
                 {toPrettyHex(polywrapperInfo.polywrapOwner)}
-                {polywrapperInfo.polywrapOwner === "0x0" ? "(you)" : ""}
-                {polywrapperInfo.polywrapOwner !==
-                polywrapperInfo.domainPolywrapOwner ? (
-                  <button>Update owner</button>
+                {polywrapperInfo.polywrapOwner === web3?.account
+                  ? " (you)"
+                  : ""}
+                {networkName === "rinkeby" &&
+                polywrapperInfo.polywrapOwner !==
+                  polywrapperInfo.domainPolywrapOwner ? (
+                  <button
+                    onClick={async () => {
+                      await updateOwnership(
+                        polywrapperInfo.domain,
+                        packageOwner
+                      );
+
+                      await loadPolywrapperInfo(polywrapperInfo.domain);
+                    }}
+                  >
+                    Update owner
+                  </button>
                 ) : (
                   <></>
                 )}
@@ -102,6 +96,35 @@ const InfoTabComponent: React.FC<{
             )}
           </tbody>
         </table>
+
+        {networkName === "rinkeby" ? (
+          <table className="info-table">
+            <tbody>
+              <tr>
+                <td colSpan={2}>Domain</td>
+              </tr>
+              <tr>
+                <td>Registry</td>
+                <td>{polywrapperInfo.domain.registry}</td>
+              </tr>
+              <tr>
+                <td>Name</td>
+                <td>{polywrapperInfo.domain.name}</td>
+              </tr>
+              <tr>
+                <td>Polywrap owner</td>
+                <td>
+                  {toPrettyHex(polywrapperInfo.domainPolywrapOwner)}
+                  {polywrapperInfo.domainPolywrapOwner === web3?.account
+                    ? " (you)"
+                    : ""}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        ) : (
+          <></>
+        )}
       </div>
     </div>
   );

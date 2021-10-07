@@ -1,23 +1,65 @@
 import "./WrapperInfoComponent.scss";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import InfoTab from "./tabs/InfoTabComponent";
 import VersionsTab from "./tabs/VersionsTabComponent";
 import React from "react";
 import PolywrapperDefinitionComponent from "./PolywrapperDefinitionComponent";
 import { PolywrapperInfo } from "../../../types/PolywrapperInfo";
+import { useWeb3 } from "../../../hooks/useWeb3";
+import { usePolywrapRegistry } from "../../../hooks/usePolywrapRegistry";
+import { fetchPolywrapperInfo } from "../../../helpers/fetchPolywrapInfo";
+import { EnsDomain } from "@polywrap/registry-js";
+import { useToasts } from "react-toast-notifications";
+import { handlePromise } from "../../../helpers/handlePromise";
 
 const WrapperInfoComponent: React.FC = () => {
+  const [web3] = useWeb3();
+  const { packageOwner } = usePolywrapRegistry();
+
+  const [isInfoLoading, setIsInfoLoading] = useState(false);
+  const { addToast } = useToasts();
+
+  useEffect(() => {
+    setPolywrapperInfo(undefined);
+  }, [web3, web3?.networkName]);
+
   const [polywrapperInfo, setPolywrapperInfo] = useState<PolywrapperInfo>();
+
+  const loadPolywrapperInfo = async (domain: EnsDomain) => {
+    const [error, info] = await handlePromise(
+      fetchPolywrapperInfo(domain, packageOwner)
+    );
+
+    if (error) {
+      if ("message" in (error as any)) {
+        addToast((error as any).message, {
+          appearance: "error",
+          autoDismiss: true,
+        });
+      } else {
+        addToast(`An error occurred`, {
+          appearance: "error",
+          autoDismiss: true,
+        });
+      }
+      return;
+    }
+
+    setPolywrapperInfo(info);
+  };
 
   return (
     <div className="WrapperInfoComponent widget">
       <PolywrapperDefinitionComponent
-        setPolywrapperInfo={setPolywrapperInfo}
+        loadPolywrapperInfo={loadPolywrapperInfo}
       ></PolywrapperDefinitionComponent>
 
       {polywrapperInfo ? (
         <div className="tabs">
-          <InfoTab polywrapperInfo={polywrapperInfo}></InfoTab>
+          <InfoTab
+            polywrapperInfo={polywrapperInfo}
+            loadPolywrapperInfo={loadPolywrapperInfo}
+          ></InfoTab>
 
           <VersionsTab polywrapperInfo={polywrapperInfo}></VersionsTab>
         </div>

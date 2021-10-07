@@ -8,6 +8,7 @@ import {
   EnsDomain,
   PackageOwner,
   RegistryAuthority,
+  RegistryContracts,
   Tracer,
 } from "@polywrap/registry-js";
 import { deployments } from "hardhat";
@@ -23,21 +24,25 @@ require("custom-env").env(process.env.NODE_ENV);
 describe("Start local chain", () => {
   let logger: Logger;
   let verifierClient: VerifierClient;
-  let packageOwner: PackageOwner;
   let registryAuthority: RegistryAuthority;
   let ensApi: EnsApi;
   let registryAuthoritySigner: Signer;
   let verifierSigner: Signer;
   let packageOwnerSigner: Signer;
   let ipfsPublisher: IpfsPublisher;
+  let registryContractsL1: RegistryContracts;
+  let registryContractsL2: RegistryContracts;
 
-  const configureDomainForPolywrap = async (domain: EnsDomain) => {
+  const configureDomainForPolywrap = async (
+    packageOwnerSigner: Signer,
+    domain: EnsDomain
+  ) => {
     await ensApi.registerDomainName(
       registryAuthoritySigner,
-      packageOwner.signer,
+      packageOwnerSigner,
       domain
     );
-    await ensApi.setPolywrapOwner(packageOwner.signer, domain);
+    await ensApi.setPolywrapOwner(packageOwnerSigner, domain);
   };
 
   const authorizeCurrentVerifier = async () => {
@@ -47,6 +52,7 @@ describe("Start local chain", () => {
   };
 
   const publishAndVerifyVersion = async (
+    packageOwner: PackageOwner,
     domain: EnsDomain,
     majorNumber: number,
     minorNumber: number,
@@ -105,11 +111,22 @@ describe("Start local chain", () => {
           packageOwnerSigner,
         },
         {
-          versionVerificationManagerL2: await (
+          registry: await (await ethers.getContract("PolywrapRegistryL1"))
+            .address,
+          versionVerificationManager: await (
             await ethers.getContract("VersionVerificationManagerL2")
           ).address,
-          packageOwnershipManagerL1: await (
+          packageOwnershipManager: await (
             await ethers.getContract("PackageOwnershipManagerL1")
+          ).address,
+          ensLink: await (await ethers.getContract("EnsLinkL1")).address,
+        },
+        {
+          packageOwnershipManager: await (
+            await ethers.getContract("PackageOwnershipManagerL2")
+          ).address,
+          versionVerificationManager: await (
+            await ethers.getContract("VersionVerificationManagerL2")
           ).address,
           registrar: await (await ethers.getContract("PolywrapRegistrar"))
             .address,
@@ -119,13 +136,10 @@ describe("Start local chain", () => {
           verificationRootRelayer: await (
             await ethers.getContract("VerificationRootRelayer")
           ).address,
-          registryL1: await (await ethers.getContract("PolywrapRegistryL1"))
-            .address,
-          registryL2: await (await ethers.getContract("PolywrapRegistryL2"))
+          registry: await (await ethers.getContract("PolywrapRegistryL2"))
             .address,
           votingMachine: await (await ethers.getContract("VotingMachine"))
             .address,
-          ensLinkL1: await (await ethers.getContract("EnsLinkL1")).address,
         },
         {
           ensRegistryL1: await (await ethers.getContract("EnsRegistryL1"))
@@ -141,11 +155,12 @@ describe("Start local chain", () => {
     );
 
     verifierClient = dependencyContainer.cradle.verifierClient;
-    packageOwner = dependencyContainer.cradle.packageOwner;
     registryAuthority = dependencyContainer.cradle.registryAuthority;
     ensApi = dependencyContainer.cradle.ensApi;
     ipfsPublisher = dependencyContainer.cradle.ipfsPublisher;
     logger = dependencyContainer.cradle.logger;
+    registryContractsL1 = dependencyContainer.cradle.registryContractsL1;
+    registryContractsL2 = dependencyContainer.cradle.registryContracts;
   });
 
   it("sanity", async () => {
@@ -156,6 +171,14 @@ describe("Start local chain", () => {
     const majorNumber = 1;
     const minorNumber = 0;
     const patchNumber = 0;
+
+    await configureDomainForPolywrap(packageOwnerSigner, domain);
+
+    let packageOwner = new PackageOwner(
+      packageOwnerSigner,
+      registryContractsL1
+    );
+
     const patchNodeId = packageOwner.calculatePatchNodeId(
       domain,
       majorNumber,
@@ -163,12 +186,12 @@ describe("Start local chain", () => {
       patchNumber
     );
 
-    await configureDomainForPolywrap(domain);
-
     const packageLocation = await ipfsPublisher.publishDir(polywrapBuildPath);
 
     await packageOwner.updateOwnership(domain);
     await packageOwner.relayOwnership(domain, l2ChainName);
+
+    packageOwner = new PackageOwner(packageOwnerSigner, registryContractsL2);
 
     await packageOwner.proposeVersion(
       domain,
@@ -195,6 +218,7 @@ describe("Start local chain", () => {
     expect(votingResult.verified).to.eq(true);
 
     await publishAndVerifyVersion(
+      packageOwner,
       domain,
       majorNumber,
       minorNumber,

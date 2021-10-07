@@ -9,7 +9,11 @@ import { EnsDomain } from "@polywrap/registry-core-js";
 import { RegistryContracts } from "./RegistryContracts";
 import { ProposedVersion } from "./ProposedVersion";
 
-export type BlockchainsWithRegistry = "l2-chain-name" | "ethereum" | "xdai";
+export type BlockchainsWithRegistry =
+  | "l2-chain-name"
+  | "ethereum"
+  | "xdai"
+  | "rinkeby";
 
 export class PackageOwner {
   constructor(signer: Signer, registryContracts: RegistryContracts) {
@@ -21,18 +25,17 @@ export class PackageOwner {
   private registryContracts: RegistryContracts;
 
   async getPolywrapOwner(domain: EnsDomain): Promise<string> {
-    return await this.registryContracts.packageOwnershipManagerL1.getPolywrapOwner(
-      domain.registryBytes32,
-      domain.node
+    return await this.registryContracts.registry.getPackageOwner(
+      domain.packageId
     );
   }
 
-  async getDomainPolywrapOwner(domain: EnsDomain): Promise<string> {
-    return await this.registryContracts.ensLinkL1.getPolywrapOwner(domain.node);
+  async getDomainPolywrapOwner(domain: EnsDomain): Promise<string | undefined> {
+    return await this.registryContracts.ensLink?.getPolywrapOwner(domain.node);
   }
 
   async updateOwnership(domain: EnsDomain): Promise<void> {
-    const tx = await this.registryContracts.packageOwnershipManagerL1.updateOwnership(
+    const tx = await this.registryContracts.packageOwnershipManager.updateOwnership(
       EnsDomain.RegistryBytes32,
       domain.node
     );
@@ -44,7 +47,7 @@ export class PackageOwner {
     domain: EnsDomain,
     chainName: BlockchainsWithRegistry
   ): Promise<void> {
-    const tx = await this.registryContracts.packageOwnershipManagerL1.relayOwnership(
+    const tx = await this.registryContracts.packageOwnershipManager.relayOwnership(
       formatBytes32String(chainName),
       EnsDomain.RegistryBytes32,
       domain.node
@@ -60,6 +63,10 @@ export class PackageOwner {
     patch: number,
     packageLocation: string
   ): Promise<void> {
+    if (!this.registryContracts.registrar) {
+      throw "There is no Registrar contract on this chain";
+    }
+
     const proposeTx = await this.registryContracts.registrar.proposeVersion(
       domain.packageId,
       major,
@@ -72,10 +79,14 @@ export class PackageOwner {
   }
 
   async getVerificationRoot(): Promise<BytesLike> {
-    return await this.registryContracts.versionVerificationManagerL2.verificationRoot();
+    return await this.registryContracts.versionVerificationManager.verificationRoot();
   }
 
   async getLeafCountForRoot(verificationRoot: BytesLike): Promise<number> {
+    if (!this.registryContracts.verificationTreeManager) {
+      throw "There is no VerificationTreeManager contract on this chain";
+    }
+
     const rootCalculatedEvents = await this.registryContracts.verificationTreeManager.queryFilter(
       this.registryContracts.verificationTreeManager.filters.VerificationRootCalculated(
         verificationRoot
@@ -94,6 +105,10 @@ export class PackageOwner {
     minor: number,
     patch: number
   ): Promise<void> {
+    if (!this.registryContracts.verificationTreeManager) {
+      throw "There is no VerificationTreeManager contract on this chain";
+    }
+
     const verificationRoot = await this.getVerificationRoot();
     const leafCountForRoot = await this.getLeafCountForRoot(verificationRoot);
 
@@ -142,7 +157,7 @@ export class PackageOwner {
       leaves,
       currentVerifiedVersionIndex.toNumber()
     );
-    const publishTx = await this.registryContracts.versionVerificationManagerL2.publishVersion(
+    const publishTx = await this.registryContracts.versionVerificationManager.publishVersion(
       domain.packageId,
       currentPatchNodeId,
       major,
@@ -157,7 +172,7 @@ export class PackageOwner {
   }
 
   async getPackageLocation(nodeId: BytesLike): Promise<string> {
-    return await this.registryContracts.registryL2.getPackageLocation(nodeId);
+    return await this.registryContracts.registry.getPackageLocation(nodeId);
   }
 
   async resolveToPackageLocation(
@@ -167,7 +182,7 @@ export class PackageOwner {
     patch: number
   ): Promise<string> {
     const patchNodeId = this.calculatePatchNodeId(domain, major, minor, patch);
-    return await this.registryContracts.registryL2.getPackageLocation(
+    return await this.registryContracts.registry.getPackageLocation(
       patchNodeId
     );
   }
@@ -180,7 +195,7 @@ export class PackageOwner {
     created: boolean;
     location: string;
   }> {
-    return await this.registryContracts.registryL2.versionNodes(nodeId);
+    return await this.registryContracts.registry.versionNodes(nodeId);
   }
 
   async getLatestVersionInfo(
@@ -191,7 +206,7 @@ export class PackageOwner {
     patchVersion: BigNumber;
     location: string;
   }> {
-    return await this.registryContracts.registryL1.getLatestVersionInfo(
+    return await this.registryContracts.registry.getLatestVersionInfo(
       packageId
     );
   }
@@ -229,6 +244,10 @@ export class PackageOwner {
     );
 
     return new Promise((resolve) => {
+      if (!this.registryContracts.votingMachine) {
+        throw "There is no VotingMachine contract on this chain";
+      }
+
       const listener = (
         decidedPatchNodeId: BytesLike,
         verified: boolean,
@@ -239,6 +258,9 @@ export class PackageOwner {
           decidedPackageLocationHash != packageLocationHash
         ) {
           return;
+        }
+        if (!this.registryContracts.votingMachine) {
+          throw "There is no VotingMachine contract on this chain";
         }
 
         this.registryContracts.votingMachine.off("VersionDecided", listener);
@@ -268,6 +290,10 @@ export class PackageOwner {
     );
 
     return new Promise((resolve) => {
+      if (!this.registryContracts.votingMachine) {
+        throw "There is no VotingMachine contract on this chain";
+      }
+
       const listener = (
         decidedPatchNodeId: BytesLike,
         verified: boolean,
@@ -278,6 +304,10 @@ export class PackageOwner {
           decidedPackageLocationHash != packageLocationHash
         ) {
           return;
+        }
+
+        if (!this.registryContracts.votingMachine) {
+          throw "There is no VotingMachine contract on this chain";
         }
 
         this.registryContracts.votingMachine.off("VersionDecided", listener);
@@ -294,6 +324,10 @@ export class PackageOwner {
   }
 
   async getProposedVersion(patchNodeId: BytesLike): Promise<ProposedVersion> {
+    if (!this.registryContracts.votingMachine) {
+      throw "There is no VotingMachine contract on this chain";
+    }
+
     const resp = await this.registryContracts.votingMachine.proposedVersions(
       patchNodeId
     );
@@ -301,6 +335,10 @@ export class PackageOwner {
   }
 
   async getAuthorizedVerifierCount(): Promise<number> {
+    if (!this.registryContracts.votingMachine) {
+      throw "There is no VotingMachine contract on this chain";
+    }
+
     const resp = await this.registryContracts.votingMachine.authorizedVerifierCount();
     return resp.toNumber();
   }
@@ -312,6 +350,10 @@ export class PackageOwner {
     approvingVerifierCount: BigNumber;
     rejectingVerifierCount: BigNumber;
   }> {
+    if (!this.registryContracts.votingMachine) {
+      throw "There is no VotingMachine contract on this chain";
+    }
+
     const resp = await this.registryContracts.votingMachine.getProposedVersionVotingInfo(
       patchNodeId
     );

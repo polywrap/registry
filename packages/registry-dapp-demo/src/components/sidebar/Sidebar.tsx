@@ -45,8 +45,8 @@ const Sidebar: React.FC = () => {
                     setNetworkName(e.target.value as SupportedNetwork);
                   }}
                 >
-                  <option value="xDAI">xDAI</option>
-                  <option value="Rinkeby">Rinkeby</option>
+                  <option value="xdai">xDAI</option>
+                  <option value="rinkeby">Rinkeby</option>
                 </select>
               </div>
               <div>Account: {toPrettyHex(web3.account)}</div>

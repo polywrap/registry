@@ -1,7 +1,12 @@
 import * as awilix from "awilix";
 import { NameAndRegistrationPair } from "awilix";
 import { EnsApi } from "../../../../helpers/EnsApi";
-import { PackageOwner, PolywrapVotingSystem } from "@polywrap/registry-js";
+import {
+  ContractAddressesL1,
+  ContractAddressesL2,
+  PackageOwner,
+  PolywrapVotingSystem,
+} from "@polywrap/registry-js";
 import { Signer } from "ethers";
 import { VerifierStateManager } from "../../../../services/VerifierStateManager";
 import { VerifierStateInfo } from "../../../../VerifierStateInfo";
@@ -15,17 +20,8 @@ export const buildHelpersDependencyExtensions = (
     verifierSigner: Signer;
     packageOwnerSigner: Signer;
   },
-  registryContractAddresses: {
-    versionVerificationManagerL2: string;
-    packageOwnershipManagerL1: string;
-    registrar: string;
-    verificationTreeManager: string;
-    verificationRootRelayer: string;
-    registryL1: string;
-    registryL2: string;
-    votingMachine: string;
-    ensLinkL1: string;
-  },
+  registryContractAddressesL1: ContractAddressesL1,
+  registryContractAddressesL2: ContractAddressesL2,
   testEnsContractAddresses: {
     ensRegistryL1: string;
     testEthRegistrarL1: string;
@@ -52,7 +48,13 @@ export const buildHelpersDependencyExtensions = (
     }),
     registryContracts: awilix.asFunction(({ ethersProvider }) => {
       return RegistryContracts.fromAddresses(
-        registryContractAddresses,
+        registryContractAddressesL2,
+        ethersProvider
+      );
+    }),
+    registryContractsL1: awilix.asFunction(({ ethersProvider }) => {
+      return RegistryContracts.fromAddresses(
+        registryContractAddressesL1,
         ethersProvider
       );
     }),
@@ -89,11 +91,6 @@ export const buildHelpersDependencyExtensions = (
     ensApi: awilix.asFunction(({ ethersProvider }) => {
       return new EnsApi(testEnsContractAddresses, ethersProvider);
     }),
-    packageOwner: awilix.asFunction(
-      ({ packageOwnerSigner, registryContracts }) => {
-        return new PackageOwner(packageOwnerSigner, registryContracts);
-      }
-    ),
     polywrapVotingSystem: awilix.asFunction(
       ({ verifierSigner, registryContracts }) => {
         return new PolywrapVotingSystem(verifierSigner, registryContracts);

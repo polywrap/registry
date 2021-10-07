@@ -1,5 +1,4 @@
 import { EnsDomain, PackageOwner } from "@polywrap/registry-js";
-import { ethers } from "ethers";
 import { PolywrapperInfo } from "../types/PolywrapperInfo";
 
 export const fetchPolywrapperInfo = async (
@@ -14,6 +13,6 @@ export const fetchPolywrapperInfo = async (
   return {
     domain,
     polywrapOwner,
-    domainPolywrapOwner,
+    domainPolywrapOwner: domainPolywrapOwner as string,
   };
 };

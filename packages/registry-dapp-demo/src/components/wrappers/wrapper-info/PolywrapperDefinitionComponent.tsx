@@ -1,18 +1,11 @@
 import "./WrapperInfoComponent.scss";
 import { useState } from "react";
 import React from "react";
-import { EnsDomain } from "@polywrap/registry-core-js";
-import { PolywrapperInfo } from "../../../types/PolywrapperInfo";
-import { fetchPolywrapperInfo } from "../../../helpers/fetchPolywrapInfo";
-import { usePolywrapRegistry } from "../../../hooks/usePolywrapRegistry";
+import { EnsDomain } from "@polywrap/registry-js";
 
 const PolywrapperDefinitionComponent: React.FC<{
-  setPolywrapperInfo: React.Dispatch<
-    React.SetStateAction<PolywrapperInfo | undefined>
-  >;
-}> = ({ setPolywrapperInfo }) => {
-  const { packageOwner } = usePolywrapRegistry();
-
+  loadPolywrapperInfo: (domain: EnsDomain) => Promise<void>;
+}> = ({ loadPolywrapperInfo }) => {
   const [domainName, setDomainName] = useState("");
   const [domainRegistry, setDomainRegistry] = useState("ens");
 
@@ -25,7 +18,7 @@ const PolywrapperDefinitionComponent: React.FC<{
           setDomainRegistry(e.target.value);
         }}
       >
-        <option value="ens">ens</option>
+        <option value="ens">ENS</option>
       </select>
       <input
         type="text"
@@ -39,9 +32,7 @@ const PolywrapperDefinitionComponent: React.FC<{
       <button
         className="find-btn"
         onClick={async () => {
-          const domain = new EnsDomain(domainName);
-
-          setPolywrapperInfo(await fetchPolywrapperInfo(domain, packageOwner));
+          await loadPolywrapperInfo(new EnsDomain(domainName));
         }}
       >
         Find
