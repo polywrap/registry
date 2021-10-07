@@ -328,32 +328,6 @@ export class PackageOwner {
     });
   }
 
-  async getProposedVersion(patchNodeId: BytesLike): Promise<ProposedVersion> {
-    const resp = await this.registryContracts.votingMachine.proposedVersions(
-      patchNodeId
-    );
-    return resp as ProposedVersion;
-  }
-
-  async getAuthorizedVerifierCount(): Promise<number> {
-    const resp = await this.registryContracts.votingMachine.authorizedVerifierCount();
-    return resp.toNumber();
-  }
-
-  async getProposedVersionVotingInfo(
-    patchNodeId: BytesLike
-  ): Promise<{
-    verifierCount: BigNumber;
-    approvingVerifierCount: BigNumber;
-    rejectingVerifierCount: BigNumber;
-  }> {
-    const resp = await this.registryContracts.votingMachine.getProposedVersionVotingInfo(
-      patchNodeId
-    );
-
-    return resp;
-  }
-
   calculatePatchNodeId(
     domain: EnsDomain,
     major: number,
