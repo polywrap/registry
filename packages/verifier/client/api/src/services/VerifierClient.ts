@@ -23,7 +23,7 @@ interface TypedEvent {
   args: ProposedVersionEventArgs;
 }
 
-const UnignorableReverts = [...ValidMinorVersionPlacementReverts] as const;
+const UnignorableReverts: string[] = [...ValidMinorVersionPlacementReverts];
 
 export class VerifierClient {
   private logger: Logger;
@@ -62,18 +62,15 @@ export class VerifierClient {
           this.logger.error(`Critical Error: ${txError.message}`);
           process.exit(1);
         }
-      } else {
+      } else if (error) {
         this.logger.warn(`Error: ${error.message}`);
+      } else {
+        this.logger.info(
+          `${processedEvents} proposed version events processed.`
+        );
+
+        await delay(this.verifierClientConfig.pauseTimeInMiliseconds);
       }
-
-      this.logger.info(`${processedEvents} proposed version events processed.`);
-
-      if (error) {
-        this.logger.error(error.message);
-        process.exit(1);
-      }
-
-      await delay(this.verifierClientConfig.pauseTimeInMiliseconds);
     }
   }
 

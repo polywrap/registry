@@ -3,10 +3,9 @@ import { Web3ApiClient } from "@web3api/client-js";
 import { SchemaComparisonService } from "./SchemaComparisonService";
 import { SchemaRetrievalService } from "./SchemaRetrievalService";
 import { Logger } from "winston";
-import { ContractCallResult, traceFunc } from "@polywrap/registry-js";
+import { traceFunc } from "@polywrap/registry-js";
 import { toPrettyHex } from "../helpers/toPrettyHex";
-import { VerifyVersionInfo } from "../helpers/VerifyVersionInfo";
-import { PreviousAndNextVersionSchema } from "../helpers/PreviousAndNextVersionSchema";
+import { VerifyVersionInfo } from "../types/VerifyVersionInfo";
 
 export class VersionVerifierService {
   private logger: Logger;
