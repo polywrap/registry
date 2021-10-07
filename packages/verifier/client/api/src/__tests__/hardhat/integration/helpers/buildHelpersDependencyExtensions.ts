@@ -63,11 +63,10 @@ export const buildHelpersDependencyExtensions = (
       return signers.registryAuthoritySigner;
     }),
     registryAuthority: awilix.asFunction(
-      ({ registryAuthoritySigner, registryContracts, logger }) => {
+      ({ registryAuthoritySigner, registryContracts }) => {
         return new RegistryAuthority(
           registryAuthoritySigner,
-          registryContracts.votingMachine.address,
-          logger
+          registryContracts.votingMachine.address
         );
       }
     ),
@@ -90,17 +89,13 @@ export const buildHelpersDependencyExtensions = (
       return new EnsApi(testEnsContractAddresses, ethersProvider);
     }),
     packageOwner: awilix.asFunction(
-      ({ packageOwnerSigner, registryContracts, logger }) => {
-        return new PackageOwner(packageOwnerSigner, registryContracts, logger);
+      ({ packageOwnerSigner, registryContracts }) => {
+        return new PackageOwner(packageOwnerSigner, registryContracts);
       }
     ),
     polywrapVotingSystem: awilix.asFunction(
-      ({ verifierSigner, registryContracts, logger }) => {
-        return new PolywrapVotingSystem(
-          verifierSigner,
-          registryContracts,
-          logger
-        );
+      ({ verifierSigner, registryContracts }) => {
+        return new PolywrapVotingSystem(verifierSigner, registryContracts);
       }
     ),
   };
