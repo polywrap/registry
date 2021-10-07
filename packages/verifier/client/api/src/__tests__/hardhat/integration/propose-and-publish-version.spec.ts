@@ -137,7 +137,7 @@ describe("Start local chain", () => {
         {
           consoleLogLevel: "debug",
           fileLogLevel: "debug",
-          logFileName: "test_verifier_client.log.json",
+          logFileName: "test_verifier_client.log",
         }
       )
     );

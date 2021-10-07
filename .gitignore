@@ -30,4 +30,3 @@ coverage.json
 
 # Logging
 *.log
-*.log.json
