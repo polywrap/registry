@@ -16,25 +16,25 @@ import {
 
 export type BlockchainsWithRegistry = "l2-chain-name" | "ethereum" | "xdai";
 
-export type TPolywrapOwnerReverts = "Domain registry is not supported";
+export type PolywrapOwnerRevert = "Domain registry is not supported";
 
-export type TDomainPolywrapOwnerReverts = "Resolver not set";
+export type DomainPolywrapOwnerRevert = "Resolver not set";
 
-export type TUpdateOwnershipReverts =
+export type UpdateOwnershipRevert =
   | "Domain registry is not allowed for local updates"
-  | TPolywrapOwnerReverts;
+  | PolywrapOwnerRevert;
 
-export type TRelayOwnershipReverts =
+export type RelayOwnershipRevert =
   | "Outgoing relay not supported for domain registry and blockchain"
-  | TPolywrapOwnerReverts;
+  | PolywrapOwnerRevert;
 
-export type TProposeVersionReverts = "Version is already proposed";
+export type ProposeVersionRevert = "Version is already proposed";
 
-export type TPublishVersionReverts =
+export type PublishVersionRevert =
   | "Invalid proof"
   | "Supplied patchNodeId does not match the calculated patchNodeId";
 
-export type TPackageLocationReverts = "Invalid Node";
+export type PackageLocationRevert = "Invalid Node";
 
 export class PackageOwner {
   constructor(signer: Signer, registryContracts: RegistryContracts) {

@@ -45,7 +45,9 @@ export class VotingService {
     );
 
     this.logger.info(
-      `Voted on proposed version ${patchNodeId}, approved: ${approved}`
+      `Voted on proposed version ${toPrettyHex(
+        patchNodeId.toString()
+      )}, approved: ${approved}`
     );
   }
 

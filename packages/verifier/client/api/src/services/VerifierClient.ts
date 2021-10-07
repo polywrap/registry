@@ -5,6 +5,8 @@ import {
   handleContractError,
   PolywrapVotingSystem,
   traceFunc,
+  TransactionError,
+  ValidMinorVersionPlacementRevert,
 } from "@polywrap/registry-js";
 import { VerifierClientConfig } from "../config/VerifierClientConfig";
 import { Logger } from "winston";
@@ -19,6 +21,8 @@ interface TypedEvent {
   logIndex: number;
   args: ProposedVersionEventArgs;
 }
+
+type UnignorableRevert = ValidMinorVersionPlacementRevert;
 
 export class VerifierClient {
   private logger: Logger;
@@ -50,6 +54,13 @@ export class VerifierClient {
       const [processedEvents, error] = await handleContractError(
         this.queryAndVerifyVersions
       )();
+
+      if ((error as TransactionError).revertMessage) {
+        const txError = error as TransactionError;
+        if (txError.revertMessage instanceof UnignorableRevert) {
+          txError.revertMessage;
+        }
+      }
 
       this.logger.info(`${processedEvents} proposed version events processed.`);
 

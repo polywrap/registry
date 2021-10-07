@@ -7,12 +7,12 @@ import {
   VersionVotingStartedEvent,
 } from "./types";
 
-type TCanVoteOnVersionReverts =
+type CanVoteOnVersionRevert =
   | "Voting has not started"
   | "Voting for this version has ended"
   | "You already voted";
 
-type TValidMinorVersionPlacementReverts =
+type ValidMinorVersionPlacementRevert =
   | "Previous version number is not less than the current one"
   | "Previous version does not point to the next version"
   | "Previous version does not belong to the same major version"
@@ -20,11 +20,11 @@ type TValidMinorVersionPlacementReverts =
   | "Next version does not point to the previous version"
   | "Next version does not belong to the same major version";
 
-export type TPrevPatchPackageLocationReverts = TCanVoteOnVersionReverts;
-export type TPrevAndNextMinorPackageLocationsReverts = TCanVoteOnVersionReverts;
-export type TVoteReverts =
-  | TCanVoteOnVersionReverts
-  | TValidMinorVersionPlacementReverts;
+export type PrevPatchPackageLocationRevert = CanVoteOnVersionRevert;
+export type PrevAndNextMinorPackageLocationsRevert = CanVoteOnVersionRevert;
+export type VoteRevert =
+  | CanVoteOnVersionRevert
+  | ValidMinorVersionPlacementRevert;
 
 export class PolywrapVotingSystem {
   constructor(signer: Signer, registryContracts: RegistryContracts) {
