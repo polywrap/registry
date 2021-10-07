@@ -16,25 +16,37 @@ import {
 
 export type BlockchainsWithRegistry = "l2-chain-name" | "ethereum" | "xdai";
 
-export type PolywrapOwnerRevert = "Domain registry is not supported";
+export const PolywrapOwnerReverts = [
+  "Domain registry is not supported",
+] as const;
+export type PolywrapOwnerRevert = typeof PolywrapOwnerReverts[number];
 
-export type DomainPolywrapOwnerRevert = "Resolver not set";
+export const DomainPolywrapOwnerReverts = ["Resolver not set"] as const;
+export type DomainPolywrapOwnerRevert = typeof DomainPolywrapOwnerReverts[number];
 
-export type UpdateOwnershipRevert =
-  | "Domain registry is not allowed for local updates"
-  | PolywrapOwnerRevert;
+export const UpdateOwnershipReverts = [
+  ...PolywrapOwnerReverts,
+  "Domain registry is not allowed for local updates",
+] as const;
+export type UpdateOwnershipRevert = typeof UpdateOwnershipReverts[number];
 
-export type RelayOwnershipRevert =
-  | "Outgoing relay not supported for domain registry and blockchain"
-  | PolywrapOwnerRevert;
+export const RelayOwnershipReverts = [
+  ...PolywrapOwnerReverts,
+  "Outgoing relay not supported for domain registry and blockchain",
+] as const;
+export type RelayOwnershipRevert = typeof RelayOwnershipReverts[number];
 
-export type ProposeVersionRevert = "Version is already proposed";
+export const ProposeVersionReverts = ["Version is already proposed"] as const;
+export type ProposeVersionRevert = typeof ProposeVersionReverts[number];
 
-export type PublishVersionRevert =
-  | "Invalid proof"
-  | "Supplied patchNodeId does not match the calculated patchNodeId";
+export const PublishVersionReverts = [
+  "Invalid proof",
+  "Supplied patchNodeId does not match the calculated patchNodeId",
+] as const;
+export type PublishVersionRevert = typeof PublishVersionReverts[number];
 
-export type PackageLocationRevert = "Invalid Node";
+export const PackageLocationReverts = ["Invalid Node"] as const;
+export type PackageLocationRevert = typeof PackageLocationReverts[number];
 
 export class PackageOwner {
   constructor(signer: Signer, registryContracts: RegistryContracts) {

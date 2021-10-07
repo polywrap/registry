@@ -7,6 +7,7 @@ import {
   traceFunc,
   TransactionError,
   ValidMinorVersionPlacementRevert,
+  ValidMinorVersionPlacementReverts,
 } from "@polywrap/registry-js";
 import { VerifierClientConfig } from "../config/VerifierClientConfig";
 import { Logger } from "winston";
@@ -22,7 +23,7 @@ interface TypedEvent {
   args: ProposedVersionEventArgs;
 }
 
-type UnignorableRevert = ValidMinorVersionPlacementRevert;
+const UnignorableReverts = [...ValidMinorVersionPlacementReverts] as const;
 
 export class VerifierClient {
   private logger: Logger;
@@ -57,9 +58,12 @@ export class VerifierClient {
 
       if ((error as TransactionError).revertMessage) {
         const txError = error as TransactionError;
-        if (txError.revertMessage instanceof UnignorableRevert) {
-          txError.revertMessage;
+        if (UnignorableReverts.includes(txError.revertMessage)) {
+          this.logger.error(`Critical Error: ${txError.message}`);
+          process.exit(1);
         }
+      } else {
+        this.logger.warn(`Error: ${error.message}`);
       }
 
       this.logger.info(`${processedEvents} proposed version events processed.`);

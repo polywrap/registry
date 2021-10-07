@@ -7,24 +7,34 @@ import {
   VersionVotingStartedEvent,
 } from "./types";
 
-type CanVoteOnVersionRevert =
-  | "Voting has not started"
-  | "Voting for this version has ended"
-  | "You already voted";
+export const CanVoteOnVersionReverts = [
+  "Voting has not started",
+  "Voting for this version has ended",
+  "You already voted",
+] as const;
+export type CanVoteOnVersionRevert = typeof CanVoteOnVersionReverts[number];
 
-type ValidMinorVersionPlacementRevert =
-  | "Previous version number is not less than the current one"
-  | "Previous version does not point to the next version"
-  | "Previous version does not belong to the same major version"
-  | "Next version number is not greater than the current one"
-  | "Next version does not point to the previous version"
-  | "Next version does not belong to the same major version";
+export const ValidMinorVersionPlacementReverts = [
+  "Previous version number is not less than the current one",
+  "Previous version does not point to the next version",
+  "Previous version does not belong to the same major version",
+  "Next version number is not greater than the current one",
+  "Next version does not point to the previous version",
+  "Next version does not belong to the same major version",
+] as const;
+export type ValidMinorVersionPlacementRevert = typeof ValidMinorVersionPlacementReverts[number];
 
-export type PrevPatchPackageLocationRevert = CanVoteOnVersionRevert;
-export type PrevAndNextMinorPackageLocationsRevert = CanVoteOnVersionRevert;
-export type VoteRevert =
-  | CanVoteOnVersionRevert
-  | ValidMinorVersionPlacementRevert;
+export const PrevPatchPackageLocationReverts = CanVoteOnVersionReverts;
+export type PrevPatchPackageLocationRevert = typeof PrevPatchPackageLocationReverts[number];
+
+export const PrevAndNextMinorPackageLocationsReverts = CanVoteOnVersionReverts;
+export type PrevAndNextMinorPackageLocationsRevert = typeof PrevAndNextMinorPackageLocationsReverts[number];
+
+export const VoteReverts = [
+  ...CanVoteOnVersionReverts,
+  ...ValidMinorVersionPlacementReverts,
+] as const;
+export type VoteRevert = typeof VoteReverts[number];
 
 export class PolywrapVotingSystem {
   constructor(signer: Signer, registryContracts: RegistryContracts) {
