@@ -131,14 +131,7 @@ async function run() {
       const allLogs = text
         .split("\n")
         .filter((line) => line.trim() !== "")
-        .map((line) => {
-          const [timestamp, level, message] = line.split(" - ");
-          return {
-            timestamp: timestamp,
-            level: level,
-            message: message,
-          };
-        });
+        .map((line) => JSON.parse(line));
       const sortedLogs = allLogs.sort((a, b) => +b.timestamp - +a.timestamp);
       const levelFilteredLogs = filterBy
         ? sortedLogs.filter((log) => log.level === filterBy)
