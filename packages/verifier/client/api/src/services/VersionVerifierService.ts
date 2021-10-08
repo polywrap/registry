@@ -86,20 +86,45 @@ export class VersionVerifierService {
       nextSchema,
     } = previousAndNextVersionSchema;
 
-    if (prevSchema === undefined || nextSchema === undefined) {
+    if (prevSchema === undefined && nextSchema === undefined) {
       return {
         prevMinorNodeId,
         nextMinorNodeId,
-        approved: false,
+        approved: true,
+      };
+    } else if (prevSchema === undefined) {
+      return {
+        prevMinorNodeId,
+        nextMinorNodeId,
+        approved: this.schemaComparisonService.areSchemasBacwardCompatible(
+          proposedVersionSchema,
+          nextSchema as string
+        ),
+      };
+    } else if (nextSchema === undefined) {
+      return {
+        prevMinorNodeId,
+        nextMinorNodeId,
+        approved: this.schemaComparisonService.areSchemasBacwardCompatible(
+          prevSchema as string,
+          proposedVersionSchema
+        ),
+      };
+    } else {
+      return {
+        prevMinorNodeId,
+        nextMinorNodeId,
+        approved:
+          this.schemaComparisonService.areSchemasBacwardCompatible(
+            prevSchema as string,
+            proposedVersionSchema
+          ) &&
+          this.schemaComparisonService.areSchemasBacwardCompatible(
+            proposedVersionSchema,
+            nextSchema as string
+          ),
       };
     }
-    return {
-      prevMinorNodeId,
-      nextMinorNodeId,
-      approved: true,
-      // approved: areSchemasBacwardCompatible(prevSchema, proposedVersionSchema) &&
-      //   areSchemasBacwardCompatible(proposedVersionSchema, nextSchema)
-    };
   }
 
   @traceFunc("version-verifier-service:verify_minor_version")
