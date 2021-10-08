@@ -54,16 +54,16 @@ export class VersionVerifierService {
     let prevMinorNodeId: BytesLike = ethers.constants.HashZero;
     let nextMinorNodeId: BytesLike = ethers.constants.HashZero;
 
-    if (isPatch) {
+    if (isPatch && isValid) {
       const result = await this.verifyPatchVersion(
-        proposedVersionSchema,
+        proposedVersionSchema as string,
         patchNodeId
       );
 
       isVersionApproved = result as boolean;
-    } else {
+    } else if (isValid) {
       const verifyVersionInfo = await this.verifyMinorVersion(
-        proposedVersionSchema,
+        proposedVersionSchema as string,
         patchNodeId
       );
 
@@ -144,5 +144,7 @@ export class VersionVerifierService {
     if (manifestError && manifest) {
       return [false, schema];
     }
+
+    return [true, schema];
   }
 }
