@@ -30,7 +30,7 @@ export class VotingService {
     nextMinorNodeId: BytesLike,
     approved: boolean
   ): Promise<void> {
-    const result = await this.polywrapVotingSystem.vote(
+    await this.polywrapVotingSystem.vote(
       [
         {
           prevMinorNodeId,
