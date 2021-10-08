@@ -188,9 +188,9 @@ describe("Start local chain", () => {
     ]);
 
     expect(votingResult.patchNodeId).to.eq(patchNodeId);
-    // This will be false since there isn't schema for prev or next version
+    // TODO: This will be false since there isn't schema for prev or next version
     // What about the first version?
-    expect(votingResult.verified).to.eq(false);
+    expect(votingResult.verified).to.eq(true);
 
     await publishAndVerifyVersion(
       domain,
