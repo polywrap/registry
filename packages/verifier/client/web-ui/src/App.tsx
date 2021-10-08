@@ -213,19 +213,30 @@ function App(): JSX.Element {
               </div>
             </div>
             <br />
+            <br />
 
             {logs &&
               logs.map((log, i) => (
                 <div key={i}>
                   <div
                     className="widget-container"
-                    style={{ width: "100%", textAlign: "left" }}
+                    style={{
+                      width: "100%",
+                      textAlign: "left",
+                      marginBottom: "0.5rem",
+                    }}
                   >
-                    <div style={{ display: "inline-block" }}>
+                    <div
+                      style={{ display: "inline-block", verticalAlign: "top" }}
+                    >
                       {new Date(log.timestamp).toLocaleString()}
                     </div>
                     <div
-                      style={{ display: "inline-block", marginLeft: "5rem" }}
+                      style={{
+                        display: "inline-block",
+                        marginLeft: "5rem",
+                        verticalAlign: "top",
+                      }}
                     >
                       <button
                         className={classByLogLevel(log.level as LogLevel)}
@@ -235,7 +246,12 @@ function App(): JSX.Element {
                       </button>
                     </div>
                     <div
-                      style={{ display: "inline-block", marginLeft: "5rem" }}
+                      style={{
+                        display: "inline-block",
+                        marginLeft: "5rem",
+                        maxWidth: "55%",
+                        verticalAlign: "top",
+                      }}
                     >
                       {log.message}
                     </div>
