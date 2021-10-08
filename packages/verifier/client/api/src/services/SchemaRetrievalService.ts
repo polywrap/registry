@@ -51,6 +51,9 @@ export class SchemaRetrievalService {
       patchNodeId
     );
 
+    let prevSchema: string | undefined = undefined;
+    let nextSchema: string | undefined = undefined;
+
     const {
       prevMinorNodeId,
       prevPackageLocation,
@@ -58,18 +61,22 @@ export class SchemaRetrievalService {
       nextPackageLocation,
     } = result as PrevAndNextMinorPackageLocations;
 
-    const [prevSchema, prevSchemaError] = prevPackageLocation
-      ? await this.getSchema(`ipfs/${prevPackageLocation}`)
-      : undefined;
-    if (prevSchemaError) {
-      return undefined;
+    if (prevPackageLocation) {
+      const [_prevSchema, _prevSchemaError] = await this.getSchema(
+        `ipfs/${prevPackageLocation}`
+      );
+      if (_prevSchemaError) {
+        prevSchema = _prevSchema;
+      }
     }
 
-    const [nextSchema, nextSchemaError] = nextPackageLocation
-      ? await this.getSchema(`ipfs/${nextPackageLocation}`)
-      : undefined;
-    if (nextSchemaError) {
-      return undefined;
+    if (nextPackageLocation) {
+      const [_nextSchema, _nextSchemaError] = await this.getSchema(
+        `ipfs/${nextPackageLocation}`
+      );
+      if (_nextSchemaError) {
+        nextSchema = _nextSchema;
+      }
     }
 
     return {
