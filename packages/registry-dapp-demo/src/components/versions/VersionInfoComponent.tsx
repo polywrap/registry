@@ -22,18 +22,18 @@ const VersionInfoComponent: React.FC<{
         <></>
       )}
       {versionInfo && versionInfo.packageLocation ? (
-        <table className="polywrapper-table">
+        <table className="polywrapper-table widget">
           <tbody>
             <tr>
-              <td>Id</td>
+              <td>Id:</td>
               <td>{toPrettyHex(versionInfo.patchNodeId)}</td>
             </tr>
             <tr>
-              <td>Number</td>
+              <td>Number:</td>
               <td>{versionInfo.number}</td>
             </tr>
             <tr>
-              <td> IPFS</td>
+              <td> IPFS:</td>
               <td>
                 <a
                   href={`https://dweb.link/ipfs/${versionInfo.packageLocation}`}

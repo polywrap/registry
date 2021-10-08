@@ -40,9 +40,9 @@ const VerificationStatusComponent: React.FC<{
       status = (
         <VerifiedStatusView
           domainName={domainName}
-          majorNumber={versionStatusInfo.proposedVersion.majorVersion.toNumber()}
-          minorNumber={versionStatusInfo.proposedVersion.minorVersion.toNumber()}
-          patchNumber={versionStatusInfo.proposedVersion.patchVersion.toNumber()}
+          majorNumber={versionStatusInfo.proposedVersion.majorVersion}
+          minorNumber={versionStatusInfo.proposedVersion.minorVersion}
+          patchNumber={versionStatusInfo.proposedVersion.patchVersion}
           packageLocation={versionStatusInfo.proposedVersion.packageLocation}
           reloadVersionStatusInfo={reloadVersionStatusInfo}
         ></VerifiedStatusView>

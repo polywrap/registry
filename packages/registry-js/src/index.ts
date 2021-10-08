@@ -7,3 +7,4 @@ export * from "./VersionVotingStartedEvent";
 export * from "./RegistryAuthority";
 export * from "./ProposedVersion";
 export * from "./constants";
+export * from "./types";

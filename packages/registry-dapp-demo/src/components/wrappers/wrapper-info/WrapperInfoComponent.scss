@@ -1,6 +1,25 @@
 .WrapperInfoComponent {
   .tabs {
     display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+  }
+
+  .InfoTab { 
+    margin-bottom: 20px;
+  }
+
+  .VersionsTab {
+    .version-info {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding-top: 20px;
+    }
+  }
+
+  .info-tables {
+    display: flex;
     flex-direction: row;
     justify-content: space-around;
   }
@@ -27,15 +46,6 @@
 
   .domain-registry {
     margin-right: 10px;
-  }
-
-  table {
-    min-width: 18em;
-  }
-
-  table, th, td {
-    border: 1px solid #2d8623;
-    border-collapse: collapse;
   }
 
   td {

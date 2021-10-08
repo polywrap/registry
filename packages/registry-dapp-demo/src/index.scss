@@ -19,21 +19,6 @@ code {
   color: #4ed29e;
 }
 
-.widget {
-  background: linear-gradient(
-    50deg,
-    rgba(75, 78, 84, 0.2) 20%, 
-    rgba(85, 88, 94, 0.2) 60%,
-    rgba(95, 98, 104, 0.2) 100%
-  ); 
-
-  padding: 15px;
-
-  border: 1px solid rgb(242, 242, 242);
-  border-radius: 13px;
-  box-shadow: rgb(255, 171, 124) 1px 1px 0px 0px;
-}
-
 ::placeholder {
   color: #ffffffab;
 }
@@ -81,4 +66,45 @@ select {
 
 .component-title {
   margin: 20px;
+}
+
+th, td {
+  border-collapse: collapse;
+}
+
+table {
+  min-width: 18em;
+  border: 0px !important;
+  border-collapse: collapse;
+
+  tr:first-child {
+    background-color: #353544;
+  }
+}
+
+td {
+  padding: 10px;
+}
+
+.polywrapper-table {
+  margin: 10px 0 0 0;
+}
+
+.widget {
+  background: linear-gradient(
+    50deg,
+    rgba(75, 78, 84, 0.2) 20%, 
+    rgba(85, 88, 94, 0.2) 60%,
+    rgba(95, 98, 104, 0.2) 100%
+  ); 
+
+  padding: 15px;
+
+  border: 1px solid rgb(242, 242, 242);
+  border-radius: 13px;
+  box-shadow: rgb(255, 171, 124) 1px 1px 0px 0px;
+}
+
+a {
+  color: #6aa124;
 }

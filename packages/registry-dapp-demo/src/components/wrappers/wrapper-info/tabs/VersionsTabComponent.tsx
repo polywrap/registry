@@ -34,13 +34,15 @@ const VersionsTabComponent: React.FC<{
       >
         Find latest
       </button>
-      {latestVersion ? (
-        <VersionInfoComponent
-          versionInfo={latestVersion}
-        ></VersionInfoComponent>
-      ) : (
-        <></>
-      )}
+      <div className="version-info">
+        {latestVersion ? (
+          <VersionInfoComponent
+            versionInfo={latestVersion}
+          ></VersionInfoComponent>
+        ) : (
+          <></>
+        )}
+      </div>
     </div>
   );
 };

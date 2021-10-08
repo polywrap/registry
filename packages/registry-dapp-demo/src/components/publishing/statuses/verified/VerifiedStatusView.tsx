@@ -1,4 +1,6 @@
 import { EnsDomain } from "@polywrap/registry-js";
+import { VerificationProof } from "@polywrap/registry-js";
+import { useState } from "react";
 import { usePolywrapRegistry } from "../../../../hooks/usePolywrapRegistry";
 import ChainSpecificView from "../../../chain-specific-view/ChainSpecificView";
 import "./VerifiedStatusView.scss";
@@ -20,38 +22,88 @@ const VerifiedStatusView: React.FC<{
 }) => {
   const { packageOwner } = usePolywrapRegistry();
 
+  const [verificationProof, setVerificationProof] = useState<
+    VerificationProof | undefined
+  >(undefined);
+
   return (
     <div className="VerifiedStatusView">
       <div className="status">Status: Verified</div>
       <div>
         <ChainSpecificView chainName="xdai">
-          <button
-            onClick={async () => {
-              const domain = new EnsDomain(domainName);
+          <div className="proof-section">
+            <button
+              className="calc-proof-btn"
+              onClick={async () => {
+                const domain = new EnsDomain(domainName);
 
-              await packageOwner.publishVersion(
-                domain,
-                packageLocation,
-                majorNumber,
-                minorNumber,
-                patchNumber
-              );
+                const proof = await packageOwner.fetchAndCalculateVerificationProof(
+                  domain,
+                  majorNumber,
+                  minorNumber,
+                  patchNumber
+                );
 
-              await reloadVersionStatusInfo();
-            }}
-          >
-            Publish to xDAI
-          </button>
+                setVerificationProof(proof);
+              }}
+            >
+              Fetch and calculate proof
+            </button>
 
-          <div>
-            <button>Fetch and calculate proof</button>
-            <input type="text" disabled placeholder="Proof..." />
-            <button>Copy to clipboard</button>
+            {verificationProof ? <div>Proof acquired</div> : <></>}
           </div>
+
+          {verificationProof ? (
+            <button
+              onClick={async () => {
+                if (!verificationProof) {
+                  return;
+                }
+
+                const domain = new EnsDomain(domainName);
+
+                await packageOwner.publishVersion(
+                  domain,
+                  packageLocation,
+                  majorNumber,
+                  minorNumber,
+                  patchNumber,
+                  verificationProof
+                );
+
+                await reloadVersionStatusInfo();
+              }}
+            >
+              Publish to xDAI
+            </button>
+          ) : (
+            <></>
+          )}
         </ChainSpecificView>
 
         <ChainSpecificView chainName="rinkeby">
-          <button>Publish to Ethereum</button>
+          {verificationProof ? (
+            <button
+              onClick={async () => {
+                const domain = new EnsDomain(domainName);
+
+                await packageOwner.publishVersion(
+                  domain,
+                  packageLocation,
+                  majorNumber,
+                  minorNumber,
+                  patchNumber,
+                  verificationProof
+                );
+
+                await reloadVersionStatusInfo();
+              }}
+            >
+              Publish to Rinkeby
+            </button>
+          ) : (
+            <div>Switch to xDAI and fetch verification proof</div>
+          )}
         </ChainSpecificView>
       </div>
     </div>

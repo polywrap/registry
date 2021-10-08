@@ -49,7 +49,7 @@ const WrapperInfoComponent: React.FC = () => {
   };
 
   return (
-    <div className="WrapperInfoComponent widget">
+    <div className="WrapperInfoComponent">
       <PolywrapperDefinitionComponent
         loadPolywrapperInfo={loadPolywrapperInfo}
       ></PolywrapperDefinitionComponent>

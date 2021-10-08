@@ -6,6 +6,7 @@ import VerificationStatusComponent from "./VerificationStatusComponent";
 import { VersionVerificationStatusInfo } from "../../types/VersionVerificationStatusInfo";
 import { VersionVerificationStatus } from "../../types/VersionVerificationStatus";
 import { ethers } from "ethers";
+import { DetailedVersionInfo } from "../../types/DetailedVersionInfo";
 
 const VersionPublishComponent: React.FC<{
   defaultDomainName?: string;
@@ -43,13 +44,6 @@ const VersionPublishComponent: React.FC<{
       verificationStatus = VersionVerificationStatus.Verifying;
     } else if (proposedVersion.decided && proposedVersion.verified) {
       verificationStatus = VersionVerificationStatus.Verified;
-      const domain = new EnsDomain(domainName);
-
-      const nodeInfo = await packageOwner.getVersionNodeInfo(domain, 1, 0, 0);
-
-      if (nodeInfo.created) {
-        verificationStatus = VersionVerificationStatus.Published;
-      }
     } else if (proposedVersion.decided && !proposedVersion.verified) {
       verificationStatus = VersionVerificationStatus.Rejected;
     } else {
@@ -63,10 +57,39 @@ const VersionPublishComponent: React.FC<{
     const domain = new EnsDomain(domainName);
     const patchNodeId = packageOwner.calculatePatchNodeId(domain, 1, 0, 0);
 
-    const proposedVersion = await packageOwner.getProposedVersion(patchNodeId);
+    const nodeInfo = await packageOwner.getVersionNodeInfo(domain, 1, 0, 0);
+
+    let versionInfo: DetailedVersionInfo;
+    let verificationStatus: VersionVerificationStatus;
+
+    if (nodeInfo.created) {
+      verificationStatus = VersionVerificationStatus.Published;
+      versionInfo = {
+        patchNodeId: patchNodeId.toString(),
+        domain,
+        majorVersion: 1,
+        minorVersion: 0,
+        patchVersion: 0,
+        packageLocation: nodeInfo.location,
+      };
+    } else {
+      const proposedVersion = await packageOwner.getProposedVersion(
+        patchNodeId
+      );
+      versionInfo = {
+        patchNodeId: patchNodeId.toString(),
+        domain,
+        majorVersion: 1,
+        minorVersion: 0,
+        patchVersion: 0,
+        packageLocation: proposedVersion.packageLocation,
+      };
+
+      verificationStatus = await getProposedVersionStatus(proposedVersion);
+    }
     setVersionStatusInfo({
-      proposedVersion,
-      status: await getProposedVersionStatus(proposedVersion),
+      proposedVersion: versionInfo,
+      status: verificationStatus,
     });
   };
 

@@ -8,6 +8,7 @@ import { computeMerkleProof } from "@polywrap/registry-core-js";
 import { EnsDomain } from "@polywrap/registry-core-js";
 import { RegistryContracts } from "./RegistryContracts";
 import { ProposedVersion } from "./ProposedVersion";
+import { VerificationProof } from "./types/VerificationProof";
 
 export type BlockchainsWithRegistry =
   | "l2-chain-name"
@@ -98,13 +99,12 @@ export class PackageOwner {
     return rootCalculatedEvents[0].args.verifiedVersionCount.toNumber();
   }
 
-  async publishVersion(
+  async fetchAndCalculateVerificationProof(
     domain: EnsDomain,
-    packageLocation: string,
     major: number,
     minor: number,
     patch: number
-  ): Promise<void> {
+  ): Promise<VerificationProof> {
     if (!this.registryContracts.verificationTreeManager) {
       throw "There is no VerificationTreeManager contract on this chain";
     }
@@ -153,10 +153,32 @@ export class PackageOwner {
       throw "currentVerifiedVersionIndex is undefined";
     }
 
-    const [proof, sides] = computeMerkleProof(
+    const [hashes, sides] = computeMerkleProof(
       leaves,
       currentVerifiedVersionIndex.toNumber()
     );
+
+    return {
+      hashes,
+      sides,
+    };
+  }
+
+  async publishVersion(
+    domain: EnsDomain,
+    packageLocation: string,
+    major: number,
+    minor: number,
+    patch: number,
+    proof: VerificationProof
+  ): Promise<void> {
+    const currentPatchNodeId = this.calculatePatchNodeId(
+      domain,
+      major,
+      minor,
+      patch
+    );
+
     const publishTx = await this.registryContracts.versionVerificationManager.publishVersion(
       domain.packageId,
       currentPatchNodeId,
@@ -164,8 +186,8 @@ export class PackageOwner {
       minor,
       patch,
       packageLocation,
-      proof,
-      sides
+      proof.hashes,
+      proof.sides
     );
 
     await publishTx.wait();
