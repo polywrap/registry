@@ -3,15 +3,18 @@ import { Web3ApiClient } from "@web3api/client-js";
 import { SchemaComparisonService } from "./SchemaComparisonService";
 import { SchemaRetrievalService } from "./SchemaRetrievalService";
 import { Logger } from "winston";
-import { traceFunc } from "@polywrap/registry-js";
+import { handleError, traceFunc } from "@polywrap/registry-js";
 import { toPrettyHex } from "../helpers/toPrettyHex";
 import { VerifyVersionInfo } from "../types/VerifyVersionInfo";
+import { ValidPackage } from "../types/ValidPackage";
 
 export class VersionVerifierService {
   private logger: Logger;
   private polywrapClient: Web3ApiClient;
   private schemaRetrievalService: SchemaRetrievalService;
   private schemaComparisonService: SchemaComparisonService;
+  private getSchema: any;
+  private getManifest: any;
 
   constructor(deps: {
     logger: Logger;
@@ -23,6 +26,8 @@ export class VersionVerifierService {
     this.polywrapClient = deps.polywrapClient;
     this.schemaRetrievalService = deps.schemaRetrievalService;
     this.schemaComparisonService = deps.schemaComparisonService;
+    this.getSchema = handleError(this.polywrapClient.getSchema);
+    this.getManifest = handleError(this.polywrapClient.getManifest);
   }
 
   @traceFunc("version-verifier-service:verify_version")
@@ -41,7 +46,7 @@ export class VersionVerifierService {
       )}, v${majorVersion}.${minorVersion}.${patchVersion}`
     );
 
-    const proposedVersionSchema = await this.polywrapClient.getSchema(
+    const [isValid, proposedVersionSchema] = await this.validatePackage(
       `ipfs/${packageLocation}`
     );
 
@@ -62,7 +67,7 @@ export class VersionVerifierService {
         patchNodeId
       );
 
-      isVersionApproved = verifyVersionInfo.approved;
+      isVersionApproved = verifyVersionInfo.approved && isValid;
       prevMinorNodeId = verifyVersionInfo.prevMinorNodeId;
       nextMinorNodeId = verifyVersionInfo.nextMinorNodeId;
     }
@@ -120,5 +125,24 @@ export class VersionVerifierService {
       minorVersionSchema
     );
     return approved;
+  }
+
+  @traceFunc("version-verifier-service:validate-package")
+  private async validatePackage(
+    packageLocation: string
+  ): Promise<ValidPackage> {
+    const [schema, schemaError] = await this.getSchema(
+      `ipfs/${packageLocation}`
+    );
+    if (schemaError) {
+      return [false, undefined];
+    }
+
+    const [manifest, manifestError] = await this.getManifest(
+      `ipfs/${packageLocation}`
+    );
+    if (manifestError && manifest) {
+      return [false, schema];
+    }
   }
 }
