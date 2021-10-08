@@ -8,7 +8,6 @@ import {
   traceFunc,
 } from "@polywrap/registry-js";
 import { PreviousAndNextVersionSchema } from "../types/PreviousAndNextVersionSchema";
-import { SchemaRetrievalError } from "../types/SchemaRetrievalError";
 
 export class SchemaRetrievalService {
   private logger: Logger;
