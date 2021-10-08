@@ -59,12 +59,20 @@ describe("Start local chain", () => {
     patchNumber: number,
     packageLocation: string
   ) => {
+    const proof = await packageOwner.fetchAndCalculateVerificationProof(
+      domain,
+      majorNumber,
+      minorNumber,
+      patchNumber
+    );
+
     await packageOwner.publishVersion(
       domain,
       packageLocation,
       majorNumber,
       minorNumber,
-      patchNumber
+      patchNumber,
+      proof
     );
 
     const versionInfo = await packageOwner.getVersionNodeInfo(
