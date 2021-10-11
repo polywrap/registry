@@ -73,7 +73,6 @@ describe("Start local chain", () => {
       minorNumber,
       patchNumber
     );
-
     expect(versionInfo.location).to.eq(packageLocation);
     expect(resolvedPackageLocation).to.eq(packageLocation);
   };

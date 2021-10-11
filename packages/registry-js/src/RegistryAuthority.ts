@@ -1,4 +1,4 @@
-import { ethers, Signer } from "ethers";
+import { ContractReceipt, ethers, Signer } from "ethers";
 import { VotingMachine__factory, VotingMachine } from "./typechain";
 
 export class RegistryAuthority {
@@ -13,11 +13,10 @@ export class RegistryAuthority {
   signer: ethers.Signer;
   private votingMachine: VotingMachine;
 
-  async authorizeVerifiers(verifierAddresses: string[]): Promise<void> {
-    const receipt = await this.votingMachine.authorizeVerifiers(
-      verifierAddresses
-    );
-
-    await receipt.wait();
+  async authorizeVerifiers(
+    verifierAddresses: string[]
+  ): Promise<ContractReceipt> {
+    const tx = await this.votingMachine.authorizeVerifiers(verifierAddresses);
+    return await tx.wait();
   }
 }

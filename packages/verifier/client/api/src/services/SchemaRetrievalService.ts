@@ -1,7 +1,12 @@
 import { Logger } from "winston";
 import { BytesLike } from "ethers";
 import { Web3ApiClient } from "@web3api/client-js";
-import { PolywrapVotingSystem, traceFunc } from "@polywrap/registry-js";
+import {
+  PolywrapVotingSystem,
+  PrevAndNextMinorPackageLocations,
+  traceFunc,
+} from "@polywrap/registry-js";
+import { PreviousAndNextVersionSchema } from "../types/PreviousAndNextVersionSchema";
 
 export class SchemaRetrievalService {
   private logger: Logger;
@@ -23,6 +28,7 @@ export class SchemaRetrievalService {
     const location = await this.polywrapVotingSystem.getPrevPatchPackageLocation(
       patchNodeId
     );
+
     const minorVersionSchema = await this.polywrapClient.getSchema(
       `ipfs/${location}`
     );
@@ -32,20 +38,17 @@ export class SchemaRetrievalService {
   @traceFunc("schema-retrieval-service:get_previous_and_next_version_schema")
   async getPreviousAndNextVersionSchema(
     patchNodeId: BytesLike
-  ): Promise<{
-    prevMinorNodeId: BytesLike;
-    prevSchema: string | undefined;
-    nextMinorNodeId: BytesLike;
-    nextSchema: string | undefined;
-  }> {
+  ): Promise<PreviousAndNextVersionSchema> {
+    const result = await this.polywrapVotingSystem.getPrevAndNextMinorPackageLocations(
+      patchNodeId
+    );
+
     const {
       prevMinorNodeId,
       prevPackageLocation,
       nextMinorNodeId,
       nextPackageLocation,
-    } = await this.polywrapVotingSystem.getPrevAndNextMinorPackageLocations(
-      patchNodeId
-    );
+    } = result as PrevAndNextMinorPackageLocations;
 
     const prevSchema = prevPackageLocation
       ? await this.polywrapClient.getSchema(`ipfs/${prevPackageLocation}`)

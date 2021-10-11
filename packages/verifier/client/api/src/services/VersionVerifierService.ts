@@ -5,6 +5,7 @@ import { SchemaRetrievalService } from "./SchemaRetrievalService";
 import { Logger } from "winston";
 import { traceFunc } from "@polywrap/registry-js";
 import { toPrettyHex } from "../helpers/toPrettyHex";
+import { VerifyVersionInfo } from "../types/VerifyVersionInfo";
 
 export class VersionVerifierService {
   private logger: Logger;
@@ -33,11 +34,7 @@ export class VersionVerifierService {
     patchVersion: number,
     packageLocation: string,
     isPatch: boolean
-  ): Promise<{
-    prevMinorNodeId: BytesLike;
-    nextMinorNodeId: BytesLike;
-    approved: boolean;
-  }> {
+  ): Promise<VerifyVersionInfo> {
     this.logger.info(
       `Verifying proposed version: ${toPrettyHex(
         patchNodeId.toString()
@@ -53,45 +50,41 @@ export class VersionVerifierService {
     let nextMinorNodeId: BytesLike = ethers.constants.HashZero;
 
     if (isPatch) {
-      isVersionApproved = await this.verifyPatchVersion(
-        proposedVersionSchema,
-        patchNodeId
-      );
-    } else {
-      const result = await this.verifyMinorVersion(
+      const result = await this.verifyPatchVersion(
         proposedVersionSchema,
         patchNodeId
       );
 
-      isVersionApproved = result.approved;
-      prevMinorNodeId = result.prevMinorNodeId;
-      nextMinorNodeId = result.nextMinorNodeId;
+      isVersionApproved = result as boolean;
+    } else {
+      const verifyVersionInfo = await this.verifyMinorVersion(
+        proposedVersionSchema,
+        patchNodeId
+      );
+
+      isVersionApproved = verifyVersionInfo.approved;
+      prevMinorNodeId = verifyVersionInfo.prevMinorNodeId;
+      nextMinorNodeId = verifyVersionInfo.nextMinorNodeId;
     }
 
-    return {
-      prevMinorNodeId,
-      nextMinorNodeId,
-      approved: isVersionApproved,
-    };
+    return { prevMinorNodeId, nextMinorNodeId, approved: isVersionApproved };
   }
 
   @traceFunc("version-verifier-service:verify_minor_version")
   private async verifyMinorVersion(
     proposedVersionSchema: string,
     patchNodeId: BytesLike
-  ): Promise<{
-    prevMinorNodeId: BytesLike;
-    nextMinorNodeId: BytesLike;
-    approved: boolean;
-  }> {
+  ): Promise<VerifyVersionInfo> {
+    const previousAndNextVersionSchema = await this.schemaRetrievalService.getPreviousAndNextVersionSchema(
+      patchNodeId
+    );
+
     const {
       prevMinorNodeId,
       prevSchema,
       nextMinorNodeId,
       nextSchema,
-    } = await this.schemaRetrievalService.getPreviousAndNextVersionSchema(
-      patchNodeId
-    );
+    } = previousAndNextVersionSchema;
 
     return {
       prevMinorNodeId,

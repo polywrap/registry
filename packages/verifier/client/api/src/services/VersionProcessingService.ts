@@ -3,8 +3,13 @@ import { VerifierStateInfo } from "../VerifierStateInfo";
 import { VersionVerifierService } from "./VersionVerifierService";
 import { VotingService } from "./VotingService";
 import { Logger } from "winston";
-import { traceFunc } from "@polywrap/registry-js";
+import {
+  handleContractError,
+  ProposedVersion,
+  traceFunc,
+} from "@polywrap/registry-js";
 import { toPrettyHex } from "../helpers/toPrettyHex";
+import { IgnorableRevert, IgnorableReverts } from "../types/IgnorableRevert";
 
 export class VersionProcessingService {
   private logger: Logger;
@@ -53,7 +58,19 @@ export class VersionProcessingService {
       }
     }
 
-    await this.processProposedVersion(event.args);
+    const [contractError] = await handleContractError(() =>
+      this.processProposedVersion(event.args)
+    )();
+
+    if (contractError) {
+      const revertMessage = contractError.revertMessage as IgnorableRevert;
+      if (revertMessage && IgnorableReverts.includes(revertMessage)) {
+        this.logger.warn(`Error: ${contractError.revertMessage}`);
+      } else {
+        this.logger.error(`Critical Error: ${contractError.error.message}`);
+        process.exit(1);
+      }
+    }
 
     stateInfo.lastProcessedTransactionIndex = event.transactionIndex;
     stateInfo.lastProcessedLogIndex = event.logIndex;
@@ -69,7 +86,7 @@ export class VersionProcessingService {
       `Processing ${toPrettyHex(patchNodeId.toString())} version.`
     );
 
-    const _proposedVersion = await this.votingService.getProposedVersion(
+    const latestProposedVersion = await this.votingService.getProposedVersion(
       patchNodeId
     );
 
@@ -80,7 +97,7 @@ export class VersionProcessingService {
       patchVersion,
       packageLocation,
       decided,
-    } = _proposedVersion;
+    } = latestProposedVersion as ProposedVersion;
 
     if (decided) {
       this.logger.info(`Version is already decided.`);
@@ -93,11 +110,7 @@ export class VersionProcessingService {
       )}, ${majorVersion}, ${minorVersion}, ${patchVersion}`
     );
 
-    const {
-      prevMinorNodeId,
-      nextMinorNodeId,
-      approved,
-    } = await this.versionVerifierService.verifyVersion(
+    const verifyVersion = await this.versionVerifierService.verifyVersion(
       packageId,
       patchNodeId,
       majorVersion.toNumber(),
@@ -106,6 +119,8 @@ export class VersionProcessingService {
       packageLocation,
       isPatch
     );
+
+    const { prevMinorNodeId, nextMinorNodeId, approved } = verifyVersion;
 
     await this.votingService.voteOnVersion(
       patchNodeId,
