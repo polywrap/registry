@@ -13,7 +13,6 @@ export class SchemaRetrievalService {
   private logger: Logger;
   private polywrapVotingSystem: PolywrapVotingSystem;
   private polywrapClient: Web3ApiClient;
-  private getSchema: any;
 
   constructor(deps: {
     logger: Logger;
@@ -23,7 +22,6 @@ export class SchemaRetrievalService {
     this.logger = deps.logger;
     this.polywrapVotingSystem = deps.polywrapVotingSystem;
     this.polywrapClient = deps.polywrapClient;
-    this.getSchema = handleError(this.polywrapClient.getSchema);
   }
 
   @traceFunc("schema-retrieval-service:get_minor_version_schema")
@@ -33,9 +31,9 @@ export class SchemaRetrievalService {
     const location = await this.polywrapVotingSystem.getPrevPatchPackageLocation(
       patchNodeId
     );
-    const [minorVersionSchema, error] = await this.getSchema(
-      `ipfs/${location}`
-    );
+    const [error, minorVersionSchema] = await handleError(() =>
+      this.polywrapClient.getSchema(`ipfs/${location}`)
+    )();
 
     if (error) {
       return undefined;
@@ -62,18 +60,18 @@ export class SchemaRetrievalService {
     } = result as PrevAndNextMinorPackageLocations;
 
     if (prevPackageLocation) {
-      const [_prevSchema, _prevSchemaError] = await this.getSchema(
-        `ipfs/${prevPackageLocation}`
-      );
+      const [_prevSchemaError, _prevSchema] = await handleError(() =>
+        this.polywrapClient.getSchema(`ipfs/${prevPackageLocation}`)
+      )();
       if (_prevSchemaError) {
         prevSchema = _prevSchema;
       }
     }
 
     if (nextPackageLocation) {
-      const [_nextSchema, _nextSchemaError] = await this.getSchema(
-        `ipfs/${nextPackageLocation}`
-      );
+      const [_nextSchemaError, _nextSchema] = await handleError(() =>
+        this.polywrapClient.getSchema(`ipfs/${nextPackageLocation}`)
+      )();
       if (_nextSchemaError) {
         nextSchema = _nextSchema;
       }

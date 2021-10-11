@@ -135,13 +135,11 @@ export class VersionVerifierService {
     const minorVersionSchema = await this.schemaRetrievalService.getMinorVersionSchema(
       patchNodeId
     );
-    if (minorVersionSchema) {
-      const approved = this.schemaComparisonService.areSchemasFunctionallyIdentical(
-        proposedVersionSchema,
-        minorVersionSchema
-      );
-      return approved;
-    }
-    return false;
+    if (!minorVersionSchema) return false;
+    const approved = this.schemaComparisonService.areSchemasFunctionallyIdentical(
+      proposedVersionSchema,
+      minorVersionSchema
+    );
+    return approved;
   }
 }
