@@ -13,6 +13,7 @@ import { ethers } from "ethers";
 import { DetailedVersionInfo } from "../../types/DetailedVersionInfo";
 import { useWeb3 } from "../../hooks/useWeb3";
 import ChainSpecificView from "../chain-specific-view/ChainSpecificView";
+import { VersionNumber } from "../../types/VersionNumber";
 
 type VerificationProofWithLocation = VerificationProof & {
   packageLocation: string;
@@ -26,9 +27,14 @@ const VersionPublishComponent: React.FC<{
   const { packageOwner } = usePolywrapRegistry();
 
   const [domainName, setDomainName] = useState(defaultDomainName ?? "");
-  const [versionNumber, setVersionNumber] = useState(
+  const [versionNumberText, setVersionNumberText] = useState(
     defaultVersionNumber ?? ""
   );
+
+  const [versionNumber, setVersionNumber] = useState<
+    VersionNumber | undefined
+  >();
+
   const [versionStatusInfo, setVersionStatusInfo] = useState<
     VersionVerificationStatusInfo | undefined
   >();
@@ -65,19 +71,31 @@ const VersionPublishComponent: React.FC<{
   };
 
   const reloadVersionStatusInfo = async () => {
-    const domain = new EnsDomain(domainName);
-    const patchNodeId = packageOwner.calculatePatchNodeId(domain, 1, 0, 0);
+    if (!versionNumber) {
+      return;
+    }
 
-    const nodeInfo = await packageOwner.getVersionNodeInfo(domain, 1, 0, 0);
+    const domain = new EnsDomain(domainName);
+    const patchNodeId = packageOwner.calculatePatchNodeId(
+      domain,
+      versionNumber.major,
+      versionNumber.minor,
+      versionNumber.patch
+    );
+
+    const nodeInfo = await packageOwner.getVersionNodeInfo(
+      domain,
+      versionNumber.major,
+      versionNumber.minor,
+      versionNumber.patch
+    );
 
     if (!nodeInfo.created && web3?.networkName === "rinkeby") {
       setVersionStatusInfo({
         proposedVersion: {
           patchNodeId: patchNodeId.toString(),
           domain,
-          majorVersion: 1,
-          minorVersion: 0,
-          patchVersion: 0,
+          versionNumber: versionNumber,
           packageLocation: nodeInfo.location,
         },
         status: VersionVerificationStatus.Unproposed,
@@ -92,9 +110,7 @@ const VersionPublishComponent: React.FC<{
       versionInfo = {
         patchNodeId: patchNodeId.toString(),
         domain,
-        majorVersion: 1,
-        minorVersion: 0,
-        patchVersion: 0,
+        versionNumber: versionNumber,
         packageLocation: nodeInfo.location,
       };
     } else {
@@ -104,14 +120,13 @@ const VersionPublishComponent: React.FC<{
       versionInfo = {
         patchNodeId: patchNodeId.toString(),
         domain,
-        majorVersion: 1,
-        minorVersion: 0,
-        patchVersion: 0,
+        versionNumber: versionNumber,
         packageLocation: proposedVersion.packageLocation,
       };
 
       verificationStatus = await getProposedVersionStatus(proposedVersion);
     }
+
     setVersionStatusInfo({
       proposedVersion: versionInfo,
       status: verificationStatus,
@@ -133,10 +148,11 @@ const VersionPublishComponent: React.FC<{
       />
       <input
         type="text"
-        value={versionNumber}
+        value={versionNumberText}
         placeholder="Version number (eg. 1.0.0)..."
         onChange={async (e) => {
-          setVersionNumber(e.target.value);
+          setVersionNumberText(e.target.value);
+          setVersionNumber(VersionNumber.fromString(e.target.value));
         }}
       />
       <button
@@ -174,9 +190,9 @@ const VersionPublishComponent: React.FC<{
                     await packageOwner.publishVersion(
                       domain,
                       verificationProof.packageLocation,
-                      versionStatusInfo.proposedVersion.majorVersion,
-                      versionStatusInfo.proposedVersion.minorVersion,
-                      versionStatusInfo.proposedVersion.patchVersion,
+                      versionStatusInfo.proposedVersion.versionNumber.major,
+                      versionStatusInfo.proposedVersion.versionNumber.minor,
+                      versionStatusInfo.proposedVersion.versionNumber.patch,
                       verificationProof
                     );
 
@@ -226,9 +242,9 @@ const VersionPublishComponent: React.FC<{
 
                         const proof = await packageOwner.fetchAndCalculateVerificationProof(
                           domain,
-                          versionStatusInfo.proposedVersion.majorVersion,
-                          versionStatusInfo.proposedVersion.minorVersion,
-                          versionStatusInfo.proposedVersion.patchVersion
+                          versionStatusInfo.proposedVersion.versionNumber.major,
+                          versionStatusInfo.proposedVersion.versionNumber.minor,
+                          versionStatusInfo.proposedVersion.versionNumber.patch
                         );
 
                         setVerificationProof({

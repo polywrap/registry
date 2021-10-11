@@ -1,10 +1,9 @@
 import { EnsDomain } from "@polywrap/registry-js";
+import { VersionNumber } from "./VersionNumber";
 
 export type DetailedVersionInfo = {
   patchNodeId: string;
   packageLocation: string;
   domain: EnsDomain;
-  majorVersion: number;
-  minorVersion: number;
-  patchVersion: number;
+  versionNumber: VersionNumber;
 };

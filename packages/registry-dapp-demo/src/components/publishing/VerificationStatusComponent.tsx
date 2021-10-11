@@ -26,6 +26,7 @@ const VerificationStatusComponent: React.FC<{
       status = (
         <UnproposedStatusView
           domainName={domainName}
+          versionNumber={versionStatusInfo.proposedVersion.versionNumber}
           reloadVersionStatusInfo={reloadVersionStatusInfo}
         ></UnproposedStatusView>
       );
@@ -46,9 +47,9 @@ const VerificationStatusComponent: React.FC<{
       status = (
         <VerifiedStatusView
           domainName={domainName}
-          majorNumber={versionStatusInfo.proposedVersion.majorVersion}
-          minorNumber={versionStatusInfo.proposedVersion.minorVersion}
-          patchNumber={versionStatusInfo.proposedVersion.patchVersion}
+          majorNumber={versionStatusInfo.proposedVersion.versionNumber.major}
+          minorNumber={versionStatusInfo.proposedVersion.versionNumber.minor}
+          patchNumber={versionStatusInfo.proposedVersion.versionNumber.patch}
           packageLocation={versionStatusInfo.proposedVersion.packageLocation}
           reloadVersionStatusInfo={reloadVersionStatusInfo}
           verificationProof={verificationProof}
@@ -56,7 +57,11 @@ const VerificationStatusComponent: React.FC<{
       );
       break;
     case VersionVerificationStatus.Rejected:
-      status = <RejectedStatusView></RejectedStatusView>;
+      status = (
+        <RejectedStatusView
+          patchNodeId={versionStatusInfo.proposedVersion.patchNodeId}
+        ></RejectedStatusView>
+      );
       break;
     case VersionVerificationStatus.Published:
       status = (
@@ -64,7 +69,7 @@ const VerificationStatusComponent: React.FC<{
           versionInfo={{
             domain: new EnsDomain(domainName),
             packageLocation: versionStatusInfo.proposedVersion.packageLocation,
-            number: "1.0.0",
+            number: versionStatusInfo.proposedVersion.versionNumber,
             patchNodeId: versionStatusInfo.proposedVersion.patchNodeId,
           }}
         ></PublishedStatusView>

@@ -10,7 +10,7 @@ const VersionsTabComponent: React.FC<{
 }> = ({ polywrapperInfo }) => {
   const { packageOwner } = usePolywrapRegistry();
 
-  const [versionNumber, setVersionNumber] = useState("");
+  const [versionNumberText, setVersionNumberText] = useState("");
   const [latestVersion, setLatestVersion] = useState<VersionInfo | undefined>();
 
   return (
@@ -18,10 +18,10 @@ const VersionsTabComponent: React.FC<{
       <h3>Versions</h3>
       <input
         type="text"
-        value={versionNumber}
+        value={versionNumberText}
         placeholder="Version number (eg. 1.0)..."
         onChange={async (e) => {
-          setVersionNumber(e.target.value);
+          setVersionNumberText(e.target.value);
         }}
       />
       <button

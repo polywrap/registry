@@ -1,12 +1,14 @@
 import { EnsDomain } from "@polywrap/registry-js";
 import { useState } from "react";
 import { usePolywrapRegistry } from "../../../../hooks/usePolywrapRegistry";
+import { VersionNumber } from "../../../../types/VersionNumber";
 import "./UnproposedStatusView.scss";
 
 const UnproposedStatusView: React.FC<{
   domainName: string;
+  versionNumber: VersionNumber;
   reloadVersionStatusInfo: () => Promise<void>;
-}> = ({ domainName, reloadVersionStatusInfo }) => {
+}> = ({ domainName, versionNumber, reloadVersionStatusInfo }) => {
   const { packageOwner } = usePolywrapRegistry();
 
   const [ipfsHash, setIpfsHash] = useState(
@@ -30,7 +32,13 @@ const UnproposedStatusView: React.FC<{
           onClick={async () => {
             const domain = new EnsDomain(domainName);
 
-            await packageOwner.proposeVersion(domain, 1, 0, 0, ipfsHash);
+            await packageOwner.proposeVersion(
+              domain,
+              versionNumber.major,
+              versionNumber.minor,
+              versionNumber.patch,
+              ipfsHash
+            );
 
             await reloadVersionStatusInfo();
           }}

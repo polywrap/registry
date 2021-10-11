@@ -30,7 +30,7 @@ const VersionInfoComponent: React.FC<{
             </tr>
             <tr>
               <td>Number:</td>
-              <td>{versionInfo.number}</td>
+              <td>{versionInfo.number.toString()}</td>
             </tr>
             <tr>
               <td> IPFS:</td>
