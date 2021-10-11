@@ -4,7 +4,6 @@ import {
   handleError,
   PolywrapVotingSystem,
   traceFunc,
-  TransactionError,
 } from "@polywrap/registry-js";
 import { Logger } from "winston";
 import { VerifierClientConfig } from "../config/VerifierClientConfig";

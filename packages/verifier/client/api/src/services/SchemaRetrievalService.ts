@@ -1,9 +1,7 @@
 import { Logger } from "winston";
-import { BytesLike, errors } from "ethers";
+import { BytesLike } from "ethers";
 import { Web3ApiClient } from "@web3api/client-js";
 import {
-  ContractCallResult,
-  handleContractError,
   PolywrapVotingSystem,
   PrevAndNextMinorPackageLocations,
   traceFunc,

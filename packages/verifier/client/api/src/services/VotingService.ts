@@ -1,10 +1,8 @@
 import { BytesLike } from "ethers";
 import {
-  ContractCallResult,
   PolywrapVotingSystem,
   ProposedVersion,
   traceFunc,
-  TransactionError,
 } from "@polywrap/registry-js";
 import { VerifierClientConfig } from "../config/VerifierClientConfig";
 import { Logger } from "winston";
