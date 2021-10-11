@@ -12,7 +12,7 @@ import { VersionVerificationStatus } from "../../types/VersionVerificationStatus
 import { ethers } from "ethers";
 import { DetailedVersionInfo } from "../../types/DetailedVersionInfo";
 import { useWeb3 } from "../../hooks/useWeb3";
-import ChainSpecificView from "../chain-specific-view/ChainSpecificView";
+import NetworkSpecificView from "../network-specific-view/NetworkSpecificView";
 import { VersionNumber } from "../../types/VersionNumber";
 
 type VerificationProofWithLocation = VerificationProof & {
@@ -163,7 +163,7 @@ const VersionPublishComponent: React.FC<{
         Get status
       </button>
       <div className="verification-status">
-        <ChainSpecificView chainName="rinkeby">
+        <NetworkSpecificView network="rinkeby">
           {versionStatusInfo &&
           versionStatusInfo.status === VersionVerificationStatus.Published ? (
             <VerificationStatusComponent
@@ -211,9 +211,9 @@ const VersionPublishComponent: React.FC<{
           ) : (
             <></>
           )}
-        </ChainSpecificView>
+        </NetworkSpecificView>
 
-        <ChainSpecificView chainName="xdai">
+        <NetworkSpecificView network="xdai">
           {versionStatusInfo ? (
             <>
               <VerificationStatusComponent
@@ -264,7 +264,7 @@ const VersionPublishComponent: React.FC<{
           ) : (
             <></>
           )}
-        </ChainSpecificView>
+        </NetworkSpecificView>
       </div>
     </div>
   );

@@ -2,7 +2,7 @@ import { EnsDomain } from "@polywrap/registry-js";
 import { VerificationProof } from "@polywrap/registry-js";
 import { useState } from "react";
 import { usePolywrapRegistry } from "../../../../hooks/usePolywrapRegistry";
-import ChainSpecificView from "../../../chain-specific-view/ChainSpecificView";
+import NetworkSpecificView from "../../../network-specific-view/NetworkSpecificView";
 import "./VerifiedStatusView.scss";
 
 const VerifiedStatusView: React.FC<{
@@ -28,7 +28,7 @@ const VerifiedStatusView: React.FC<{
     <div className="VerifiedStatusView">
       <div className="status">Status: Verified</div>
       <div>
-        <ChainSpecificView chainName="xdai">
+        <NetworkSpecificView network="xdai">
           {verificationProof ? (
             <>
               <button
@@ -60,7 +60,7 @@ const VerifiedStatusView: React.FC<{
           ) : (
             <></>
           )}
-        </ChainSpecificView>
+        </NetworkSpecificView>
       </div>
     </div>
   );

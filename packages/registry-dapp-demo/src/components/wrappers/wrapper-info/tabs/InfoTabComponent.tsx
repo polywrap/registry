@@ -7,7 +7,7 @@ import { updateOwnership } from "../../../../helpers/updateOwnership";
 import { usePolywrapRegistry } from "../../../../hooks/usePolywrapRegistry";
 import { useWeb3 } from "../../../../hooks/useWeb3";
 import { PolywrapperInfo } from "../../../../types/PolywrapperInfo";
-import ChainSpecificView from "../../../chain-specific-view/ChainSpecificView";
+import NetworkSpecificView from "../../../network-specific-view/NetworkSpecificView";
 
 const InfoTabComponent: React.FC<{
   polywrapperInfo: PolywrapperInfo;
@@ -94,7 +94,7 @@ const InfoTabComponent: React.FC<{
                       : ""}
                   </td>
                 </tr>
-                <ChainSpecificView chainName="rinkeby">
+                <NetworkSpecificView network="rinkeby">
                   <tr>
                     <td colSpan={2}>
                       <select
@@ -121,7 +121,7 @@ const InfoTabComponent: React.FC<{
                       </button>
                     </td>
                   </tr>
-                </ChainSpecificView>
+                </NetworkSpecificView>
               </tbody>
             </table>
           ) : (
