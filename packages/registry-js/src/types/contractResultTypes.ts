@@ -2,14 +2,14 @@ import { errors } from "ethers";
 import { HTTPMethod } from "./HTTPMethod";
 import { JSONString } from "./JSONString";
 
-export type TData<TReturn> = TReturn | null;
+export type TData<TReturn> = TReturn | undefined;
 export type TError =
   | BaseContractError
   | BaseTransactionError
   | TransactionError
-  | null;
+  | undefined;
 
-export type ContractCallResult<TReturn> = [TData<TReturn>, TError];
+export type ContractCallResult<TReturn> = [TError, TData<TReturn>];
 
 export type BaseContractError = {
   message: string;
