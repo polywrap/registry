@@ -133,7 +133,7 @@ export class VersionVerifierService {
       })
     )();
     if (manifestError && manifest) {
-      this.logger.warn(`Error: ${manifestError.message}`);
+      this.logger.info(`Error: ${manifestError.message}`);
       return [false, undefined];
     }
 
@@ -141,7 +141,7 @@ export class VersionVerifierService {
       this.polywrapClient.getSchema(`ipfs/${packageLocation}`)
     )();
     if (schemaError) {
-      this.logger.warn(`Error: ${schemaError.message}`);
+      this.logger.info(`Error: ${schemaError.message}`);
       return [false, undefined];
     }
 
