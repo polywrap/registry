@@ -129,9 +129,12 @@ export class VersionVerifierService {
     packageLocation: string
   ): Promise<ValidPackage> {
     const [manifestError, manifest] = await handleError(() =>
-      this.polywrapClient.getManifest(`ipfs/${packageLocation}`)
+      this.polywrapClient.getManifest(`ipfs/${packageLocation}`, {
+        type: "web3api",
+      })
     )();
     if (manifestError && manifest) {
+      this.logger.warn(`Error: ${manifestError.message}`);
       return [false, undefined];
     }
 
@@ -139,6 +142,7 @@ export class VersionVerifierService {
       this.polywrapClient.getSchema(`ipfs/${packageLocation}`)
     )();
     if (schemaError) {
+      this.logger.warn(`Error: ${schemaError.message}`);
       return [false, undefined];
     }
 
