@@ -13,8 +13,6 @@ export class VersionVerifierService {
   private polywrapClient: Web3ApiClient;
   private schemaRetrievalService: SchemaRetrievalService;
   private schemaComparisonService: SchemaComparisonService;
-  private getSchema: any;
-  private getManifest: any;
 
   constructor(deps: {
     logger: Logger;
@@ -26,8 +24,6 @@ export class VersionVerifierService {
     this.polywrapClient = deps.polywrapClient;
     this.schemaRetrievalService = deps.schemaRetrievalService;
     this.schemaComparisonService = deps.schemaComparisonService;
-    this.getSchema = handleError(this.polywrapClient.getSchema);
-    this.getManifest = handleError(this.polywrapClient.getManifest);
   }
 
   @traceFunc("version-verifier-service:verify_version")
@@ -53,21 +49,22 @@ export class VersionVerifierService {
     let isVersionApproved = false;
     let prevMinorNodeId: BytesLike = ethers.constants.HashZero;
     let nextMinorNodeId: BytesLike = ethers.constants.HashZero;
+    if (!isValid) return { prevMinorNodeId, nextMinorNodeId, approved: false };
 
-    if (isPatch && isValid) {
+    if (isPatch) {
       const result = await this.verifyPatchVersion(
         proposedVersionSchema as string,
         patchNodeId
       );
 
       isVersionApproved = result as boolean;
-    } else if (isValid) {
+    } else {
       const verifyVersionInfo = await this.verifyMinorVersion(
         proposedVersionSchema as string,
         patchNodeId
       );
 
-      isVersionApproved = verifyVersionInfo.approved && isValid;
+      isVersionApproved = verifyVersionInfo.approved;
       prevMinorNodeId = verifyVersionInfo.prevMinorNodeId;
       nextMinorNodeId = verifyVersionInfo.nextMinorNodeId;
     }
@@ -131,18 +128,18 @@ export class VersionVerifierService {
   private async validatePackage(
     packageLocation: string
   ): Promise<ValidPackage> {
-    const [schema, schemaError] = await this.getSchema(
-      `ipfs/${packageLocation}`
-    );
-    if (schemaError) {
+    const [manifestError, manifest] = await handleError(() =>
+      this.polywrapClient.getManifest(`ipfs/${packageLocation}`)
+    )();
+    if (manifestError && manifest) {
       return [false, undefined];
     }
 
-    const [manifest, manifestError] = await this.getManifest(
-      `ipfs/${packageLocation}`
-    );
-    if (manifestError && manifest) {
-      return [false, schema];
+    const [schemaError, schema] = await handleError(() =>
+      this.polywrapClient.getSchema(`ipfs/${packageLocation}`)
+    )();
+    if (schemaError) {
+      return [false, undefined];
     }
 
     return [true, schema];
