@@ -45,21 +45,6 @@ export class PolywrapVotingSystem {
   signer: Signer;
   private registryContracts: RegistryContracts;
 
-  private requireCanVoteOnVersion: string[] = [
-    "Voting has not started",
-    "Voting for this version has ended",
-    "You already voted",
-  ];
-
-  private requireValidMinorVersionPlacement: string[] = [
-    "Previous version number is not less than the current one",
-    "Previous version does not point to the next version",
-    "Previous version does not belong to the same major version",
-    "Next version number is not greater than the current one",
-    "Next version does not point to the previous version",
-    "Next version does not belong to the same major version",
-  ];
-
   async vote(
     votes: {
       patchNodeId: BytesLike;
@@ -120,20 +105,5 @@ export class PolywrapVotingSystem {
     );
 
     return (result as unknown) as VersionVotingStartedEvent[];
-  }
-
-  get prevPatchPackageLocationReverts(): string[] {
-    return this.requireCanVoteOnVersion;
-  }
-
-  get prevAndNextMinorPackageLocationsReverts(): string[] {
-    return this.requireCanVoteOnVersion;
-  }
-
-  get voteReverts(): string[] {
-    return [
-      ...this.requireCanVoteOnVersion,
-      ...this.requireValidMinorVersionPlacement,
-    ];
   }
 }
