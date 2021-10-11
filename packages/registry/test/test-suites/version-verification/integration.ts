@@ -154,14 +154,17 @@ describe("Voting", () => {
   });
 
   it("can propose and publish a version", async () => {
-    packageOwnershipManagerL1 =
-      packageOwnershipManagerL1.connect(polywrapOwner);
+    packageOwnershipManagerL1 = packageOwnershipManagerL1.connect(
+      polywrapOwner
+    );
     registryL1 = registryL1.connect(polywrapOwner);
     registryL2 = registryL2.connect(polywrapOwner);
-    versionVerificationManagerL1 =
-      versionVerificationManagerL1.connect(polywrapOwner);
-    versionVerificationManagerL2 =
-      versionVerificationManagerL2.connect(polywrapOwner);
+    versionVerificationManagerL1 = versionVerificationManagerL1.connect(
+      polywrapOwner
+    );
+    versionVerificationManagerL2 = versionVerificationManagerL2.connect(
+      polywrapOwner
+    );
 
     await packageOwnershipManagerL1.updateOwnership(
       EnsDomain.RegistryBytes32,
