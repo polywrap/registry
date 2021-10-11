@@ -13,7 +13,6 @@ export class SchemaRetrievalService {
   private logger: Logger;
   private polywrapVotingSystem: PolywrapVotingSystem;
   private polywrapClient: Web3ApiClient;
-  private getSchema: any;
 
   constructor(deps: {
     logger: Logger;
@@ -23,7 +22,6 @@ export class SchemaRetrievalService {
     this.logger = deps.logger;
     this.polywrapVotingSystem = deps.polywrapVotingSystem;
     this.polywrapClient = deps.polywrapClient;
-    this.getSchema = handleError(this.polywrapClient.getSchema);
   }
 
   @traceFunc("schema-retrieval-service:get_minor_version_schema")
@@ -51,8 +49,8 @@ export class SchemaRetrievalService {
       patchNodeId
     );
 
-    let prevSchema: string | undefined = undefined;
-    let nextSchema: string | undefined = undefined;
+    let prevSchema: string | undefined;
+    let nextSchema: string | undefined;
 
     const {
       prevMinorNodeId,

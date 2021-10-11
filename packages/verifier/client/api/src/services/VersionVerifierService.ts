@@ -6,7 +6,6 @@ import { Logger } from "winston";
 import { handleError, traceFunc } from "@polywrap/registry-js";
 import { toPrettyHex } from "../helpers/toPrettyHex";
 import { VerifyVersionInfo } from "../types/VerifyVersionInfo";
-import { ValidPackage } from "../types/ValidPackage";
 
 export class VersionVerifierService {
   private logger: Logger;
@@ -127,7 +126,7 @@ export class VersionVerifierService {
   @traceFunc("version-verifier-service:validate-package")
   private async validatePackage(
     packageLocation: string
-  ): Promise<ValidPackage> {
+  ): Promise<[isValid: boolean, schema?: string]> {
     const [manifestError, manifest] = await handleError(() =>
       this.polywrapClient.getManifest(`ipfs/${packageLocation}`, {
         type: "web3api",
