@@ -86,6 +86,8 @@ export class VerifierClient {
         this.verifierStateManager.state,
         typedEvent
       );
+
+      this.verifierStateManager.save();
     }
 
     return proposedVersionEvents.length;
