@@ -49,8 +49,8 @@ export class SchemaRetrievalService {
       patchNodeId
     );
 
-    let prevSchema: string | undefined = undefined;
-    let nextSchema: string | undefined = undefined;
+    let prevSchema: string | undefined;
+    let nextSchema: string | undefined;
 
     const {
       prevMinorNodeId,

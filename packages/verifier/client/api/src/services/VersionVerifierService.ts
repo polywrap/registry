@@ -3,7 +3,7 @@ import { Web3ApiClient } from "@web3api/client-js";
 import { SchemaComparisonService } from "./SchemaComparisonService";
 import { SchemaRetrievalService } from "./SchemaRetrievalService";
 import { Logger } from "winston";
-import { traceFunc } from "@polywrap/registry-js";
+import { handleError, traceFunc } from "@polywrap/registry-js";
 import { toPrettyHex } from "../helpers/toPrettyHex";
 import { VerifyVersionInfo } from "../types/VerifyVersionInfo";
 
@@ -41,24 +41,25 @@ export class VersionVerifierService {
       )}, v${majorVersion}.${minorVersion}.${patchVersion}`
     );
 
-    const proposedVersionSchema = await this.polywrapClient.getSchema(
+    const [isValid, proposedVersionSchema] = await this.validatePackage(
       `ipfs/${packageLocation}`
     );
 
     let isVersionApproved = false;
     let prevMinorNodeId: BytesLike = ethers.constants.HashZero;
     let nextMinorNodeId: BytesLike = ethers.constants.HashZero;
+    if (!isValid) return { prevMinorNodeId, nextMinorNodeId, approved: false };
 
     if (isPatch) {
       const result = await this.verifyPatchVersion(
-        proposedVersionSchema,
+        proposedVersionSchema as string,
         patchNodeId
       );
 
       isVersionApproved = result as boolean;
     } else {
       const verifyVersionInfo = await this.verifyMinorVersion(
-        proposedVersionSchema,
+        proposedVersionSchema as string,
         patchNodeId
       );
 
@@ -120,5 +121,30 @@ export class VersionVerifierService {
       minorVersionSchema
     );
     return approved;
+  }
+
+  @traceFunc("version-verifier-service:validate-package")
+  private async validatePackage(
+    packageLocation: string
+  ): Promise<[isValid: boolean, schema?: string]> {
+    const [manifestError, manifest] = await handleError(() =>
+      this.polywrapClient.getManifest(`ipfs/${packageLocation}`, {
+        type: "web3api",
+      })
+    )();
+    if (manifestError && manifest) {
+      this.logger.info(`Error: ${manifestError.message}`);
+      return [false, undefined];
+    }
+
+    const [schemaError, schema] = await handleError(() =>
+      this.polywrapClient.getSchema(`ipfs/${packageLocation}`)
+    )();
+    if (schemaError) {
+      this.logger.info(`Error: ${schemaError.message}`);
+      return [false, undefined];
+    }
+
+    return [true, schema];
   }
 }
