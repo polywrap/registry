@@ -3,8 +3,9 @@ import { Web3ApiClient } from "@web3api/client-js";
 import { SchemaComparisonService } from "./SchemaComparisonService";
 import { SchemaRetrievalService } from "./SchemaRetrievalService";
 import { Logger } from "winston";
-import { traceFunc } from "@polywrap/registry-js";
+import { handleError, traceFunc } from "@polywrap/registry-js";
 import { toPrettyHex } from "../helpers/toPrettyHex";
+import { VerifyVersionInfo } from "../types/VerifyVersionInfo";
 
 export class VersionVerifierService {
   private logger: Logger;
@@ -33,72 +34,76 @@ export class VersionVerifierService {
     patchVersion: number,
     packageLocation: string,
     isPatch: boolean
-  ): Promise<{
-    prevMinorNodeId: BytesLike;
-    nextMinorNodeId: BytesLike;
-    approved: boolean;
-  }> {
+  ): Promise<VerifyVersionInfo> {
     this.logger.info(
       `Verifying proposed version: ${toPrettyHex(
         patchNodeId.toString()
       )}, v${majorVersion}.${minorVersion}.${patchVersion}`
     );
 
-    const proposedVersionSchema = await this.polywrapClient.getSchema(
+    const [isValid, proposedVersionSchema] = await this.validatePackage(
       `ipfs/${packageLocation}`
     );
 
     let isVersionApproved = false;
     let prevMinorNodeId: BytesLike = ethers.constants.HashZero;
     let nextMinorNodeId: BytesLike = ethers.constants.HashZero;
+    if (!isValid) return { prevMinorNodeId, nextMinorNodeId, approved: false };
 
     if (isPatch) {
-      isVersionApproved = await this.verifyPatchVersion(
-        proposedVersionSchema,
-        patchNodeId
-      );
-    } else {
-      const result = await this.verifyMinorVersion(
-        proposedVersionSchema,
+      const result = await this.verifyPatchVersion(
+        proposedVersionSchema as string,
         patchNodeId
       );
 
-      isVersionApproved = result.approved;
-      prevMinorNodeId = result.prevMinorNodeId;
-      nextMinorNodeId = result.nextMinorNodeId;
+      isVersionApproved = result as boolean;
+    } else {
+      const verifyVersionInfo = await this.verifyMinorVersion(
+        proposedVersionSchema as string,
+        patchNodeId
+      );
+
+      isVersionApproved = verifyVersionInfo.approved;
+      prevMinorNodeId = verifyVersionInfo.prevMinorNodeId;
+      nextMinorNodeId = verifyVersionInfo.nextMinorNodeId;
     }
 
-    return {
-      prevMinorNodeId,
-      nextMinorNodeId,
-      approved: isVersionApproved,
-    };
+    return { prevMinorNodeId, nextMinorNodeId, approved: isVersionApproved };
   }
 
   @traceFunc("version-verifier-service:verify_minor_version")
   private async verifyMinorVersion(
     proposedVersionSchema: string,
     patchNodeId: BytesLike
-  ): Promise<{
-    prevMinorNodeId: BytesLike;
-    nextMinorNodeId: BytesLike;
-    approved: boolean;
-  }> {
+  ): Promise<VerifyVersionInfo> {
+    const previousAndNextVersionSchema = await this.schemaRetrievalService.getPreviousAndNextVersionSchema(
+      patchNodeId
+    );
+
     const {
       prevMinorNodeId,
       prevSchema,
       nextMinorNodeId,
       nextSchema,
-    } = await this.schemaRetrievalService.getPreviousAndNextVersionSchema(
-      patchNodeId
-    );
+    } = previousAndNextVersionSchema;
+
+    let approved =
+      prevMinorNodeId === ethers.constants.HashZero ||
+      this.schemaComparisonService.areSchemasBacwardCompatible(
+        prevSchema,
+        proposedVersionSchema
+      );
+    approved &&=
+      nextMinorNodeId === ethers.constants.HashZero ||
+      this.schemaComparisonService.areSchemasBacwardCompatible(
+        proposedVersionSchema,
+        nextSchema
+      );
 
     return {
       prevMinorNodeId,
       nextMinorNodeId,
-      approved: true,
-      // approved: areSchemasBacwardCompatible(prevSchema, proposedVersionSchema) &&
-      //   areSchemasBacwardCompatible(proposedVersionSchema, nextSchema)
+      approved,
     };
   }
 
@@ -107,15 +112,39 @@ export class VersionVerifierService {
     proposedVersionSchema: string,
     patchNodeId: BytesLike
   ): Promise<boolean> {
-    // return true;
-
     const minorVersionSchema = await this.schemaRetrievalService.getMinorVersionSchema(
       patchNodeId
     );
-
-    return this.schemaComparisonService.areSchemasFunctionallyIdentical(
+    if (!minorVersionSchema) return false;
+    const approved = this.schemaComparisonService.areSchemasFunctionallyIdentical(
       proposedVersionSchema,
       minorVersionSchema
     );
+    return approved;
+  }
+
+  @traceFunc("version-verifier-service:validate-package")
+  private async validatePackage(
+    packageLocation: string
+  ): Promise<[isValid: boolean, schema?: string]> {
+    const [manifestError, manifest] = await handleError(() =>
+      this.polywrapClient.getManifest(`ipfs/${packageLocation}`, {
+        type: "web3api",
+      })
+    )();
+    if (manifestError && manifest) {
+      this.logger.info(`Error: ${manifestError.message}`);
+      return [false, undefined];
+    }
+
+    const [schemaError, schema] = await handleError(() =>
+      this.polywrapClient.getSchema(`ipfs/${packageLocation}`)
+    )();
+    if (schemaError) {
+      this.logger.info(`Error: ${schemaError.message}`);
+      return [false, undefined];
+    }
+
+    return [true, schema];
   }
 }

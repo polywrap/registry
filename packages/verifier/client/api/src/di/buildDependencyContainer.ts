@@ -17,6 +17,7 @@ import { IpfsConfig } from "../config/IpfsConfig";
 import winston from "winston";
 import { ApiServerConfig } from "../config/ApiServerConfig";
 import { WebUiServerConfig } from "../config/WebUiServerConfig";
+import { LoggerConfig } from "../config/loggerConfig";
 
 export const buildDependencyContainer = (
   extensionsAndOverrides?: NameAndRegistrationPair<unknown>
@@ -32,6 +33,7 @@ export const buildDependencyContainer = (
     polywrapClientConfig: awilix.asClass(PolywrapClientConfig).singleton(),
     apiServerConfig: awilix.asClass(ApiServerConfig).singleton(),
     webUiServerConfig: awilix.asClass(WebUiServerConfig).singleton(),
+    loggerConfig: awilix.asClass(LoggerConfig).singleton(),
     registryContracts: awilix
       .asFunction(({ ethersProvider }) => {
         return RegistryContracts.fromDefaultLocalhost(ethersProvider, "xdai");
@@ -45,23 +47,36 @@ export const buildDependencyContainer = (
       })
       .singleton(),
     logger: awilix
-      .asFunction(() => {
-        const format = winston.format.printf(
-          ({ level, message, timestamp }) => {
-            return `${timestamp} - ${level} - ${message}`;
-          }
+      .asFunction(({ loggerConfig }) => {
+        const consoleFormat = winston.format.printf(
+          ({ level, message, timestamp }) =>
+            `${new Date(timestamp)} - ${level} - ${message}`
         );
+        const jsonFormat = winston.format.printf((object) =>
+          JSON.stringify(object)
+        );
+
         return winston.createLogger({
-          level: "info",
           transports: [
-            new winston.transports.Console(),
-            new winston.transports.File({ filename: "verifier_client.log" }),
+            new winston.transports.Console({
+              level: loggerConfig.consoleLogLevel,
+              format: winston.format.combine(
+                winston.format.simple(),
+                winston.format.colorize(),
+                winston.format.timestamp(),
+                consoleFormat
+              ),
+            }),
+            new winston.transports.File({
+              filename: loggerConfig.logFileName,
+              level: loggerConfig.fileLogLevel,
+              format: winston.format.combine(
+                winston.format.json(),
+                winston.format.timestamp(),
+                jsonFormat
+              ),
+            }),
           ],
-          format: winston.format.combine(
-            winston.format.simple(),
-            winston.format.timestamp(),
-            format
-          ),
         });
       })
       .singleton(),

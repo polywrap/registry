@@ -1,7 +1,13 @@
 import { Logger } from "winston";
 import { BytesLike } from "ethers";
 import { Web3ApiClient } from "@web3api/client-js";
-import { PolywrapVotingSystem, traceFunc } from "@polywrap/registry-js";
+import {
+  handleError,
+  PolywrapVotingSystem,
+  PrevAndNextMinorPackageLocations,
+  traceFunc,
+} from "@polywrap/registry-js";
+import { PreviousAndNextVersionSchema } from "../types/PreviousAndNextVersionSchema";
 
 export class SchemaRetrievalService {
   private logger: Logger;
@@ -19,41 +25,57 @@ export class SchemaRetrievalService {
   }
 
   @traceFunc("schema-retrieval-service:get_minor_version_schema")
-  async getMinorVersionSchema(patchNodeId: BytesLike): Promise<string> {
+  async getMinorVersionSchema(
+    patchNodeId: BytesLike
+  ): Promise<string | undefined> {
     const location = await this.polywrapVotingSystem.getPrevPatchPackageLocation(
       patchNodeId
     );
-    const minorVersionSchema = await this.polywrapClient.getSchema(
-      `ipfs/${location}`
-    );
+    const [error, minorVersionSchema] = await handleError(() =>
+      this.polywrapClient.getSchema(`ipfs/${location}`)
+    )();
+
+    if (error) {
+      return undefined;
+    }
     return minorVersionSchema;
   }
 
   @traceFunc("schema-retrieval-service:get_previous_and_next_version_schema")
   async getPreviousAndNextVersionSchema(
     patchNodeId: BytesLike
-  ): Promise<{
-    prevMinorNodeId: BytesLike;
-    prevSchema: string | undefined;
-    nextMinorNodeId: BytesLike;
-    nextSchema: string | undefined;
-  }> {
+  ): Promise<PreviousAndNextVersionSchema> {
+    const result = await this.polywrapVotingSystem.getPrevAndNextMinorPackageLocations(
+      patchNodeId
+    );
+
+    let prevSchema: string | undefined;
+    let nextSchema: string | undefined;
+
     const {
       prevMinorNodeId,
       prevPackageLocation,
       nextMinorNodeId,
       nextPackageLocation,
-    } = await this.polywrapVotingSystem.getPrevAndNextMinorPackageLocations(
-      patchNodeId
-    );
+    } = result as PrevAndNextMinorPackageLocations;
 
-    const prevSchema = prevPackageLocation
-      ? await this.polywrapClient.getSchema(`ipfs/${prevPackageLocation}`)
-      : undefined;
+    if (prevPackageLocation) {
+      const [_prevSchemaError, _prevSchema] = await handleError(() =>
+        this.polywrapClient.getSchema(`ipfs/${prevPackageLocation}`)
+      )();
+      if (_prevSchemaError) {
+        prevSchema = _prevSchema;
+      }
+    }
 
-    const nextSchema = nextPackageLocation
-      ? await this.polywrapClient.getSchema(`ipfs/${nextPackageLocation}`)
-      : undefined;
+    if (nextPackageLocation) {
+      const [_nextSchemaError, _nextSchema] = await handleError(() =>
+        this.polywrapClient.getSchema(`ipfs/${nextPackageLocation}`)
+      )();
+      if (_nextSchemaError) {
+        nextSchema = _nextSchema;
+      }
+    }
 
     return {
       prevMinorNodeId,

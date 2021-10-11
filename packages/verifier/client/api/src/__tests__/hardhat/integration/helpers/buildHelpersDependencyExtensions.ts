@@ -26,26 +26,48 @@ export const buildHelpersDependencyExtensions = (
     ensRegistryL1: string;
     testEthRegistrarL1: string;
     testPublicResolverL1: string;
+  },
+  loggerConfig: {
+    consoleLogLevel: string;
+    fileLogLevel: string;
+    logFileName: string;
   }
 ): NameAndRegistrationPair<any> => {
   return {
-    logger: awilix.asFunction(() => {
-      const format = winston.format.printf(({ level, message, timestamp }) => {
-        return `${timestamp} - ${level} - ${message}`;
-      });
-      return winston.createLogger({
-        level: "debug",
-        transports: [
-          new winston.transports.Console(),
-          new winston.transports.File({ filename: "test_verifier_client.log" }),
-        ],
-        format: winston.format.combine(
-          winston.format.simple(),
-          winston.format.timestamp(),
-          format
-        ),
-      });
-    }),
+    logger: awilix
+      .asFunction(() => {
+        const consoleFormat = winston.format.printf(
+          ({ level, message, timestamp }) =>
+            `${new Date(timestamp)} - ${level} - ${message}`
+        );
+        const jsonFormat = winston.format.printf((object) =>
+          JSON.stringify(object)
+        );
+
+        return winston.createLogger({
+          transports: [
+            new winston.transports.Console({
+              level: loggerConfig.consoleLogLevel,
+              format: winston.format.combine(
+                winston.format.simple(),
+                winston.format.colorize(),
+                winston.format.timestamp(),
+                consoleFormat
+              ),
+            }),
+            new winston.transports.File({
+              filename: loggerConfig.logFileName,
+              level: loggerConfig.fileLogLevel,
+              format: winston.format.combine(
+                winston.format.json(),
+                winston.format.timestamp(),
+                jsonFormat
+              ),
+            }),
+          ],
+        });
+      })
+      .singleton(),
     registryContracts: awilix.asFunction(({ ethersProvider }) => {
       return RegistryContracts.fromAddresses(
         registryContractAddressesL2,

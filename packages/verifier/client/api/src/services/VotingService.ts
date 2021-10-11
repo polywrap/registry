@@ -25,17 +25,17 @@ export class VotingService {
     nextMinorNodeId: BytesLike,
     approved: boolean
   ): Promise<void> {
-    try {
-      const voteTx = await this.polywrapVotingSystem.vote([
+    await this.polywrapVotingSystem.vote(
+      [
         {
           prevMinorNodeId,
           nextMinorNodeId,
           patchNodeId,
           approved: approved,
         },
-      ]);
-
-      await voteTx.wait(this.verifierClientConfig.numOfConfirmationsToWait);
+      ],
+      this.verifierClientConfig.numOfConfirmationsToWait
+    );
 
       this.logger.info(
         `Voted on proposed version ${patchNodeId}, approved: ${approved}`

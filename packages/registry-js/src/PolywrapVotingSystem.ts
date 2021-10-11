@@ -1,8 +1,40 @@
-import { CallOverrides, ContractTransaction, Overrides, Signer } from "ethers";
+import { CallOverrides, ContractReceipt, Overrides, Signer } from "ethers";
 import { BytesLike } from "ethers/lib/utils";
-import { ProposedVersion } from "./ProposedVersion";
 import { RegistryContracts } from "./RegistryContracts";
-import { VersionVotingStartedEvent } from "./VersionVotingStartedEvent";
+import {
+  PrevAndNextMinorPackageLocations,
+  ProposedVersion,
+  VersionVotingStartedEvent,
+} from "./types";
+
+export const CanVoteOnVersionReverts = [
+  "Voting has not started",
+  "Voting for this version has ended",
+  "You already voted",
+] as const;
+export type CanVoteOnVersionRevert = typeof CanVoteOnVersionReverts[number];
+
+export const ValidMinorVersionPlacementReverts = [
+  "Previous version number is not less than the current one",
+  "Previous version does not point to the next version",
+  "Previous version does not belong to the same major version",
+  "Next version number is not greater than the current one",
+  "Next version does not point to the previous version",
+  "Next version does not belong to the same major version",
+] as const;
+export type ValidMinorVersionPlacementRevert = typeof ValidMinorVersionPlacementReverts[number];
+
+export const PrevPatchPackageLocationReverts = CanVoteOnVersionReverts;
+export type PrevPatchPackageLocationRevert = typeof PrevPatchPackageLocationReverts[number];
+
+export const PrevAndNextMinorPackageLocationsReverts = CanVoteOnVersionReverts;
+export type PrevAndNextMinorPackageLocationsRevert = typeof PrevAndNextMinorPackageLocationsReverts[number];
+
+export const VoteReverts = [
+  ...CanVoteOnVersionReverts,
+  ...ValidMinorVersionPlacementReverts,
+] as const;
+export type VoteRevert = typeof VoteReverts[number];
 
 export class PolywrapVotingSystem {
   constructor(signer: Signer, registryContracts: RegistryContracts) {
@@ -13,25 +45,28 @@ export class PolywrapVotingSystem {
   signer: Signer;
   private registryContracts: RegistryContracts;
 
-  vote(
+  async vote(
     votes: {
       patchNodeId: BytesLike;
       prevMinorNodeId: BytesLike;
       nextMinorNodeId: BytesLike;
       approved: boolean;
     }[],
+    numOfConfirmationsToWait: number,
     overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction> {
+  ): Promise<ContractReceipt> {
     if (!this.registryContracts.votingMachine) {
       throw "There is no VotingMachine contract on this chain";
     }
 
-    return overrides
+    const tx = await (overrides
       ? this.registryContracts.votingMachine.vote(votes, overrides)
-      : this.registryContracts.votingMachine.vote(votes);
+      : this.registryContracts.votingMachine.vote(votes));
+    const receipt = await tx.wait(numOfConfirmationsToWait);
+    return receipt;
   }
 
-  getPrevPatchPackageLocation(
+  async getPrevPatchPackageLocation(
     patchNodeId: BytesLike,
     overrides?: CallOverrides
   ): Promise<string> {
@@ -39,39 +74,38 @@ export class PolywrapVotingSystem {
       throw "There is no VotingMachine contract on this chain";
     }
 
-    return overrides
+    return await (overrides
       ? this.registryContracts.votingMachine.getPrevPatchPackageLocation(
           patchNodeId,
           overrides
         )
       : this.registryContracts.votingMachine.getPrevPatchPackageLocation(
           patchNodeId
-        );
+        ));
   }
 
-  getPrevAndNextMinorPackageLocations(
+  async getPrevAndNextMinorPackageLocations(
     patchNodeId: BytesLike,
     overrides?: CallOverrides
-  ): Promise<
-    [string, string, string, string] & {
-      prevMinorNodeId: string;
-      prevPackageLocation: string;
-      nextMinorNodeId: string;
-      nextPackageLocation: string;
-    }
-  > {
+  ): Promise<PrevAndNextMinorPackageLocations> {
+    return await (overrides
     if (!this.registryContracts.votingMachine) {
       throw "There is no VotingMachine contract on this chain";
     }
 
-    return overrides
       ? this.registryContracts.votingMachine.getPrevAndNextMinorPackageLocations(
           patchNodeId,
           overrides
         )
       : this.registryContracts.votingMachine.getPrevAndNextMinorPackageLocations(
           patchNodeId
-        );
+        ));
+  }
+
+  async getProposedVersion(patchNodeId: BytesLike): Promise<ProposedVersion> {
+    return await this.registryContracts.votingMachine.proposedVersions(
+      patchNodeId
+    );
   }
 
   async queryVersionVotingStarted(
@@ -81,22 +115,15 @@ export class PolywrapVotingSystem {
       throw "There is no VotingMachine contract on this chain";
     }
 
-    const resp = await this.registryContracts.votingMachine.queryFilter(
+    const result = await this.registryContracts.votingMachine.queryFilter(
       this.registryContracts.votingMachine.filters.VersionVotingStarted(),
       blockNumber
     );
 
-    return (resp as unknown) as VersionVotingStartedEvent[];
+    return (result as unknown) as VersionVotingStartedEvent[];
   }
-
-  async getProposedVersion(patchNodeId: BytesLike): Promise<ProposedVersion> {
     if (!this.registryContracts.votingMachine) {
       throw "There is no VotingMachine contract on this chain";
     }
 
-    const resp = await this.registryContracts.votingMachine.proposedVersions(
-      patchNodeId
-    );
-    return resp as ProposedVersion;
-  }
 }

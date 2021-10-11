@@ -1,9 +1,16 @@
-import { VersionProcessingService } from "./VersionProcessingService";
-import { VerifierStateManager } from "./VerifierStateManager";
-import { ProposedVersionEventArgs } from "../events/ProposedVersionEventArgs";
-import { PolywrapVotingSystem, traceFunc } from "@polywrap/registry-js";
-import { VerifierClientConfig } from "../config/VerifierClientConfig";
+import {
+  BaseContractError,
+  handleContractError,
+  handleError,
+  PolywrapVotingSystem,
+  traceFunc,
+} from "@polywrap/registry-js";
 import { Logger } from "winston";
+import { VerifierClientConfig } from "../config/VerifierClientConfig";
+import { ProposedVersionEventArgs } from "../events/ProposedVersionEventArgs";
+import { IgnorableRevert, IgnorableReverts } from "../types/IgnorableRevert";
+import { VerifierStateManager } from "./VerifierStateManager";
+import { VersionProcessingService } from "./VersionProcessingService";
 
 function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -43,9 +50,20 @@ export class VerifierClient {
 
     // eslint-disable-next-line no-constant-condition
     while (true) {
-      await this.queryAndVerifyVersions();
+      const [error, processedEvents] = await handleError(() =>
+        this.queryAndVerifyVersions()
+      )();
 
-      await delay(this.verifierClientConfig.pauseTimeInMiliseconds);
+      if (error) {
+        this.logger.error(`Critical Error: ${error.message}`);
+        process.exit(1);
+      } else {
+        this.logger.info(
+          `${processedEvents} proposed version events processed.`
+        );
+
+        await delay(this.verifierClientConfig.pauseTimeInMiliseconds);
+      }
     }
   }
 

@@ -87,7 +87,6 @@ describe("Start local chain", () => {
       minorNumber,
       patchNumber
     );
-
     expect(versionInfo.location).to.eq(packageLocation);
     expect(resolvedPackageLocation).to.eq(packageLocation);
   };
@@ -158,6 +157,11 @@ describe("Start local chain", () => {
           testPublicResolverL1: await (
             await ethers.getContract("TestPublicResolverL1")
           ).address,
+        },
+        {
+          consoleLogLevel: "debug",
+          fileLogLevel: "debug",
+          logFileName: "test_verifier_client.log",
         }
       )
     );
