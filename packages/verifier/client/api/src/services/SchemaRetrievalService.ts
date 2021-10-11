@@ -2,6 +2,7 @@ import { Logger } from "winston";
 import { BytesLike } from "ethers";
 import { Web3ApiClient } from "@web3api/client-js";
 import {
+  handleError,
   PolywrapVotingSystem,
   PrevAndNextMinorPackageLocations,
   traceFunc,
@@ -24,14 +25,19 @@ export class SchemaRetrievalService {
   }
 
   @traceFunc("schema-retrieval-service:get_minor_version_schema")
-  async getMinorVersionSchema(patchNodeId: BytesLike): Promise<string> {
+  async getMinorVersionSchema(
+    patchNodeId: BytesLike
+  ): Promise<string | undefined> {
     const location = await this.polywrapVotingSystem.getPrevPatchPackageLocation(
       patchNodeId
     );
+    const [error, minorVersionSchema] = await handleError(() =>
+      this.polywrapClient.getSchema(`ipfs/${location}`)
+    )();
 
-    const minorVersionSchema = await this.polywrapClient.getSchema(
-      `ipfs/${location}`
-    );
+    if (error) {
+      return undefined;
+    }
     return minorVersionSchema;
   }
 
@@ -43,6 +49,9 @@ export class SchemaRetrievalService {
       patchNodeId
     );
 
+    let prevSchema: string | undefined = undefined;
+    let nextSchema: string | undefined = undefined;
+
     const {
       prevMinorNodeId,
       prevPackageLocation,
@@ -50,13 +59,23 @@ export class SchemaRetrievalService {
       nextPackageLocation,
     } = result as PrevAndNextMinorPackageLocations;
 
-    const prevSchema = prevPackageLocation
-      ? await this.polywrapClient.getSchema(`ipfs/${prevPackageLocation}`)
-      : undefined;
+    if (prevPackageLocation) {
+      const [_prevSchemaError, _prevSchema] = await handleError(() =>
+        this.polywrapClient.getSchema(`ipfs/${prevPackageLocation}`)
+      )();
+      if (_prevSchemaError) {
+        prevSchema = _prevSchema;
+      }
+    }
 
-    const nextSchema = nextPackageLocation
-      ? await this.polywrapClient.getSchema(`ipfs/${nextPackageLocation}`)
-      : undefined;
+    if (nextPackageLocation) {
+      const [_nextSchemaError, _nextSchema] = await handleError(() =>
+        this.polywrapClient.getSchema(`ipfs/${nextPackageLocation}`)
+      )();
+      if (_nextSchemaError) {
+        nextSchema = _nextSchema;
+      }
+    }
 
     return {
       prevMinorNodeId,

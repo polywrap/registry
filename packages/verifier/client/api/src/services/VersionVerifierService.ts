@@ -86,12 +86,23 @@ export class VersionVerifierService {
       nextSchema,
     } = previousAndNextVersionSchema;
 
+    let approved =
+      prevMinorNodeId === ethers.constants.HashZero ||
+      this.schemaComparisonService.areSchemasBacwardCompatible(
+        prevSchema,
+        proposedVersionSchema
+      );
+    approved &&=
+      nextMinorNodeId === ethers.constants.HashZero ||
+      this.schemaComparisonService.areSchemasBacwardCompatible(
+        proposedVersionSchema,
+        nextSchema
+      );
+
     return {
       prevMinorNodeId,
       nextMinorNodeId,
-      approved: true,
-      // approved: areSchemasBacwardCompatible(prevSchema, proposedVersionSchema) &&
-      //   areSchemasBacwardCompatible(proposedVersionSchema, nextSchema)
+      approved,
     };
   }
 
@@ -100,15 +111,14 @@ export class VersionVerifierService {
     proposedVersionSchema: string,
     patchNodeId: BytesLike
   ): Promise<boolean> {
-    // return true;
-
     const minorVersionSchema = await this.schemaRetrievalService.getMinorVersionSchema(
       patchNodeId
     );
-
-    return this.schemaComparisonService.areSchemasFunctionallyIdentical(
+    if (!minorVersionSchema) return false;
+    const approved = this.schemaComparisonService.areSchemasFunctionallyIdentical(
       proposedVersionSchema,
       minorVersionSchema
     );
+    return approved;
   }
 }
