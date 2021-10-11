@@ -15,10 +15,15 @@ export function handleContractError<TArgs extends Array<unknown>, TReturn>(
       const res = func(...args);
 
       if (isPromise(res)) {
-        const result = (res.then((res: any) => res) as unknown) as TReturn;
-        return [result, null];
+        const result = (res
+          .then((res: any) => [undefined, res])
+          .catch((error) => [
+            error,
+            undefined,
+          ]) as unknown) as ContractCallResult<TReturn>;
+        return result;
       } else {
-        return [res, null];
+        return [undefined, res];
       }
     } catch (err) {
       const errorObj = err as Record<string, any>;
@@ -37,16 +42,40 @@ export function handleContractError<TArgs extends Array<unknown>, TReturn>(
               ...baseError,
               revertMessage: revertMessage,
             };
-            return [null, error];
+            return [error, undefined];
           } else {
-            return [null, errorObj as BaseTransactionError];
+            return [errorObj as BaseTransactionError, undefined];
           }
         } else {
-          return [null, errorObj as BaseContractError];
+          return [errorObj as BaseContractError, undefined];
         }
       }
 
       throw err;
+    }
+  };
+}
+
+export function handleError<TArgs extends Array<unknown>, TReturn>(
+  func: (...args: TArgs) => MaybeAsync<TReturn>
+) {
+  return (...args: TArgs): MaybeAsync<FunctionResult<TReturn>> => {
+    try {
+      const res = func(...args);
+
+      if (isPromise(res)) {
+        const result = (res
+          .then((res: any) => [undefined, res])
+          .catch((error) => [
+            error,
+            undefined,
+          ]) as unknown) as FunctionResult<TReturn>;
+        return result;
+      } else {
+        return [undefined, res];
+      }
+    } catch (err) {
+      return [err as Error, undefined];
     }
   };
 }
