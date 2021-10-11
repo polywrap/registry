@@ -53,7 +53,7 @@ export class VerifierClient {
     while (true) {
       const [error, processedEvents] = await handleError(() =>
         this.queryAndVerifyVersions()
-      );
+      )();
 
       if (error) {
         this.logger.error(`Critical Error: ${error.message}`);

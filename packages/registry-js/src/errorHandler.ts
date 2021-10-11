@@ -1,11 +1,14 @@
 import { errors } from "ethers";
+import { isPromise } from "./helpers/isPromise";
 import {
+  BaseContractError,
+  BaseTransactionError,
   ContractCallResult,
   ErrorResponseBody,
   TransactionError,
 } from "./types/contractResultTypes";
-import { isPromise } from "./helpers/isPromise";
-import { BaseContractError, BaseTransactionError, MaybeAsync } from "./types";
+import { FunctionResult } from "./types/FunctionResult";
+import { MaybeAsync } from "./types/MaybeAsync";
 
 export function handleContractError<TArgs extends Array<unknown>, TReturn>(
   func: (...args: TArgs) => MaybeAsync<TReturn>
