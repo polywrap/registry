@@ -68,34 +68,6 @@ const InfoTabComponent: React.FC<{
                   )}
                 </td>
               </tr>
-              <ChainSpecificView chainName="rinkeby">
-                <tr>
-                  <td colSpan={2}>
-                    <select
-                      className="relay-chain"
-                      value={relayChain}
-                      onChange={async (e) => {
-                        setRelayChain(
-                          e.target.value as BlockchainsWithRegistry
-                        );
-                      }}
-                    >
-                      <option value="l2-chain-name">xDAI</option>
-                    </select>
-                    <button
-                      onClick={async () => {
-                        await relayOwnership(
-                          polywrapperInfo.domain,
-                          relayChain,
-                          packageOwner
-                        );
-                      }}
-                    >
-                      Relay ownership
-                    </button>
-                  </td>
-                </tr>
-              </ChainSpecificView>
             </tbody>
           </table>
 
@@ -122,6 +94,34 @@ const InfoTabComponent: React.FC<{
                       : ""}
                   </td>
                 </tr>
+                <ChainSpecificView chainName="rinkeby">
+                  <tr>
+                    <td colSpan={2}>
+                      <select
+                        className="relay-chain"
+                        value={relayChain}
+                        onChange={async (e) => {
+                          setRelayChain(
+                            e.target.value as BlockchainsWithRegistry
+                          );
+                        }}
+                      >
+                        <option value="l2-chain-name">xDAI</option>
+                      </select>
+                      <button
+                        onClick={async () => {
+                          await relayOwnership(
+                            polywrapperInfo.domain,
+                            relayChain,
+                            packageOwner
+                          );
+                        }}
+                      >
+                        Relay ownership
+                      </button>
+                    </td>
+                  </tr>
+                </ChainSpecificView>
               </tbody>
             </table>
           ) : (

@@ -42,6 +42,7 @@ const WrapperInfoComponent: React.FC = () => {
           autoDismiss: true,
         });
       }
+      console.error(error);
       return;
     }
 

@@ -1,6 +1,6 @@
 import "./VersionPublishComponent.scss";
 import { VersionVerificationStatus } from "../../types/VersionVerificationStatus";
-import { EnsDomain } from "@polywrap/registry-js";
+import { EnsDomain, VerificationProof } from "@polywrap/registry-js";
 import UnproposedStatusView from "./statuses/unproposed/UnproposedStatusView";
 import QueuedStatusView from "./statuses/queued/QueuedStatusView";
 import VerifyingStatusView from "./statuses/verifying/VerifyingStatusView";
@@ -13,7 +13,13 @@ const VerificationStatusComponent: React.FC<{
   domainName: string;
   versionStatusInfo: VersionVerificationStatusInfo;
   reloadVersionStatusInfo: () => Promise<void>;
-}> = ({ domainName, versionStatusInfo, reloadVersionStatusInfo }) => {
+  verificationProof?: VerificationProof;
+}> = ({
+  domainName,
+  versionStatusInfo,
+  reloadVersionStatusInfo,
+  verificationProof,
+}) => {
   let status = <></>;
   switch (versionStatusInfo.status) {
     case VersionVerificationStatus.Unproposed:
@@ -45,6 +51,7 @@ const VerificationStatusComponent: React.FC<{
           patchNumber={versionStatusInfo.proposedVersion.patchVersion}
           packageLocation={versionStatusInfo.proposedVersion.packageLocation}
           reloadVersionStatusInfo={reloadVersionStatusInfo}
+          verificationProof={verificationProof}
         ></VerifiedStatusView>
       );
       break;
