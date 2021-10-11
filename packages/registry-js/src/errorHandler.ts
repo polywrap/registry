@@ -5,7 +5,7 @@ import {
   BaseTransactionError,
   ContractCallResult,
   ErrorResponseBody,
-  TransactionError,
+  ContractError,
 } from "./types/contractResultTypes";
 import { FunctionResult } from "./types/FunctionResult";
 import { MaybeAsync } from "./types/MaybeAsync";
@@ -41,16 +41,32 @@ export function handleContractError<TArgs extends Array<unknown>, TReturn>(
             const revertMessage = responseBody.error.message
               .substring(20)
               .trim();
-            const error: TransactionError = {
-              ...baseError,
+            const error: ContractError = {
+              error: baseError,
               revertMessage: revertMessage,
             };
             return [error, undefined];
           } else {
-            return [errorObj as BaseTransactionError, undefined];
+            const error: ContractError = {
+              error: baseError,
+              revertMessage: "Reverted without any message",
+            };
+            return [error, undefined];
           }
         } else {
-          return [errorObj as BaseContractError, undefined];
+          if (errorObj["reason"]) {
+            const error: ContractError = {
+              error: errorObj as BaseContractError,
+              revertMessage: errorObj["reason"],
+            };
+            return [error, undefined];
+          } else {
+            const error: ContractError = {
+              error: errorObj as BaseContractError,
+              revertMessage: "Reverted without any message",
+            };
+            return [error, undefined];
+          }
         }
       }
 

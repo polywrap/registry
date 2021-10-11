@@ -3,8 +3,13 @@ import { VerifierStateInfo } from "../VerifierStateInfo";
 import { VersionVerifierService } from "./VersionVerifierService";
 import { VotingService } from "./VotingService";
 import { Logger } from "winston";
-import { ProposedVersion, traceFunc } from "@polywrap/registry-js";
+import {
+  handleContractError,
+  ProposedVersion,
+  traceFunc,
+} from "@polywrap/registry-js";
 import { toPrettyHex } from "../helpers/toPrettyHex";
+import { IgnorableRevert, IgnorableReverts } from "../types/IgnorableRevert";
 
 export class VersionProcessingService {
   private logger: Logger;
@@ -53,7 +58,19 @@ export class VersionProcessingService {
       }
     }
 
-    await this.processProposedVersion(event.args);
+    const [contractError] = await handleContractError(() =>
+      this.processProposedVersion(event.args)
+    )();
+
+    if (contractError) {
+      const revertMessage = contractError.revertMessage as IgnorableRevert;
+      if (revertMessage && IgnorableReverts.includes(revertMessage)) {
+        this.logger.warn(`Error: ${contractError.revertMessage}`);
+      } else {
+        this.logger.error(`Critical Error: ${contractError.error.message}`);
+        process.exit(1);
+      }
+    }
 
     stateInfo.lastProcessedTransactionIndex = event.transactionIndex;
     stateInfo.lastProcessedLogIndex = event.logIndex;

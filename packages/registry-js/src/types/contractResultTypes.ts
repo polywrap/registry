@@ -3,11 +3,7 @@ import { HTTPMethod } from "./HTTPMethod";
 import { JSONString } from "./JSONString";
 
 export type TData<TReturn> = TReturn | undefined;
-export type TError =
-  | BaseContractError
-  | BaseTransactionError
-  | TransactionError
-  | undefined;
+export type TError = ContractError | undefined;
 
 export type ContractCallResult<TReturn> = [TError, TData<TReturn>];
 
@@ -36,8 +32,9 @@ export type BaseTransactionError = BaseContractError & {
   };
 };
 
-export type TransactionError = BaseTransactionError & {
+export type ContractError = {
   revertMessage: string;
+  error: BaseContractError | BaseTransactionError;
 };
 
 export type ErrorResponseBody = {

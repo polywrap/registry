@@ -83,39 +83,10 @@ export class VerifierClient {
     for (const event of proposedVersionEvents) {
       const typedEvent: TypedEvent = (event as unknown) as TypedEvent;
 
-      const [error] = await handleContractError(() =>
-        this.versionProcessingService.processProposedVersionEvent(
-          this.verifierStateManager.state,
-          typedEvent
-        )
-      )();
-
-      console.log(error);
-
-      if (error && (error as TransactionError).revertMessage) {
-        const txError = error as TransactionError;
-        const revertMessage = txError.revertMessage as IgnorableRevert;
-        if (revertMessage && IgnorableReverts.includes(revertMessage)) {
-          this.logger.warn(`Error: ${txError.message}`);
-        } else {
-          this.logger.error(`Critical Error: ${txError.message}`);
-          process.exit(1);
-        }
-      } else if (error && (error as BaseContractError).reason) {
-        const contractError = error as BaseContractError;
-        const revertMessage = contractError.reason as IgnorableRevert;
-        if (revertMessage && IgnorableReverts.includes(revertMessage)) {
-          this.logger.warn(`Error: ${contractError.message}`);
-        } else {
-          this.logger.error(`Critical Error: ${contractError.message}`);
-          process.exit(1);
-        }
-      } else if (error) {
-        this.logger.error(`Critical Error: ${error.message}`);
-        process.exit(1);
-      } else {
-        this.verifierStateManager.save();
-      }
+      await this.versionProcessingService.processProposedVersionEvent(
+        this.verifierStateManager.state,
+        typedEvent
+      );
     }
 
     return proposedVersionEvents.length;
