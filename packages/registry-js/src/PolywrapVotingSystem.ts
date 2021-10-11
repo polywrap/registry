@@ -88,11 +88,11 @@ export class PolywrapVotingSystem {
     patchNodeId: BytesLike,
     overrides?: CallOverrides
   ): Promise<PrevAndNextMinorPackageLocations> {
-    return await (overrides
     if (!this.registryContracts.votingMachine) {
       throw "There is no VotingMachine contract on this chain";
     }
 
+    return await (overrides
       ? this.registryContracts.votingMachine.getPrevAndNextMinorPackageLocations(
           patchNodeId,
           overrides
@@ -103,6 +103,10 @@ export class PolywrapVotingSystem {
   }
 
   async getProposedVersion(patchNodeId: BytesLike): Promise<ProposedVersion> {
+    if (!this.registryContracts.votingMachine) {
+      throw "There is no VotingMachine contract on this chain";
+    }
+
     return await this.registryContracts.votingMachine.proposedVersions(
       patchNodeId
     );
@@ -122,8 +126,4 @@ export class PolywrapVotingSystem {
 
     return (result as unknown) as VersionVotingStartedEvent[];
   }
-    if (!this.registryContracts.votingMachine) {
-      throw "There is no VotingMachine contract on this chain";
-    }
-
 }

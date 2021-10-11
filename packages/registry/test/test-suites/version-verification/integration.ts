@@ -75,27 +75,7 @@ describe("Voting", () => {
   });
 
   beforeEach(async () => {
-    const deploys = await deployments.fixture([
-      "EnsL1",
-      "SetupEnsL1",
-      "PolywrapRegistryL1",
-      "EnsLinkL1",
-      "PackageOwnershipManagerL1",
-      "OwnershipBridgeLinkL1",
-      "VerificationRootBridgeLinkL1",
-      "VersionVerificationManagerL1",
-      "ConnectContracts",
-      "PolywrapRegistryL2",
-      "Registrar",
-      "VotingMachine",
-      "PackageOwnershipManagerL2",
-      "OwnershipBridgeLinkL2",
-      "VerificationTreeManager",
-      "VersionVerificationManagerL2",
-      "VerificationRootBridgeLinkL2",
-      "VerificationRootRelayer",
-      "ConnectContracts",
-    ]);
+    const deploys = await deployments.fixture(["ens", "l1", "l2"]);
 
     const provider = ethers.getDefaultProvider();
 
@@ -156,19 +136,6 @@ describe("Voting", () => {
       provider
     );
 
-    const ensRegistry = ENSRegistry__factory.connect(
-      deploys["EnsRegistryL1"].address,
-      provider
-    );
-    const ethRegistrar = TestEthRegistrar__factory.connect(
-      deploys["TestEthRegistrarL1"].address,
-      provider
-    );
-    const ensPublicResolver = TestPublicResolver__factory.connect(
-      deploys["TestPublicResolverL1"].address,
-      provider
-    );
-
     ens = new EnsApi(
       {
         ensRegistryL1: deploys["EnsRegistryL1"].address,
@@ -187,23 +154,20 @@ describe("Voting", () => {
   });
 
   it("can propose and publish a version", async () => {
-    packageOwnershipManagerL1 = packageOwnershipManagerL1.connect(
-      polywrapOwner
-    );
+    packageOwnershipManagerL1 =
+      packageOwnershipManagerL1.connect(polywrapOwner);
     registryL1 = registryL1.connect(polywrapOwner);
     registryL2 = registryL2.connect(polywrapOwner);
-    versionVerificationManagerL1 = versionVerificationManagerL1.connect(
-      polywrapOwner
-    );
-    versionVerificationManagerL2 = versionVerificationManagerL2.connect(
-      polywrapOwner
-    );
+    versionVerificationManagerL1 =
+      versionVerificationManagerL1.connect(polywrapOwner);
+    versionVerificationManagerL2 =
+      versionVerificationManagerL2.connect(polywrapOwner);
 
-    packageOwnershipManagerL1.updateOwnership(
+    await packageOwnershipManagerL1.updateOwnership(
       EnsDomain.RegistryBytes32,
       testDomain.node
     );
-    packageOwnershipManagerL1.relayOwnership(
+    await packageOwnershipManagerL1.relayOwnership(
       formatBytes32String("l2-chain-name"),
       EnsDomain.RegistryBytes32,
       testDomain.node

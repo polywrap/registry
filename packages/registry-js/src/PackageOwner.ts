@@ -264,12 +264,20 @@ export class PackageOwner {
   }
 
   async getProposedVersion(patchNodeId: BytesLike): Promise<ProposedVersion> {
+    if (!this.registryContracts.votingMachine) {
+      throw "There is no VotingMachine contract on this chain";
+    }
+
     return await this.registryContracts.votingMachine.proposedVersions(
       patchNodeId
     );
   }
 
   async getAuthorizedVerifierCount(): Promise<number> {
+    if (!this.registryContracts.votingMachine) {
+      throw "There is no VotingMachine contract on this chain";
+    }
+
     const result = await this.registryContracts.votingMachine.authorizedVerifierCount();
     return result.toNumber();
   }
@@ -277,6 +285,10 @@ export class PackageOwner {
   async getProposedVersionVotingInfo(
     patchNodeId: BytesLike
   ): Promise<ProposedVersionVotingInfo> {
+    if (!this.registryContracts.votingMachine) {
+      throw "There is no VotingMachine contract on this chain";
+    }
+
     const result = await this.registryContracts.votingMachine.getProposedVersionVotingInfo(
       patchNodeId
     );
@@ -379,18 +391,6 @@ export class PackageOwner {
       this.registryContracts.votingMachine.on("VersionDecided", listener);
     });
   }
-
-    if (!this.registryContracts.votingMachine) {
-      throw "There is no VotingMachine contract on this chain";
-    }
-
-    if (!this.registryContracts.votingMachine) {
-      throw "There is no VotingMachine contract on this chain";
-    }
-
-    if (!this.registryContracts.votingMachine) {
-      throw "There is no VotingMachine contract on this chain";
-    }
 
   calculatePatchNodeId(
     domain: EnsDomain,

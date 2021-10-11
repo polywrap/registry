@@ -90,7 +90,7 @@ export class VersionProcessingService {
       `Processing ${toPrettyHex(patchNodeId.toString())} version.`
     );
 
-    const _proposedVersion = await this.polywrapVotingSystem.getProposedVersion(
+    const latestProposedVersion = await this.polywrapVotingSystem.getProposedVersion(
       patchNodeId
     );
 

@@ -2,6 +2,7 @@ import { BytesLike } from "ethers";
 import { PolywrapVotingSystem, traceFunc } from "@polywrap/registry-js";
 import { VerifierClientConfig } from "../config/VerifierClientConfig";
 import { Logger } from "winston";
+import { toPrettyHex } from "../helpers/toPrettyHex";
 
 export class VotingService {
   private logger: Logger;
@@ -37,13 +38,10 @@ export class VotingService {
       this.verifierClientConfig.numOfConfirmationsToWait
     );
 
-      this.logger.info(
-        `Voted on proposed version ${patchNodeId}, approved: ${approved}`
-      );
-    } catch (error) {
-      this.logger.warn(
-        `Voting failed for proposed version: ${patchNodeId} - Error: ${error}`
-      );
-    }
+    this.logger.info(
+      `Voted on proposed version ${toPrettyHex(
+        patchNodeId.toString()
+      )}, approved: ${approved}`
+    );
   }
 }
