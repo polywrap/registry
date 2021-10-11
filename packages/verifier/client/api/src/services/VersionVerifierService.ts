@@ -86,45 +86,24 @@ export class VersionVerifierService {
       nextSchema,
     } = previousAndNextVersionSchema;
 
-    if (prevSchema === undefined && nextSchema === undefined) {
-      return {
-        prevMinorNodeId,
-        nextMinorNodeId,
-        approved: true,
-      };
-    } else if (prevSchema === undefined) {
-      return {
-        prevMinorNodeId,
-        nextMinorNodeId,
-        approved: this.schemaComparisonService.areSchemasBacwardCompatible(
-          proposedVersionSchema,
-          nextSchema as string
-        ),
-      };
-    } else if (nextSchema === undefined) {
-      return {
-        prevMinorNodeId,
-        nextMinorNodeId,
-        approved: this.schemaComparisonService.areSchemasBacwardCompatible(
-          prevSchema as string,
-          proposedVersionSchema
-        ),
-      };
-    } else {
-      return {
-        prevMinorNodeId,
-        nextMinorNodeId,
-        approved:
-          this.schemaComparisonService.areSchemasBacwardCompatible(
-            prevSchema as string,
-            proposedVersionSchema
-          ) &&
-          this.schemaComparisonService.areSchemasBacwardCompatible(
-            proposedVersionSchema,
-            nextSchema as string
-          ),
-      };
-    }
+    let approved =
+      prevMinorNodeId === ethers.constants.HashZero ||
+      this.schemaComparisonService.areSchemasBacwardCompatible(
+        prevSchema,
+        proposedVersionSchema
+      );
+    approved &&=
+      nextMinorNodeId === ethers.constants.HashZero ||
+      this.schemaComparisonService.areSchemasBacwardCompatible(
+        proposedVersionSchema,
+        nextSchema
+      );
+
+    return {
+      prevMinorNodeId,
+      nextMinorNodeId,
+      approved,
+    };
   }
 
   @traceFunc("version-verifier-service:verify_minor_version")
