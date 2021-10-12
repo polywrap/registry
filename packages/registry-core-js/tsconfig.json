@@ -3,11 +3,9 @@
     "target": "es5",
     "module": "commonjs",
     "moduleResolution": "node",
-    "lib": [
-      "es2019"
-    ],
-    "rootDir": "./src",
+    "lib": ["es2019"],
     "outDir": "./bin",
+    "rootDir": "src",
     "strict": true,
     "noImplicitAny": true,
     "esModuleInterop": true,
@@ -16,6 +14,6 @@
     "resolveJsonModule": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
-    "preserveSymlinks": true
+    "declaration": true
   }
 }
