@@ -2,12 +2,13 @@ import { expect } from "chai";
 import { ethers } from "hardhat";
 import { buildDependencyContainer } from "../../../di/buildDependencyContainer";
 import { VerifierClient } from "../../../services/VerifierClient";
-import { EnsApi } from "./helpers/ens/EnsApi";
+import { EnsApi } from "../../../helpers/EnsApi";
 import { buildHelpersDependencyExtensions } from "./helpers/buildHelpersDependencyExtensions";
 import {
   EnsDomain,
   PackageOwner,
   RegistryAuthority,
+  RegistryContracts,
   Tracer,
 } from "@polywrap/registry-js";
 import { deployments } from "hardhat";
@@ -18,26 +19,30 @@ import { IpfsPublisher } from "./helpers/IpfsPublisher";
 import { Logger } from "winston";
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-require("custom-env").env(process.env.ENV);
+require("custom-env").env(process.env.NODE_ENV);
 
 describe("Start local chain", () => {
   let logger: Logger;
   let verifierClient: VerifierClient;
-  let packageOwner: PackageOwner;
   let registryAuthority: RegistryAuthority;
   let ensApi: EnsApi;
   let registryAuthoritySigner: Signer;
   let verifierSigner: Signer;
   let packageOwnerSigner: Signer;
   let ipfsPublisher: IpfsPublisher;
+  let registryContractsL1: RegistryContracts;
+  let registryContractsL2: RegistryContracts;
 
-  const configureDomainForPolywrap = async (domain: EnsDomain) => {
+  const configureDomainForPolywrap = async (
+    packageOwnerSigner: Signer,
+    domain: EnsDomain
+  ) => {
     await ensApi.registerDomainName(
       registryAuthoritySigner,
-      packageOwner.signer,
+      packageOwnerSigner,
       domain
     );
-    await ensApi.setPolywrapOwner(packageOwner.signer, domain);
+    await ensApi.setPolywrapOwner(packageOwnerSigner, domain);
   };
 
   const authorizeCurrentVerifier = async () => {
@@ -47,18 +52,27 @@ describe("Start local chain", () => {
   };
 
   const publishAndVerifyVersion = async (
+    packageOwner: PackageOwner,
     domain: EnsDomain,
     majorNumber: number,
     minorNumber: number,
     patchNumber: number,
     packageLocation: string
   ) => {
+    const proof = await packageOwner.fetchAndCalculateVerificationProof(
+      domain,
+      majorNumber,
+      minorNumber,
+      patchNumber
+    );
+
     await packageOwner.publishVersion(
       domain,
       packageLocation,
       majorNumber,
       minorNumber,
-      patchNumber
+      patchNumber,
+      proof
     );
 
     const versionInfo = await packageOwner.getVersionNodeInfo(
@@ -73,7 +87,6 @@ describe("Start local chain", () => {
       minorNumber,
       patchNumber
     );
-
     expect(versionInfo.location).to.eq(packageLocation);
     expect(resolvedPackageLocation).to.eq(packageLocation);
   };
@@ -105,20 +118,32 @@ describe("Start local chain", () => {
           packageOwnerSigner,
         },
         {
-          versionVerificationManagerL2: await (
+          registry: await (await ethers.getContract("PolywrapRegistryL1"))
+            .address,
+          versionVerificationManager: await (
             await ethers.getContract("VersionVerificationManagerL2")
           ).address,
-          packageOwnershipManagerL1: await (
+          packageOwnershipManager: await (
             await ethers.getContract("PackageOwnershipManagerL1")
+          ).address,
+          ensLink: await (await ethers.getContract("EnsLinkL1")).address,
+        },
+        {
+          packageOwnershipManager: await (
+            await ethers.getContract("PackageOwnershipManagerL2")
+          ).address,
+          versionVerificationManager: await (
+            await ethers.getContract("VersionVerificationManagerL2")
           ).address,
           registrar: await (await ethers.getContract("PolywrapRegistrar"))
             .address,
           verificationTreeManager: await (
             await ethers.getContract("VerificationTreeManager")
           ).address,
-          registryL1: await (await ethers.getContract("PolywrapRegistryL1"))
-            .address,
-          registryL2: await (await ethers.getContract("PolywrapRegistryL2"))
+          verificationRootRelayer: await (
+            await ethers.getContract("VerificationRootRelayer")
+          ).address,
+          registry: await (await ethers.getContract("PolywrapRegistryL2"))
             .address,
           votingMachine: await (await ethers.getContract("VotingMachine"))
             .address,
@@ -132,16 +157,22 @@ describe("Start local chain", () => {
           testPublicResolverL1: await (
             await ethers.getContract("TestPublicResolverL1")
           ).address,
+        },
+        {
+          consoleLogLevel: "debug",
+          fileLogLevel: "debug",
+          logFileName: "test_verifier_client.log",
         }
       )
     );
 
     verifierClient = dependencyContainer.cradle.verifierClient;
-    packageOwner = dependencyContainer.cradle.packageOwner;
     registryAuthority = dependencyContainer.cradle.registryAuthority;
     ensApi = dependencyContainer.cradle.ensApi;
     ipfsPublisher = dependencyContainer.cradle.ipfsPublisher;
     logger = dependencyContainer.cradle.logger;
+    registryContractsL1 = dependencyContainer.cradle.registryContractsL1;
+    registryContractsL2 = dependencyContainer.cradle.registryContracts;
   });
 
   it("sanity", async () => {
@@ -152,6 +183,14 @@ describe("Start local chain", () => {
     const majorNumber = 1;
     const minorNumber = 0;
     const patchNumber = 0;
+
+    await configureDomainForPolywrap(packageOwnerSigner, domain);
+
+    let packageOwner = new PackageOwner(
+      packageOwnerSigner,
+      registryContractsL1
+    );
+
     const patchNodeId = packageOwner.calculatePatchNodeId(
       domain,
       majorNumber,
@@ -159,12 +198,12 @@ describe("Start local chain", () => {
       patchNumber
     );
 
-    await configureDomainForPolywrap(domain);
-
     const packageLocation = await ipfsPublisher.publishDir(polywrapBuildPath);
 
     await packageOwner.updateOwnership(domain);
     await packageOwner.relayOwnership(domain, l2ChainName);
+
+    packageOwner = new PackageOwner(packageOwnerSigner, registryContractsL2);
 
     await packageOwner.proposeVersion(
       domain,
@@ -176,7 +215,7 @@ describe("Start local chain", () => {
 
     await authorizeCurrentVerifier();
 
-    const [votingResult, _] = await Promise.all([
+    const [votingResult] = await Promise.all([
       packageOwner.waitForVotingEnd(
         domain,
         majorNumber,
@@ -191,6 +230,7 @@ describe("Start local chain", () => {
     expect(votingResult.verified).to.eq(true);
 
     await publishAndVerifyVersion(
+      packageOwner,
       domain,
       majorNumber,
       minorNumber,

@@ -101,6 +101,40 @@ const _abi = [
     inputs: [
       {
         internalType: "bytes32",
+        name: "packageId",
+        type: "bytes32",
+      },
+    ],
+    name: "getLatestVersionInfo",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "majorVersion",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "minorVersion",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "patchVersion",
+        type: "uint256",
+      },
+      {
+        internalType: "string",
+        name: "location",
+        type: "string",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "bytes32",
         name: "versionNodeId",
         type: "bytes32",
       },

@@ -3,24 +3,34 @@ import { VerifierStateInfo } from "../VerifierStateInfo";
 import { VersionVerifierService } from "./VersionVerifierService";
 import { VotingService } from "./VotingService";
 import { Logger } from "winston";
-import { traceFunc } from "@polywrap/registry-js";
+import {
+  PolywrapVotingSystem,
+  handleContractError,
+  ProposedVersion,
+  traceFunc,
+} from "@polywrap/registry-js";
+import { toPrettyHex } from "../helpers/toPrettyHex";
+import { IgnorableRevert, IgnorableReverts } from "../types/IgnorableRevert";
 
 export class VersionProcessingService {
   private logger: Logger;
   private votingService: VotingService;
   private versionVerifierService: VersionVerifierService;
+  private polywrapVotingSystem: PolywrapVotingSystem;
 
   constructor(deps: {
     logger: Logger;
     votingService: VotingService;
     versionVerifierService: VersionVerifierService;
+    polywrapVotingSystem: PolywrapVotingSystem;
   }) {
     this.logger = deps.logger;
     this.votingService = deps.votingService;
     this.versionVerifierService = deps.versionVerifierService;
+    this.polywrapVotingSystem = deps.polywrapVotingSystem;
   }
 
-  @traceFunc("VersionProcessingService:processProposedVersionEvent")
+  @traceFunc("version-processing-service:process_proposed_version_event")
   async processProposedVersionEvent(
     stateInfo: VerifierStateInfo,
     event: {
@@ -52,44 +62,69 @@ export class VersionProcessingService {
       }
     }
 
-    await this.processProposedVersion(event.args);
+    const [contractError] = await handleContractError(() =>
+      this.processProposedVersion(event.args)
+    )();
+
+    if (contractError) {
+      const revertMessage = contractError.revertMessage as IgnorableRevert;
+      if (revertMessage && IgnorableReverts.includes(revertMessage)) {
+        this.logger.warn(`Error: ${contractError.revertMessage}`);
+      } else {
+        this.logger.error(`Critical Error: ${contractError.error.message}`);
+        process.exit(1);
+      }
+    }
 
     stateInfo.lastProcessedTransactionIndex = event.transactionIndex;
     stateInfo.lastProcessedLogIndex = event.logIndex;
   }
 
-  @traceFunc("VersionProcessingService:processProposedVersion")
+  @traceFunc("version-processing-service:process_proposed_version")
   async processProposedVersion(
     proposedVersion: ProposedVersionEventArgs
   ): Promise<void> {
+    const { patchNodeId, isPatch } = proposedVersion;
+
+    this.logger.info(
+      `Processing ${toPrettyHex(patchNodeId.toString())} version.`
+    );
+
+    const latestProposedVersion = await this.polywrapVotingSystem.getProposedVersion(
+      patchNodeId
+    );
+
     const {
       packageId,
-      patchNodeId,
       majorVersion,
       minorVersion,
       patchVersion,
       packageLocation,
-      proposer,
-      isPatch,
-    } = proposedVersion;
+      decided,
+    } = latestProposedVersion as ProposedVersion;
+
+    if (decided) {
+      this.logger.info(`Version is already decided.`);
+      return;
+    }
 
     this.logger.info(
-      `Version proposed: ${patchNodeId}, ${majorVersion}, ${minorVersion}, ${patchVersion}`
+      `Version proposed: ${toPrettyHex(
+        patchNodeId.toString()
+      )}, ${majorVersion}, ${minorVersion}, ${patchVersion}`
     );
 
-    const {
-      prevMinorNodeId,
-      nextMinorNodeId,
-      approved,
-    } = await this.versionVerifierService.verifyVersion(
+    const verifyVersion = await this.versionVerifierService.verifyVersion(
       packageId,
       patchNodeId,
-      majorVersion,
-      minorVersion,
-      patchVersion,
+      majorVersion.toNumber(),
+      minorVersion.toNumber(),
+      patchVersion.toNumber(),
       packageLocation,
       isPatch
     );
+
+    const { prevMinorNodeId, nextMinorNodeId, approved } = verifyVersion;
 
     await this.votingService.voteOnVersion(
       patchNodeId,

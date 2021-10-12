@@ -1,9 +1,16 @@
-import { VersionProcessingService } from "./VersionProcessingService";
-import { VerifierStateManager } from "./VerifierStateManager";
-import { ProposedVersionEventArgs } from "../events/ProposedVersionEventArgs";
-import { PolywrapVotingSystem, traceFunc } from "@polywrap/registry-js";
-import { VerifierClientConfig } from "../config/VerifierClientConfig";
+import {
+  BaseContractError,
+  handleContractError,
+  handleError,
+  PolywrapVotingSystem,
+  traceFunc,
+} from "@polywrap/registry-js";
 import { Logger } from "winston";
+import { VerifierClientConfig } from "../config/VerifierClientConfig";
+import { ProposedVersionEventArgs } from "../events/ProposedVersionEventArgs";
+import { IgnorableRevert, IgnorableReverts } from "../types/IgnorableRevert";
+import { VerifierStateManager } from "./VerifierStateManager";
+import { VersionProcessingService } from "./VersionProcessingService";
 
 function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -37,25 +44,40 @@ export class VerifierClient {
     this.verifierClientConfig = deps.verifierClientConfig;
   }
 
-  @traceFunc("VerifierClient:run")
+  @traceFunc("verifier-client:run")
   async run(): Promise<void> {
-    const processedEventCnt = 0;
+    this.logger.info(`Listening for VotingStarted events.`);
 
     // eslint-disable-next-line no-constant-condition
     while (true) {
-      // processedEventCnt = await this.queryAndVerifyVersions();
+      const [error, processedEvents] = await handleError(() =>
+        this.queryAndVerifyVersions()
+      )();
 
-      this.logger.info(`Processed ${processedEventCnt} events.`);
+      if (error) {
+        this.logger.error(`Critical Error: ${error.message}`);
+        process.exit(1);
+      } else {
+        this.logger.info(
+          `${processedEvents} proposed version events processed.`
+        );
 
-      await delay(this.verifierClientConfig.pauseTimeInMiliseconds);
+        await delay(this.verifierClientConfig.pauseTimeInMiliseconds);
+      }
     }
   }
 
-  @traceFunc("VerifierClient:queryAndVerifyVersions")
+  @traceFunc("verifier-client:query_and_verify_versions")
   async queryAndVerifyVersions(): Promise<number> {
     const proposedVersionEvents = await this.polywrapVotingSystem.queryVersionVotingStarted(
       this.verifierStateManager.state.currentlyProcessingBlock
     );
+
+    if (proposedVersionEvents.length) {
+      this.logger.info(
+        `Found ${proposedVersionEvents.length} VotingStarted events.`
+      );
+    }
 
     for (const event of proposedVersionEvents) {
       const typedEvent: TypedEvent = (event as unknown) as TypedEvent;

@@ -547,4 +547,10 @@ contract VotingMachine is OwnableUpgradeable {
       nextPackageLocation
     );
   }
+
+  function getProposedVersionVotingInfo(bytes32 patchNodeId) public view returns(uint256 verifierCount, uint256 approvingVerifierCount, uint256 rejectingVerifierCount) {
+    ProposedVersion storage proposedVersion = proposedVersions[patchNodeId];
+
+    return (authorizedVerifierCount, proposedVersion.approvingVerifiers.length, proposedVersion.rejectingVerifiers.length);
+  }
 }

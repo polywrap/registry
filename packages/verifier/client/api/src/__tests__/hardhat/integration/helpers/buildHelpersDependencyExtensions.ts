@@ -1,7 +1,12 @@
 import * as awilix from "awilix";
 import { NameAndRegistrationPair } from "awilix";
-import { EnsApi } from "./ens/EnsApi";
-import { PackageOwner, PolywrapVotingSystem } from "@polywrap/registry-js";
+import { EnsApi } from "../../../../helpers/EnsApi";
+import {
+  ContractAddressesL1,
+  ContractAddressesL2,
+  PackageOwner,
+  PolywrapVotingSystem,
+} from "@polywrap/registry-js";
 import { Signer } from "ethers";
 import { VerifierStateManager } from "../../../../services/VerifierStateManager";
 import { VerifierStateInfo } from "../../../../VerifierStateInfo";
@@ -15,42 +20,63 @@ export const buildHelpersDependencyExtensions = (
     verifierSigner: Signer;
     packageOwnerSigner: Signer;
   },
-  registryContractAddresses: {
-    versionVerificationManagerL2: string;
-    packageOwnershipManagerL1: string;
-    registrar: string;
-    verificationTreeManager: string;
-    registryL1: string;
-    registryL2: string;
-    votingMachine: string;
-  },
+  registryContractAddressesL1: ContractAddressesL1,
+  registryContractAddressesL2: ContractAddressesL2,
   testEnsContractAddresses: {
     ensRegistryL1: string;
     testEthRegistrarL1: string;
     testPublicResolverL1: string;
+  },
+  loggerConfig: {
+    consoleLogLevel: string;
+    fileLogLevel: string;
+    logFileName: string;
   }
 ): NameAndRegistrationPair<any> => {
   return {
-    logger: awilix.asFunction(() => {
-      const format = winston.format.printf(({ level, message, timestamp }) => {
-        return `${timestamp} - ${level} - ${message}`;
-      });
-      return winston.createLogger({
-        level: "debug",
-        transports: [
-          new winston.transports.Console(),
-          new winston.transports.File({ filename: "test_verifier_client.log" }),
-        ],
-        format: winston.format.combine(
-          winston.format.simple(),
-          winston.format.timestamp(),
-          format
-        ),
-      });
-    }),
+    logger: awilix
+      .asFunction(() => {
+        const consoleFormat = winston.format.printf(
+          ({ level, message, timestamp }) =>
+            `${new Date(timestamp)} - ${level} - ${message}`
+        );
+        const jsonFormat = winston.format.printf((object) =>
+          JSON.stringify(object)
+        );
+
+        return winston.createLogger({
+          transports: [
+            new winston.transports.Console({
+              level: loggerConfig.consoleLogLevel,
+              format: winston.format.combine(
+                winston.format.simple(),
+                winston.format.colorize(),
+                winston.format.timestamp(),
+                consoleFormat
+              ),
+            }),
+            new winston.transports.File({
+              filename: loggerConfig.logFileName,
+              level: loggerConfig.fileLogLevel,
+              format: winston.format.combine(
+                winston.format.json(),
+                winston.format.timestamp(),
+                jsonFormat
+              ),
+            }),
+          ],
+        });
+      })
+      .singleton(),
     registryContracts: awilix.asFunction(({ ethersProvider }) => {
       return RegistryContracts.fromAddresses(
-        registryContractAddresses,
+        registryContractAddressesL2,
+        ethersProvider
+      );
+    }),
+    registryContractsL1: awilix.asFunction(({ ethersProvider }) => {
+      return RegistryContracts.fromAddresses(
+        registryContractAddressesL1,
         ethersProvider
       );
     }),
@@ -87,11 +113,6 @@ export const buildHelpersDependencyExtensions = (
     ensApi: awilix.asFunction(({ ethersProvider }) => {
       return new EnsApi(testEnsContractAddresses, ethersProvider);
     }),
-    packageOwner: awilix.asFunction(
-      ({ packageOwnerSigner, registryContracts }) => {
-        return new PackageOwner(packageOwnerSigner, registryContracts);
-      }
-    ),
     polywrapVotingSystem: awilix.asFunction(
       ({ verifierSigner, registryContracts }) => {
         return new PolywrapVotingSystem(verifierSigner, registryContracts);

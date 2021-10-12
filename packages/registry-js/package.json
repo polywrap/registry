@@ -14,11 +14,12 @@
     "lint": "eslint . --ext .ts"
   },
   "dependencies": {
+    "@polywrap/registry-core-js": "^1.0.0",
     "@typechain/ethers-v5": "^7.0.1",
     "ethers": "^5.4.6",
-    "@polywrap/registry-core-js": "^1.0.0",
     "typechain": "^5.1.2",
-    "typescript": "^4.4.2"
+    "typescript": "^4.4.2",
+    "winston": "^3.3.3"
   },
   "devDependencies": {
     "@types/jest": "^27.0.1",

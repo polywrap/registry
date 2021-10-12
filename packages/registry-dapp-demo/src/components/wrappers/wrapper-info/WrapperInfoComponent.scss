@@ -1,0 +1,67 @@
+.WrapperInfoComponent {
+  .tabs {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+  }
+
+  .InfoTab { 
+    margin-bottom: 20px;
+  }
+
+  .VersionsTab {
+    .version-info {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding-top: 20px;
+    }
+  }
+
+  .info-tables {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: flex-start;
+  }
+
+  h4 {
+    margin-top: 5px;
+  }
+
+  .find-btn {
+    margin-left: 10px;
+  }
+
+  .polywrapper-definition {
+    margin-bottom: 20px;
+  }
+
+  .error {
+    color: orangered;
+  }
+
+  .success {
+    color: yellowgreen;
+  }
+
+  .domain-registry {
+    margin-right: 10px;
+  }
+
+  td {
+    padding: 10px;
+  }
+
+  .polywrapper-table {
+    margin: 10px 0 0 0;
+  }
+
+  .relay-chain {
+    margin: 0 5px 0 0;
+  }
+
+  .version-not-published {
+    margin: 5px 0 0 0;
+  }
+}

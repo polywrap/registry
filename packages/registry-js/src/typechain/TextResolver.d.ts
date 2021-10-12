@@ -53,6 +53,10 @@ interface TextResolverInterface extends ethers.utils.Interface {
   getEvent(nameOrSignatureOrTopic: "TextChanged"): EventFragment;
 }
 
+export type TextChangedEvent = TypedEvent<
+  [string, string, string] & { node: string; indexedKey: string; key: string }
+>;
+
 export class TextResolver extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
   attach(addressOrName: string): this;
@@ -155,6 +159,15 @@ export class TextResolver extends BaseContract {
   };
 
   filters: {
+    "TextChanged(bytes32,string,string)"(
+      node?: BytesLike | null,
+      indexedKey?: string | null,
+      key?: null
+    ): TypedEventFilter<
+      [string, string, string],
+      { node: string; indexedKey: string; key: string }
+    >;
+
     TextChanged(
       node?: BytesLike | null,
       indexedKey?: string | null,

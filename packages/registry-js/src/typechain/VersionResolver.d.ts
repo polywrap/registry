@@ -21,6 +21,7 @@ import { TypedEventFilter, TypedEvent, TypedListener } from "./commons";
 
 interface VersionResolverInterface extends ethers.utils.Interface {
   functions: {
+    "getLatestVersionInfo(bytes32)": FunctionFragment;
     "getPackageLocation(bytes32)": FunctionFragment;
     "getPackageOwner(bytes32)": FunctionFragment;
     "initialize()": FunctionFragment;
@@ -38,6 +39,10 @@ interface VersionResolverInterface extends ethers.utils.Interface {
     "versionPublisher()": FunctionFragment;
   };
 
+  encodeFunctionData(
+    functionFragment: "getLatestVersionInfo",
+    values: [BytesLike]
+  ): string;
   encodeFunctionData(
     functionFragment: "getPackageLocation",
     values: [BytesLike]
@@ -93,6 +98,10 @@ interface VersionResolverInterface extends ethers.utils.Interface {
     values?: undefined
   ): string;
 
+  decodeFunctionResult(
+    functionFragment: "getLatestVersionInfo",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(
     functionFragment: "getPackageLocation",
     data: BytesLike
@@ -156,6 +165,29 @@ interface VersionResolverInterface extends ethers.utils.Interface {
   getEvent(nameOrSignatureOrTopic: "VersionPublished"): EventFragment;
 }
 
+export type OwnershipTransferredEvent = TypedEvent<
+  [string, string] & { previousOwner: string; newOwner: string }
+>;
+
+export type OwnershipUpdatedEvent = TypedEvent<
+  [string, string, string, string] & {
+    domainRegistryNode: string;
+    packageId: string;
+    domainRegistry: string;
+    owner: string;
+  }
+>;
+
+export type VersionPublishedEvent = TypedEvent<
+  [string, BigNumber, BigNumber, BigNumber, string] & {
+    packageId: string;
+    major: BigNumber;
+    minor: BigNumber;
+    patch: BigNumber;
+    location: string;
+  }
+>;
+
 export class VersionResolver extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
   attach(addressOrName: string): this;
@@ -200,6 +232,18 @@ export class VersionResolver extends BaseContract {
   interface: VersionResolverInterface;
 
   functions: {
+    getLatestVersionInfo(
+      packageId: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<
+      [BigNumber, BigNumber, BigNumber, string] & {
+        majorVersion: BigNumber;
+        minorVersion: BigNumber;
+        patchVersion: BigNumber;
+        location: string;
+      }
+    >;
+
     getPackageLocation(
       versionNodeId: BytesLike,
       overrides?: CallOverrides
@@ -283,6 +327,18 @@ export class VersionResolver extends BaseContract {
 
     versionPublisher(overrides?: CallOverrides): Promise<[string]>;
   };
+
+  getLatestVersionInfo(
+    packageId: BytesLike,
+    overrides?: CallOverrides
+  ): Promise<
+    [BigNumber, BigNumber, BigNumber, string] & {
+      majorVersion: BigNumber;
+      minorVersion: BigNumber;
+      patchVersion: BigNumber;
+      location: string;
+    }
+  >;
 
   getPackageLocation(
     versionNodeId: BytesLike,
@@ -368,6 +424,18 @@ export class VersionResolver extends BaseContract {
   versionPublisher(overrides?: CallOverrides): Promise<string>;
 
   callStatic: {
+    getLatestVersionInfo(
+      packageId: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<
+      [BigNumber, BigNumber, BigNumber, string] & {
+        majorVersion: BigNumber;
+        minorVersion: BigNumber;
+        patchVersion: BigNumber;
+        location: string;
+      }
+    >;
+
     getPackageLocation(
       versionNodeId: BytesLike,
       overrides?: CallOverrides
@@ -449,12 +517,35 @@ export class VersionResolver extends BaseContract {
   };
 
   filters: {
+    "OwnershipTransferred(address,address)"(
+      previousOwner?: string | null,
+      newOwner?: string | null
+    ): TypedEventFilter<
+      [string, string],
+      { previousOwner: string; newOwner: string }
+    >;
+
     OwnershipTransferred(
       previousOwner?: string | null,
       newOwner?: string | null
     ): TypedEventFilter<
       [string, string],
       { previousOwner: string; newOwner: string }
+    >;
+
+    "OwnershipUpdated(bytes32,bytes32,bytes32,address)"(
+      domainRegistryNode?: BytesLike | null,
+      packageId?: null,
+      domainRegistry?: null,
+      owner?: string | null
+    ): TypedEventFilter<
+      [string, string, string, string],
+      {
+        domainRegistryNode: string;
+        packageId: string;
+        domainRegistry: string;
+        owner: string;
+      }
     >;
 
     OwnershipUpdated(
@@ -469,6 +560,23 @@ export class VersionResolver extends BaseContract {
         packageId: string;
         domainRegistry: string;
         owner: string;
+      }
+    >;
+
+    "VersionPublished(bytes32,uint256,uint256,uint256,string)"(
+      packageId?: BytesLike | null,
+      major?: null,
+      minor?: null,
+      patch?: null,
+      location?: null
+    ): TypedEventFilter<
+      [string, BigNumber, BigNumber, BigNumber, string],
+      {
+        packageId: string;
+        major: BigNumber;
+        minor: BigNumber;
+        patch: BigNumber;
+        location: string;
       }
     >;
 
@@ -491,6 +599,11 @@ export class VersionResolver extends BaseContract {
   };
 
   estimateGas: {
+    getLatestVersionInfo(
+      packageId: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
     getPackageLocation(
       versionNodeId: BytesLike,
       overrides?: CallOverrides
@@ -560,6 +673,11 @@ export class VersionResolver extends BaseContract {
   };
 
   populateTransaction: {
+    getLatestVersionInfo(
+      packageId: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
     getPackageLocation(
       versionNodeId: BytesLike,
       overrides?: CallOverrides

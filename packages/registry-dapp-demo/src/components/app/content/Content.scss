@@ -1,0 +1,16 @@
+.Content {
+  .title {
+    margin: 1em 0 1em 0;
+  }
+
+  .widget-container {
+    display: flex;
+    justify-content: center;
+
+    .WrapperInfoComponent {
+      min-width: 40em;
+      width: 100%;
+      margin: 0 2em 0 2em;
+    }
+  }
+}

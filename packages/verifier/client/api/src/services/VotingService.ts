@@ -2,6 +2,7 @@ import { BytesLike } from "ethers";
 import { PolywrapVotingSystem, traceFunc } from "@polywrap/registry-js";
 import { VerifierClientConfig } from "../config/VerifierClientConfig";
 import { Logger } from "winston";
+import { toPrettyHex } from "../helpers/toPrettyHex";
 
 export class VotingService {
   private logger: Logger;
@@ -18,26 +19,29 @@ export class VotingService {
     this.verifierClientConfig = deps.verifierClientConfig;
   }
 
-  @traceFunc("VotingService:voteOnVersion")
+  @traceFunc("voting-service:vote_on_version")
   async voteOnVersion(
     patchNodeId: BytesLike,
     prevMinorNodeId: BytesLike,
     nextMinorNodeId: BytesLike,
     approved: boolean
   ): Promise<void> {
-    const voteTx = await this.polywrapVotingSystem.vote([
-      {
-        prevMinorNodeId,
-        nextMinorNodeId,
-        patchNodeId,
-        approved: approved,
-      },
-    ]);
-
-    await voteTx.wait(this.verifierClientConfig.numOfConfirmationsToWait);
+    await this.polywrapVotingSystem.vote(
+      [
+        {
+          prevMinorNodeId,
+          nextMinorNodeId,
+          patchNodeId,
+          approved: approved,
+        },
+      ],
+      this.verifierClientConfig.numOfConfirmationsToWait
+    );
 
     this.logger.info(
-      `Voted on proposed version ${patchNodeId}, approved: ${approved}`
+      `Voted on proposed version ${toPrettyHex(
+        patchNodeId.toString()
+      )}, approved: ${approved}`
     );
   }
 }

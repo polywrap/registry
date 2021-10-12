@@ -1,12 +1,21 @@
 import { ethers, Signer } from "ethers";
-import { contractAddressesTestnet } from "./constants";
+import { BlockchainsWithRegistry } from ".";
 import {
+  contractAddressesDefaultLocalhostL1,
+  contractAddressesDefaultLocalhostL2,
+  contractAddressesTestnet,
+} from "./constants";
+import {
+  EnsLink,
+  EnsLink__factory,
   PackageOwnershipManager,
   PackageOwnershipManager__factory,
   PolywrapRegistrar,
   PolywrapRegistrar__factory,
   PolywrapRegistry,
   PolywrapRegistry__factory,
+  VerificationRootRelayer,
+  VerificationRootRelayer__factory,
   VerificationTreeManager,
   VerificationTreeManager__factory,
   VersionVerificationManager,
@@ -16,96 +25,130 @@ import {
 } from "./typechain";
 
 export class RegistryContracts {
-  versionVerificationManagerL2: VersionVerificationManager;
-  packageOwnershipManagerL1: PackageOwnershipManager;
-  registryL1: PolywrapRegistry;
-  registryL2: PolywrapRegistry;
-  verificationTreeManager: VerificationTreeManager;
-  registrar: PolywrapRegistrar;
-  votingMachine: VotingMachine;
+  registry: PolywrapRegistry;
+  packageOwnershipManager: PackageOwnershipManager;
+  versionVerificationManager: VersionVerificationManager;
+  verificationTreeManager?: VerificationTreeManager;
+  verificationRootRelayer?: VerificationRootRelayer;
+  registrar?: PolywrapRegistrar;
+  votingMachine?: VotingMachine;
+  ensLink?: EnsLink;
 
   constructor(contracts: {
-    versionVerificationManagerL2: VersionVerificationManager;
-    packageOwnershipManagerL1: PackageOwnershipManager;
-    registryL1: PolywrapRegistry;
-    registryL2: PolywrapRegistry;
-    verificationTreeManager: VerificationTreeManager;
-    registrar: PolywrapRegistrar;
-    votingMachine: VotingMachine;
+    registry: PolywrapRegistry;
+    packageOwnershipManager: PackageOwnershipManager;
+    versionVerificationManager: VersionVerificationManager;
+    verificationTreeManager?: VerificationTreeManager;
+    verificationRootRelayer?: VerificationRootRelayer;
+    registrar?: PolywrapRegistrar;
+    votingMachine?: VotingMachine;
+    ensLink?: EnsLink;
   }) {
-    this.versionVerificationManagerL2 = contracts.versionVerificationManagerL2;
-    this.packageOwnershipManagerL1 = contracts.packageOwnershipManagerL1;
-    this.registryL1 = contracts.registryL1;
-    this.registryL2 = contracts.registryL2;
+    this.registry = contracts.registry;
+    this.packageOwnershipManager = contracts.packageOwnershipManager;
+    this.versionVerificationManager = contracts.versionVerificationManager;
     this.verificationTreeManager = contracts.verificationTreeManager;
+    this.verificationRootRelayer = contracts.verificationRootRelayer;
     this.registrar = contracts.registrar;
     this.votingMachine = contracts.votingMachine;
+    this.ensLink = contracts.ensLink;
   }
 
   connect(signer: Signer): RegistryContracts {
-    this.versionVerificationManagerL2 = this.versionVerificationManagerL2.connect(
+    this.registry = this.registry.connect(signer);
+    this.packageOwnershipManager = this.packageOwnershipManager.connect(signer);
+    this.versionVerificationManager = this.versionVerificationManager.connect(
       signer
     );
-    this.packageOwnershipManagerL1 = this.packageOwnershipManagerL1.connect(
+    this.verificationTreeManager = this.verificationTreeManager?.connect(
       signer
     );
-    this.registryL1 = this.registryL1.connect(signer);
-    this.registryL2 = this.registryL2.connect(signer);
-    this.verificationTreeManager = this.verificationTreeManager.connect(signer);
-    this.registrar = this.registrar.connect(signer);
-    this.votingMachine = this.votingMachine.connect(signer);
+    this.verificationRootRelayer = this.verificationRootRelayer?.connect(
+      signer
+    );
+    this.registrar = this.registrar?.connect(signer);
+    this.votingMachine = this.votingMachine?.connect(signer);
+    this.ensLink = this.ensLink?.connect(signer);
 
     return this;
   }
 
   static fromAddresses(
     addresses: {
-      versionVerificationManagerL2: string;
-      packageOwnershipManagerL1: string;
-      registrar: string;
-      verificationTreeManager: string;
-      registryL1: string;
-      registryL2: string;
-      votingMachine: string;
+      registry: string;
+      packageOwnershipManager: string;
+      versionVerificationManager: string;
+      registrar?: string;
+      verificationTreeManager?: string;
+      verificationRootRelayer?: string;
+      votingMachine?: string;
+      ensLink?: string;
     },
-    provider: ethers.providers.BaseProvider
+    provider: ethers.providers.Provider
   ): RegistryContracts {
     return new RegistryContracts({
-      versionVerificationManagerL2: VersionVerificationManager__factory.connect(
-        addresses.versionVerificationManagerL2,
+      registry: PolywrapRegistry__factory.connect(addresses.registry, provider),
+      versionVerificationManager: VersionVerificationManager__factory.connect(
+        addresses.versionVerificationManager,
         provider
       ),
-      packageOwnershipManagerL1: PackageOwnershipManager__factory.connect(
-        addresses.packageOwnershipManagerL1,
+      packageOwnershipManager: PackageOwnershipManager__factory.connect(
+        addresses.packageOwnershipManager,
         provider
       ),
-      registrar: PolywrapRegistrar__factory.connect(
-        addresses.registrar,
-        provider
-      ),
-      verificationTreeManager: VerificationTreeManager__factory.connect(
-        addresses.verificationTreeManager,
-        provider
-      ),
-      registryL1: PolywrapRegistry__factory.connect(
-        addresses.registryL1,
-        provider
-      ),
-      registryL2: PolywrapRegistry__factory.connect(
-        addresses.registryL2,
-        provider
-      ),
-      votingMachine: VotingMachine__factory.connect(
-        addresses.votingMachine,
-        provider
-      ),
+      registrar: addresses.registrar
+        ? PolywrapRegistrar__factory.connect(addresses.registrar, provider)
+        : undefined,
+      verificationTreeManager: addresses.verificationTreeManager
+        ? VerificationTreeManager__factory.connect(
+            addresses.verificationTreeManager,
+            provider
+          )
+        : undefined,
+      verificationRootRelayer: addresses.verificationRootRelayer
+        ? VerificationRootRelayer__factory.connect(
+            addresses.verificationRootRelayer,
+            provider
+          )
+        : undefined,
+      votingMachine: addresses.votingMachine
+        ? VotingMachine__factory.connect(addresses.votingMachine, provider)
+        : undefined,
+      ensLink: addresses.ensLink
+        ? EnsLink__factory.connect(addresses.ensLink, provider)
+        : undefined,
     });
   }
 
-  static fromTestnet(
-    provider: ethers.providers.BaseProvider
-  ): RegistryContracts {
+  static fromTestnet(provider: ethers.providers.Provider): RegistryContracts {
     return RegistryContracts.fromAddresses(contractAddressesTestnet, provider);
+  }
+
+  static fromDefaultLocalhost(
+    provider: ethers.providers.Provider,
+    networkName: BlockchainsWithRegistry
+  ): RegistryContracts {
+    switch (networkName) {
+      case "ethereum":
+        throw "Not implemented";
+      case "l2-chain-name":
+        return RegistryContracts.fromAddresses(
+          contractAddressesDefaultLocalhostL1,
+          provider
+        );
+      case "rinkeby":
+        return RegistryContracts.fromAddresses(
+          contractAddressesDefaultLocalhostL1,
+          provider
+        );
+      case "xdai":
+        return RegistryContracts.fromAddresses(
+          contractAddressesDefaultLocalhostL2,
+          provider
+        );
+      default:
+        throw "Network not supported";
+    }
   }
 
   static fromLocalhost(

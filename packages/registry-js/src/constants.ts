@@ -1,20 +1,61 @@
+import * as VersionVerificationManagerL1 from "./deployments/localhost/VersionVerificationManagerL1.json";
+import * as VersionVerificationManagerL2 from "./deployments/localhost/VersionVerificationManagerL2.json";
+import * as PackageOwnershipManagerL1 from "./deployments/localhost/PackageOwnershipManagerL1.json";
+import * as PackageOwnershipManagerL2 from "./deployments/localhost/PackageOwnershipManagerL2.json";
+import * as PolywrapRegistrar from "./deployments/localhost/PolywrapRegistrar.json";
+import * as VerificationTreeManager from "./deployments/localhost/VerificationTreeManager.json";
+import * as VerificationRootRelayer from "./deployments/localhost/VerificationRootRelayer.json";
+import * as VotingMachine from "./deployments/localhost/VotingMachine.json";
+import * as EnsLinkL1 from "./deployments/localhost/EnsLinkL1.json";
+import * as PolywrapRegistryL1 from "./deployments/localhost/PolywrapRegistryL1.json";
+import * as PolywrapRegistryL2 from "./deployments/localhost/PolywrapRegistryL2.json";
+
 export const contractAddressesTestnet = {
-  versionVerificationManagerL2: "0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e",
-  packageOwnershipManagerL1: "0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e",
-  registrar: "0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e",
-  verificationTreeManager: "0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e",
-  registryL1: "0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e",
-  registryL2: "0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e",
-  votingMachine: "0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e",
+  registry: "0x0",
+  packageOwnershipManager: "0x0",
+  versionVerificationManager: "0x0",
+
+  registrar: "0x0",
+  verificationTreeManager: "0x0",
+  verificationRootRelayer: "0x0",
+
+  ensLink: "0x0",
 };
 
-export const contractAddressesLocalhost = {
-  versionVerificationManagerL1: "0xE6E340D132b5f46d1e472DebcD681B2aBc16e57E",
-  versionVerificationManagerL2: "0x10eFD12b38Ba992A42dd13311A4E6Bf73b13a64C",
-  packageOwnershipManagerL1: "0x09635F643e140090A9A8Dcd712eD6285858ceBef",
-  registrar: "0xA1aEc20ADA0d808A69AB2529f73eCFAd3234dd80",
-  verificationTreeManager: "0xC41BAbA389c3A3d1Fe9d2919e786BA615b593318",
-  registryL1: "0x4A679253410272dd5232B3Ff7cF5dbB88f295319",
-  registryL2: "0xd32Edd7217b1fae9f492415fA98738A12610AFdf",
-  votingMachine: "0xbaE260164F438a487bcb80E8b52F3Cc847d8d05C",
+export const contractAddressesDefaultLocalhostL1: ContractAddressesL1 = {
+  registry: PolywrapRegistryL1.address,
+  packageOwnershipManager: PackageOwnershipManagerL1.address,
+  versionVerificationManager: VersionVerificationManagerL1.address,
+
+  ensLink: EnsLinkL1.address,
+};
+
+export const contractAddressesDefaultLocalhostL2: ContractAddressesL2 = {
+  registry: PolywrapRegistryL2.address,
+  packageOwnershipManager: PackageOwnershipManagerL2.address,
+  versionVerificationManager: VersionVerificationManagerL2.address,
+
+  registrar: PolywrapRegistrar.address,
+  verificationTreeManager: VerificationTreeManager.address,
+  verificationRootRelayer: VerificationRootRelayer.address,
+  votingMachine: VotingMachine.address,
+};
+
+export type ContractAddressesL1 = {
+  registry: string;
+  packageOwnershipManager: string;
+  versionVerificationManager: string;
+
+  ensLink: string;
+};
+
+export type ContractAddressesL2 = {
+  registry: string;
+  packageOwnershipManager: string;
+  versionVerificationManager: string;
+
+  registrar: string;
+  verificationTreeManager: string;
+  verificationRootRelayer: string;
+  votingMachine: string;
 };

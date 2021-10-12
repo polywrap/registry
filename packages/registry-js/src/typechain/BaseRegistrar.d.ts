@@ -216,6 +216,58 @@ interface BaseRegistrarInterface extends ethers.utils.Interface {
   getEvent(nameOrSignatureOrTopic: "Transfer"): EventFragment;
 }
 
+export type ApprovalEvent = TypedEvent<
+  [string, string, BigNumber] & {
+    owner: string;
+    approved: string;
+    tokenId: BigNumber;
+  }
+>;
+
+export type ApprovalForAllEvent = TypedEvent<
+  [string, string, boolean] & {
+    owner: string;
+    operator: string;
+    approved: boolean;
+  }
+>;
+
+export type ControllerAddedEvent = TypedEvent<
+  [string] & { controller: string }
+>;
+
+export type ControllerRemovedEvent = TypedEvent<
+  [string] & { controller: string }
+>;
+
+export type NameMigratedEvent = TypedEvent<
+  [BigNumber, string, BigNumber] & {
+    id: BigNumber;
+    owner: string;
+    expires: BigNumber;
+  }
+>;
+
+export type NameRegisteredEvent = TypedEvent<
+  [BigNumber, string, BigNumber] & {
+    id: BigNumber;
+    owner: string;
+    expires: BigNumber;
+  }
+>;
+
+export type NameRenewedEvent = TypedEvent<
+  [BigNumber, BigNumber] & { id: BigNumber; expires: BigNumber }
+>;
+
+export type OwnershipTransferredEvent = TypedEvent<
+  [string, string] & { previousOwner: string; newOwner: string }
+>;
+
+export type TransferEvent = TypedEvent<
+  [string, string, BigNumber] & { from: string; to: string; tokenId: BigNumber }
+>;
+
 export class BaseRegistrar extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
   attach(addressOrName: string): this;
@@ -601,6 +653,15 @@ export class BaseRegistrar extends BaseContract {
   };
 
   filters: {
+    "Approval(address,address,uint256)"(
+      owner?: string | null,
+      approved?: string | null,
+      tokenId?: BigNumberish | null
+    ): TypedEventFilter<
+      [string, string, BigNumber],
+      { owner: string; approved: string; tokenId: BigNumber }
+    >;
+
     Approval(
       owner?: string | null,
       approved?: string | null,
@@ -608,6 +669,15 @@ export class BaseRegistrar extends BaseContract {
     ): TypedEventFilter<
       [string, string, BigNumber],
       { owner: string; approved: string; tokenId: BigNumber }
+    >;
+
+    "ApprovalForAll(address,address,bool)"(
+      owner?: string | null,
+      operator?: string | null,
+      approved?: null
+    ): TypedEventFilter<
+      [string, string, boolean],
+      { owner: string; operator: string; approved: boolean }
     >;
 
     ApprovalForAll(
@@ -619,7 +689,15 @@ export class BaseRegistrar extends BaseContract {
       { owner: string; operator: string; approved: boolean }
     >;
 
+    "ControllerAdded(address)"(
+      controller?: string | null
+    ): TypedEventFilter<[string], { controller: string }>;
+
     ControllerAdded(
+      controller?: string | null
+    ): TypedEventFilter<[string], { controller: string }>;
+
+    "ControllerRemoved(address)"(
       controller?: string | null
     ): TypedEventFilter<[string], { controller: string }>;
 
@@ -627,7 +705,25 @@ export class BaseRegistrar extends BaseContract {
       controller?: string | null
     ): TypedEventFilter<[string], { controller: string }>;
 
+    "NameMigrated(uint256,address,uint256)"(
+      id?: BigNumberish | null,
+      owner?: string | null,
+      expires?: null
+    ): TypedEventFilter<
+      [BigNumber, string, BigNumber],
+      { id: BigNumber; owner: string; expires: BigNumber }
+    >;
+
     NameMigrated(
+      id?: BigNumberish | null,
+      owner?: string | null,
+      expires?: null
+    ): TypedEventFilter<
+      [BigNumber, string, BigNumber],
+      { id: BigNumber; owner: string; expires: BigNumber }
+    >;
+
+    "NameRegistered(uint256,address,uint256)"(
       id?: BigNumberish | null,
       owner?: string | null,
       expires?: null
@@ -645,6 +741,14 @@ export class BaseRegistrar extends BaseContract {
       { id: BigNumber; owner: string; expires: BigNumber }
     >;
 
+    "NameRenewed(uint256,uint256)"(
+      id?: BigNumberish | null,
+      expires?: null
+    ): TypedEventFilter<
+      [BigNumber, BigNumber],
+      { id: BigNumber; expires: BigNumber }
+    >;
+
     NameRenewed(
       id?: BigNumberish | null,
       expires?: null
@@ -653,12 +757,29 @@ export class BaseRegistrar extends BaseContract {
       { id: BigNumber; expires: BigNumber }
     >;
 
+    "OwnershipTransferred(address,address)"(
+      previousOwner?: string | null,
+      newOwner?: string | null
+    ): TypedEventFilter<
+      [string, string],
+      { previousOwner: string; newOwner: string }
+    >;
+
     OwnershipTransferred(
       previousOwner?: string | null,
       newOwner?: string | null
     ): TypedEventFilter<
       [string, string],
       { previousOwner: string; newOwner: string }
+    >;
+
+    "Transfer(address,address,uint256)"(
+      from?: string | null,
+      to?: string | null,
+      tokenId?: BigNumberish | null
+    ): TypedEventFilter<
+      [string, string, BigNumber],
+      { from: string; to: string; tokenId: BigNumber }
     >;
 
     Transfer(
