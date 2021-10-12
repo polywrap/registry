@@ -6,6 +6,7 @@
     "lib": [
       "es2019"
     ],
+    "rootDir": "./src",
     "outDir": "./bin",
     "strict": true,
     "noImplicitAny": true,
@@ -16,11 +17,5 @@
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "preserveSymlinks": true
-  },
-  "include": [
-    "../registry/deploy/*/*.js",
-  ],
-  "files": [
-    "./hardhat.config.ts",
-  ]
+  }
 }

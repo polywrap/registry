@@ -6,7 +6,7 @@ import {
 } from "@polywrap/registry-js";
 import { VerifierClientConfig } from "../config/VerifierClientConfig";
 import { Logger } from "winston";
-import { toPrettyHex } from "../helpers/toPrettyHex";
+import { toPrettyHex } from "@polywrap/version-verifier-js";
 
 export class VotingService {
   private logger: Logger;

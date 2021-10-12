@@ -1,6 +1,6 @@
 import { ProposedVersionEventArgs } from "../types/ProposedVersionEventArgs";
 import { VerifierStateInfo } from "../types/VerifierStateInfo";
-import { VersionVerifierService } from "./VersionVerifierService";
+import { VersionVerifierService } from "@polywrap/version-verifier-js";
 import { VotingService } from "./VotingService";
 import { Logger } from "winston";
 import {
@@ -9,7 +9,7 @@ import {
   ProposedVersion,
   traceFunc,
 } from "@polywrap/registry-js";
-import { toPrettyHex } from "../helpers/toPrettyHex";
+import { toPrettyHex } from "@polywrap/version-verifier-js";
 import { IgnorableRevert, IgnorableReverts } from "../types/IgnorableRevert";
 import { VerifierStateManager } from "../../../../verifier/client/api/src/services/VerifierStateManager";
 import { TypedEvent } from "../types/TypedEvent";
