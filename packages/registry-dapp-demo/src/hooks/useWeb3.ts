@@ -2,7 +2,7 @@ import { ethers } from "ethers";
 import { useEffect, useState } from "react";
 import { Web3 } from "../types/Web3";
 
-export const initWeb3 = (): [
+export const useWeb3 = (): [
   Web3 | undefined,
   React.Dispatch<React.SetStateAction<Web3 | undefined>>
 ] => {

@@ -198,18 +198,12 @@ const VersionPublishComponent: React.FC<{
         type="text"
         value={versionNumberText}
         placeholder="Version number (eg. 1.0.0)..."
-        onChange={async (e) => {
+        onChange={(e) => {
           setVersionNumberText(e.target.value);
           setVersionNumber(VersionNumber.fromString(e.target.value));
         }}
       />
-      <button
-        onClick={async () => {
-          await reloadVersionStatusInfo();
-        }}
-      >
-        Get status
-      </button>
+      <button onClick={reloadVersionStatusInfo}>Get status</button>
       <div className="verification-status">
         <NetworkSpecificView network="rinkeby">
           {versionStatusInfo &&

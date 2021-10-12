@@ -15,6 +15,20 @@ const UnproposedStatusView: React.FC<{
     "bafybeidftvdnn4wzpuipdfwqwkegmcm4ktnqrrch3p3web67mtmhu2d6ei"
   );
 
+  const proposeVersion = async () => {
+    const domain = new EnsDomain(domainName);
+
+    await packageOwner.proposeVersion(
+      domain,
+      versionNumber.major,
+      versionNumber.minor,
+      versionNumber.patch,
+      ipfsHash
+    );
+
+    await reloadVersionStatusInfo();
+  };
+
   return (
     <div className="UnproposedStatusView">
       <div className="status">Status: Unproposed</div>
@@ -28,23 +42,7 @@ const UnproposedStatusView: React.FC<{
             setIpfsHash(e.target.value);
           }}
         />
-        <button
-          onClick={async () => {
-            const domain = new EnsDomain(domainName);
-
-            await packageOwner.proposeVersion(
-              domain,
-              versionNumber.major,
-              versionNumber.minor,
-              versionNumber.patch,
-              ipfsHash
-            );
-
-            await reloadVersionStatusInfo();
-          }}
-        >
-          Propose version
-        </button>
+        <button onClick={proposeVersion}>Propose version</button>
       </div>
     </div>
   );

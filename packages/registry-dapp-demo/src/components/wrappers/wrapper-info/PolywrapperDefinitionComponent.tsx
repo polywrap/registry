@@ -31,9 +31,7 @@ const PolywrapperDefinitionComponent: React.FC<{
 
       <button
         className="find-btn"
-        onClick={async () => {
-          await loadPolywrapperInfo(new EnsDomain(domainName));
-        }}
+        onClick={() => loadPolywrapperInfo(new EnsDomain(domainName))}
       >
         Find
       </button>

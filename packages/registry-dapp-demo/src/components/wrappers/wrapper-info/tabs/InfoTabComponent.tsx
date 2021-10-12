@@ -109,13 +109,13 @@ const InfoTabComponent: React.FC<{
                         <option value="l2-chain-name">xDAI</option>
                       </select>
                       <button
-                        onClick={async () => {
-                          await relayOwnership(
+                        onClick={() =>
+                          relayOwnership(
                             polywrapperInfo.domain,
                             relayChain,
                             packageOwner
-                          );
-                        }}
+                          )
+                        }
                       >
                         Relay ownership
                       </button>

@@ -12,11 +12,11 @@ import { HashRouter as Router, Route, Switch } from "react-router-dom";
 import ImplementationRegistryPage from "../pages/implementation-registry/ImplementationRegistryPage";
 import VersionPublishPage from "../pages/version-publish/VersionPublishPage";
 import WrappersPage from "../pages/wrappers/WrappersPage";
-import { initWeb3 } from "../../hooks/initWeb3";
+import { useWeb3 } from "../../hooks/useWeb3";
 import { Web3Context } from "../../providers/Web3Context";
 
 const App: React.FC = () => {
-  const [web3, setWeb3] = initWeb3();
+  const [web3, setWeb3] = useWeb3();
   const [registry, setRegistry] = useState<
     | {
         packageOwner: PackageOwner;
