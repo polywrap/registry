@@ -1,11 +1,32 @@
 import "./Sidebar.scss";
 import SidebarMenuItems from "./SidebarMenuItems";
 import Logo from "../../logo.png";
-import { useWeb3 } from "../../hooks/useWeb3";
+import { useWeb3Context } from "../../hooks/useWeb3Context";
 import { toPrettyHex } from "../../helpers/toPrettyHex";
+import { SupportedNetwork } from "../../constants";
+import { useEffect, useState } from "react";
+import { Web3 } from "../../types/Web3";
 
 const Sidebar: React.FC = () => {
-  const web3 = useWeb3();
+  const [web3, setWeb3] = useWeb3Context();
+  const [networkName, setNetworkName] = useState<SupportedNetwork>();
+
+  useEffect(() => {
+    if (web3) {
+      setNetworkName(web3.networkName);
+    }
+  }, [web3]);
+
+  useEffect(() => {
+    if (web3 && networkName) {
+      setWeb3((web3: Web3 | undefined) => {
+        return {
+          ...web3,
+          networkName,
+        } as Web3 | undefined;
+      });
+    }
+  }, [networkName]);
 
   return (
     <div className="sidebar row">
@@ -18,7 +39,19 @@ const Sidebar: React.FC = () => {
         <div className="account-details">
           {web3 ? (
             <div>
-              <div>Network: {web3.networkName}</div>
+              <div>
+                <span className="network-label">Network: </span>
+                <select
+                  className="relay-chain"
+                  value={networkName}
+                  onChange={(e) => {
+                    setNetworkName(e.target.value as SupportedNetwork);
+                  }}
+                >
+                  <option value="xdai">xDAI</option>
+                  <option value="rinkeby">Rinkeby</option>
+                </select>
+              </div>
               <div>Account: {toPrettyHex(web3.account)}</div>
             </div>
           ) : (

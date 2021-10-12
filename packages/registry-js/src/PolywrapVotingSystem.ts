@@ -55,6 +55,10 @@ export class PolywrapVotingSystem {
     numOfConfirmationsToWait: number,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractReceipt> {
+    if (!this.registryContracts.votingMachine) {
+      throw "There is no VotingMachine contract on this chain";
+    }
+
     const tx = await (overrides
       ? this.registryContracts.votingMachine.vote(votes, overrides)
       : this.registryContracts.votingMachine.vote(votes));
@@ -66,6 +70,10 @@ export class PolywrapVotingSystem {
     patchNodeId: BytesLike,
     overrides?: CallOverrides
   ): Promise<string> {
+    if (!this.registryContracts.votingMachine) {
+      throw "There is no VotingMachine contract on this chain";
+    }
+
     return await (overrides
       ? this.registryContracts.votingMachine.getPrevPatchPackageLocation(
           patchNodeId,
@@ -80,6 +88,10 @@ export class PolywrapVotingSystem {
     patchNodeId: BytesLike,
     overrides?: CallOverrides
   ): Promise<PrevAndNextMinorPackageLocations> {
+    if (!this.registryContracts.votingMachine) {
+      throw "There is no VotingMachine contract on this chain";
+    }
+
     return await (overrides
       ? this.registryContracts.votingMachine.getPrevAndNextMinorPackageLocations(
           patchNodeId,
@@ -91,6 +103,10 @@ export class PolywrapVotingSystem {
   }
 
   async getProposedVersion(patchNodeId: BytesLike): Promise<ProposedVersion> {
+    if (!this.registryContracts.votingMachine) {
+      throw "There is no VotingMachine contract on this chain";
+    }
+
     return await this.registryContracts.votingMachine.proposedVersions(
       patchNodeId
     );
@@ -99,6 +115,10 @@ export class PolywrapVotingSystem {
   async queryVersionVotingStarted(
     blockNumber: number
   ): Promise<VersionVotingStartedEvent[]> {
+    if (!this.registryContracts.votingMachine) {
+      throw "There is no VotingMachine contract on this chain";
+    }
+
     const result = await this.registryContracts.votingMachine.queryFilter(
       this.registryContracts.votingMachine.filters.VersionVotingStarted(),
       blockNumber

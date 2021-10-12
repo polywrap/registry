@@ -4,6 +4,8 @@ export * from "./PolywrapVotingSystem";
 export * from "./RegistryContracts";
 export * from "./RegistryAuthority";
 export * from "./logger";
+export * from "./constants";
+export * from "./types";
 export * from "./helpers/isPromise";
 export * from "./errorHandler";
 export * from "./types";

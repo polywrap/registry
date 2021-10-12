@@ -1,5 +1,6 @@
 import { EnsDomain, PackageOwner } from "@polywrap/registry-js";
 import { VersionInfo } from "../types/VersionInfo";
+import { VersionNumber } from "../types/VersionNumber";
 
 export const getLatestVersionInfo = async (
   domain: EnsDomain,
@@ -8,6 +9,7 @@ export const getLatestVersionInfo = async (
   const versionInfo = await packageOwner.getLatestVersionInfo(domain.packageId);
 
   return {
+    domain,
     patchNodeId: packageOwner
       .calculatePatchNodeId(
         domain,
@@ -16,7 +18,11 @@ export const getLatestVersionInfo = async (
         versionInfo.patchVersion.toNumber()
       )
       .toString(),
-    number: `${versionInfo.majorVersion}.${versionInfo.minorVersion}.${versionInfo.patchVersion}`,
+    number: VersionNumber.fromBigNumbers(
+      versionInfo.majorVersion,
+      versionInfo.minorVersion,
+      versionInfo.patchVersion
+    ),
     packageLocation: versionInfo.location,
   };
 };

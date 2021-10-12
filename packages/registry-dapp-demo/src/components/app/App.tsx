@@ -12,11 +12,11 @@ import { HashRouter as Router, Route, Switch } from "react-router-dom";
 import ImplementationRegistryPage from "../pages/implementation-registry/ImplementationRegistryPage";
 import VersionPublishPage from "../pages/version-publish/VersionPublishPage";
 import WrappersPage from "../pages/wrappers/WrappersPage";
-import { initWeb3 } from "../../hooks/initWeb3";
+import { useWeb3 } from "../../hooks/useWeb3";
 import { Web3Context } from "../../providers/Web3Context";
 
 const App: React.FC = () => {
-  const web3 = initWeb3();
+  const [web3, setWeb3] = useWeb3();
   const [registry, setRegistry] = useState<
     | {
         packageOwner: PackageOwner;
@@ -32,7 +32,7 @@ const App: React.FC = () => {
 
     const packageOwner = new PackageOwner(
       web3.signer,
-      getPolywrapRegistryContracts(web3.provider)
+      getPolywrapRegistryContracts(web3.provider, web3.networkName)
     );
 
     setRegistry({
@@ -51,13 +51,13 @@ const App: React.FC = () => {
         }),
       },
     ]);
-  }, [web3]);
+  }, [web3, web3?.networkName]);
 
   return (
     <div className="App">
       <ToastProvider>
         <Web3ApiProvider plugins={redirects}>
-          <Web3Context.Provider value={web3}>
+          <Web3Context.Provider value={[web3, setWeb3]}>
             <PolywrapRegistryContext.Provider value={registry}>
               <Sidebar />
               {registry ? (

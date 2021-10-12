@@ -1,17 +1,33 @@
 import { EnsDomain } from "@polywrap/registry-js";
 import { useState } from "react";
 import { usePolywrapRegistry } from "../../../../hooks/usePolywrapRegistry";
+import { VersionNumber } from "../../../../types/VersionNumber";
 import "./UnproposedStatusView.scss";
 
 const UnproposedStatusView: React.FC<{
   domainName: string;
-  reloadProposedVersion: () => Promise<void>;
-}> = ({ domainName, reloadProposedVersion }) => {
+  versionNumber: VersionNumber;
+  reloadVersionStatusInfo: () => Promise<void>;
+}> = ({ domainName, versionNumber, reloadVersionStatusInfo }) => {
   const { packageOwner } = usePolywrapRegistry();
 
   const [ipfsHash, setIpfsHash] = useState(
     "bafybeidftvdnn4wzpuipdfwqwkegmcm4ktnqrrch3p3web67mtmhu2d6ei"
   );
+
+  const proposeVersion = async () => {
+    const domain = new EnsDomain(domainName);
+
+    await packageOwner.proposeVersion(
+      domain,
+      versionNumber.major,
+      versionNumber.minor,
+      versionNumber.patch,
+      ipfsHash
+    );
+
+    await reloadVersionStatusInfo();
+  };
 
   return (
     <div className="UnproposedStatusView">
@@ -26,17 +42,7 @@ const UnproposedStatusView: React.FC<{
             setIpfsHash(e.target.value);
           }}
         />
-        <button
-          onClick={async () => {
-            const domain = new EnsDomain(domainName);
-
-            await packageOwner.proposeVersion(domain, 1, 0, 0, ipfsHash);
-
-            await reloadProposedVersion();
-          }}
-        >
-          Propose version
-        </button>
+        <button onClick={proposeVersion}>Propose version</button>
       </div>
     </div>
   );

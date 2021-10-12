@@ -6,9 +6,11 @@ import "./VerifyingStatusView.scss";
 const VerifyingStatusView: React.FC<{
   patchNodeId: BytesLike;
   packageLocation: string;
-  reloadProposedVersion: () => Promise<void>;
-}> = ({ patchNodeId, packageLocation, reloadProposedVersion }) => {
+  reloadVersionStatusInfo: () => Promise<void>;
+}> = ({ patchNodeId, packageLocation, reloadVersionStatusInfo }) => {
   const { packageOwner } = usePolywrapRegistry();
+
+  const [isLoading, setIsLoading] = useState(true);
   const [votingInfo, setVotingInfo] = useState({
     verifierCount: 0,
     approvingVerifiers: 0,
@@ -26,18 +28,19 @@ const VerifyingStatusView: React.FC<{
     });
   };
 
-  const votesNeeded = votingInfo.verifierCount / 2 + 1;
+  const votesNeeded = Math.floor(votingInfo.verifierCount / 2) + 1;
 
   useEffect(() => {
-    async () => {
+    (async () => {
       await loadVotingInfo();
-    };
+      setIsLoading(false);
+    })();
   }, []);
 
   useEffect(() => {
     (async () => {
       await packageOwner._waitForVotingEnd(patchNodeId, packageLocation);
-      await reloadProposedVersion();
+      await reloadVersionStatusInfo();
     })();
   }, []);
 
@@ -45,13 +48,19 @@ const VerifyingStatusView: React.FC<{
     <div className="VerifyingStatusView">
       <div className="status">Status: Verifying</div>
       <div>
-        <div>Verifiers: {votingInfo.verifierCount}</div>
-        <div>
-          Approvals: {votingInfo.approvingVerifiers}/{votesNeeded}
-        </div>
-        <div>
-          Denials: {votingInfo.rejectingVerifiers}/{votesNeeded}
-        </div>
+        {isLoading ? (
+          <div>Loading...</div>
+        ) : (
+          <>
+            <div>Verifiers: {votingInfo.verifierCount}</div>
+            <div>
+              Approvals: {votingInfo.approvingVerifiers}/{votesNeeded}
+            </div>
+            <div>
+              Denials: {votingInfo.rejectingVerifiers}/{votesNeeded}
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

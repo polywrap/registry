@@ -48,9 +48,13 @@ export class VersionVerifierService {
     let isVersionApproved = false;
     let prevMinorNodeId: BytesLike = ethers.constants.HashZero;
     let nextMinorNodeId: BytesLike = ethers.constants.HashZero;
-    if (!isValid) return { prevMinorNodeId, nextMinorNodeId, approved: false };
+    if (!isValid) {
+      this.logger.info(`Invalid polywrapper at location`);
+      return { prevMinorNodeId, nextMinorNodeId, approved: false };
+    }
 
     if (isPatch) {
+      this.logger.debug(`Version is patch`);
       const result = await this.verifyPatchVersion(
         proposedVersionSchema as string,
         patchNodeId
@@ -58,6 +62,7 @@ export class VersionVerifierService {
 
       isVersionApproved = result as boolean;
     } else {
+      this.logger.debug(`Version is minor`);
       const verifyVersionInfo = await this.verifyMinorVersion(
         proposedVersionSchema as string,
         patchNodeId
@@ -128,7 +133,7 @@ export class VersionVerifierService {
     packageLocation: string
   ): Promise<[isValid: boolean, schema?: string]> {
     const [manifestError, manifest] = await handleError(() =>
-      this.polywrapClient.getManifest(`ipfs/${packageLocation}`, {
+      this.polywrapClient.getManifest(`${packageLocation}`, {
         type: "web3api",
       })
     )();
@@ -138,7 +143,7 @@ export class VersionVerifierService {
     }
 
     const [schemaError, schema] = await handleError(() =>
-      this.polywrapClient.getSchema(`ipfs/${packageLocation}`)
+      this.polywrapClient.getSchema(`${packageLocation}`)
     )();
     if (schemaError) {
       this.logger.info(`Error: ${schemaError.message}`);

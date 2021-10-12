@@ -8,13 +8,18 @@ import { computeMerkleProof } from "@polywrap/registry-core-js";
 import { EnsDomain } from "@polywrap/registry-core-js";
 import { RegistryContracts } from "./RegistryContracts";
 import {
+  VerificationProof,
   LatestVersionInfo,
   NodeInfo,
   ProposedVersion,
   ProposedVersionVotingInfo,
 } from "./types";
 
-export type BlockchainsWithRegistry = "l2-chain-name" | "ethereum" | "xdai";
+export type BlockchainsWithRegistry =
+  | "l2-chain-name"
+  | "ethereum"
+  | "xdai"
+  | "rinkeby";
 
 export const PolywrapOwnerReverts = [
   "Domain registry is not supported",
@@ -58,18 +63,17 @@ export class PackageOwner {
   private registryContracts: RegistryContracts;
 
   async getPolywrapOwner(domain: EnsDomain): Promise<string> {
-    return await this.registryContracts.packageOwnershipManagerL1.getPolywrapOwner(
-      domain.registryBytes32,
-      domain.node
+    return await this.registryContracts.registry.getPackageOwner(
+      domain.packageId
     );
   }
 
-  async getDomainPolywrapOwner(domain: EnsDomain): Promise<string> {
-    return await this.registryContracts.ensLinkL1.getPolywrapOwner(domain.node);
+  async getDomainPolywrapOwner(domain: EnsDomain): Promise<string | undefined> {
+    return await this.registryContracts.ensLink?.getPolywrapOwner(domain.node);
   }
 
   async updateOwnership(domain: EnsDomain): Promise<ContractReceipt> {
-    const tx = await this.registryContracts.packageOwnershipManagerL1.updateOwnership(
+    const tx = await this.registryContracts.packageOwnershipManager.updateOwnership(
       EnsDomain.RegistryBytes32,
       domain.node
     );
@@ -80,7 +84,7 @@ export class PackageOwner {
     domain: EnsDomain,
     chainName: BlockchainsWithRegistry
   ): Promise<ContractReceipt> {
-    const tx = await this.registryContracts.packageOwnershipManagerL1.relayOwnership(
+    const tx = await this.registryContracts.packageOwnershipManager.relayOwnership(
       formatBytes32String(chainName),
       EnsDomain.RegistryBytes32,
       domain.node
@@ -95,6 +99,10 @@ export class PackageOwner {
     patch: number,
     packageLocation: string
   ): Promise<ContractReceipt> {
+    if (!this.registryContracts.registrar) {
+      throw "There is no Registrar contract on this chain";
+    }
+
     const proposeTx = await this.registryContracts.registrar.proposeVersion(
       domain.packageId,
       major,
@@ -106,10 +114,14 @@ export class PackageOwner {
   }
 
   async getVerificationRoot(): Promise<BytesLike> {
-    return await this.registryContracts.versionVerificationManagerL2.verificationRoot();
+    return await this.registryContracts.versionVerificationManager.verificationRoot();
   }
 
   async getLeafCountForRoot(verificationRoot: BytesLike): Promise<number> {
+    if (!this.registryContracts.verificationTreeManager) {
+      throw "There is no VerificationTreeManager contract on this chain";
+    }
+
     const rootCalculatedEvents = await this.registryContracts.verificationTreeManager.queryFilter(
       this.registryContracts.verificationTreeManager.filters.VerificationRootCalculated(
         verificationRoot
@@ -120,13 +132,16 @@ export class PackageOwner {
     return rootCalculatedEvents[0].args.verifiedVersionCount.toNumber();
   }
 
-  async publishVersion(
+  async fetchAndCalculateVerificationProof(
     domain: EnsDomain,
-    packageLocation: string,
     major: number,
     minor: number,
     patch: number
-  ): Promise<ContractReceipt> {
+  ): Promise<VerificationProof> {
+    if (!this.registryContracts.verificationTreeManager) {
+      throw "There is no VerificationTreeManager contract on this chain";
+    }
+
     const verificationRoot = await this.getVerificationRoot();
     const leafCountForRoot = await this.getLeafCountForRoot(verificationRoot);
 
@@ -171,26 +186,48 @@ export class PackageOwner {
       throw "currentVerifiedVersionIndex is undefined";
     }
 
-    const [proof, sides] = computeMerkleProof(
+    const [hashes, sides] = computeMerkleProof(
       leaves,
       currentVerifiedVersionIndex.toNumber()
     );
-    const publishTx = await this.registryContracts.versionVerificationManagerL2.publishVersion(
+
+    return {
+      hashes,
+      sides,
+    };
+  }
+
+  async publishVersion(
+    domain: EnsDomain,
+    packageLocation: string,
+    major: number,
+    minor: number,
+    patch: number,
+    proof: VerificationProof
+  ): Promise<ContractReceipt> {
+    const currentPatchNodeId = this.calculatePatchNodeId(
+      domain,
+      major,
+      minor,
+      patch
+    );
+
+    const publishTx = await this.registryContracts.versionVerificationManager.publishVersion(
       domain.packageId,
       currentPatchNodeId,
       major,
       minor,
       patch,
       packageLocation,
-      proof,
-      sides
+      proof.hashes,
+      proof.sides
     );
 
     return await publishTx.wait();
   }
 
   async getPackageLocation(nodeId: BytesLike): Promise<string> {
-    return await this.registryContracts.registryL2.getPackageLocation(nodeId);
+    return await this.registryContracts.registry.getPackageLocation(nodeId);
   }
 
   async resolveToPackageLocation(
@@ -200,17 +237,17 @@ export class PackageOwner {
     patch: number
   ): Promise<string> {
     const patchNodeId = this.calculatePatchNodeId(domain, major, minor, patch);
-    return await this.registryContracts.registryL2.getPackageLocation(
+    return await this.registryContracts.registry.getPackageLocation(
       patchNodeId
     );
   }
 
   async getNodeInfo(nodeId: BytesLike): Promise<NodeInfo> {
-    return await this.registryContracts.registryL2.versionNodes(nodeId);
+    return await this.registryContracts.registry.versionNodes(nodeId);
   }
 
   async getLatestVersionInfo(packageId: string): Promise<LatestVersionInfo> {
-    return await this.registryContracts.registryL1.getLatestVersionInfo(
+    return await this.registryContracts.registry.getLatestVersionInfo(
       packageId
     );
   }
@@ -227,12 +264,20 @@ export class PackageOwner {
   }
 
   async getProposedVersion(patchNodeId: BytesLike): Promise<ProposedVersion> {
+    if (!this.registryContracts.votingMachine) {
+      throw "There is no VotingMachine contract on this chain";
+    }
+
     return await this.registryContracts.votingMachine.proposedVersions(
       patchNodeId
     );
   }
 
   async getAuthorizedVerifierCount(): Promise<number> {
+    if (!this.registryContracts.votingMachine) {
+      throw "There is no VotingMachine contract on this chain";
+    }
+
     const result = await this.registryContracts.votingMachine.authorizedVerifierCount();
     return result.toNumber();
   }
@@ -240,6 +285,10 @@ export class PackageOwner {
   async getProposedVersionVotingInfo(
     patchNodeId: BytesLike
   ): Promise<ProposedVersionVotingInfo> {
+    if (!this.registryContracts.votingMachine) {
+      throw "There is no VotingMachine contract on this chain";
+    }
+
     const result = await this.registryContracts.votingMachine.getProposedVersionVotingInfo(
       patchNodeId
     );
@@ -264,6 +313,10 @@ export class PackageOwner {
     );
 
     return new Promise((resolve) => {
+      if (!this.registryContracts.votingMachine) {
+        throw "There is no VotingMachine contract on this chain";
+      }
+
       const listener = (
         decidedPatchNodeId: BytesLike,
         verified: boolean,
@@ -274,6 +327,9 @@ export class PackageOwner {
           decidedPackageLocationHash != packageLocationHash
         ) {
           return;
+        }
+        if (!this.registryContracts.votingMachine) {
+          throw "There is no VotingMachine contract on this chain";
         }
 
         this.registryContracts.votingMachine.off("VersionDecided", listener);
@@ -303,6 +359,10 @@ export class PackageOwner {
     );
 
     return new Promise((resolve) => {
+      if (!this.registryContracts.votingMachine) {
+        throw "There is no VotingMachine contract on this chain";
+      }
+
       const listener = (
         decidedPatchNodeId: BytesLike,
         verified: boolean,
@@ -313,6 +373,10 @@ export class PackageOwner {
           decidedPackageLocationHash != packageLocationHash
         ) {
           return;
+        }
+
+        if (!this.registryContracts.votingMachine) {
+          throw "There is no VotingMachine contract on this chain";
         }
 
         this.registryContracts.votingMachine.off("VersionDecided", listener);
