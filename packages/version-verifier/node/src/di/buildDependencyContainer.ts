@@ -1,10 +1,10 @@
 import * as awilix from "awilix";
 import { ethers } from "ethers";
-import { SchemaComparisonService } from "../services/SchemaComparisonService";
-import { VersionVerifierService } from "../services/VersionVerifierService";
+import { SchemaComparisonService } from "@polywrap/version-verifier-js";
+import { VersionVerifierService } from "@polywrap/version-verifier-js";
 import { VersionProcessingService } from "../services/VersionProcessingService";
 import { VotingService } from "../services/VotingService";
-import { SchemaRetrievalService } from "../services/SchemaRetrievalService";
+import { SchemaRetrievalService } from "@polywrap/version-verifier-js";
 import { VerifierStateManager } from "../services/VerifierStateManager";
 import { NameAndRegistrationPair } from "awilix";
 import { setupWeb3ApiClient } from "../helpers/web3Api/setupClient";

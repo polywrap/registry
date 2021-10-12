@@ -11,7 +11,7 @@ import {
 } from "@polywrap/registry-js";
 import { toPrettyHex } from "@polywrap/version-verifier-js";
 import { IgnorableRevert, IgnorableReverts } from "../types/IgnorableRevert";
-import { VerifierStateManager } from "../../../../verifier/client/api/src/services/VerifierStateManager";
+import { VerifierStateManager } from "../services/VerifierStateManager";
 import { TypedEvent } from "../types/TypedEvent";
 
 export class VersionProcessingService {

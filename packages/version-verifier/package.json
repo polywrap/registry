@@ -1,0 +1,8 @@
+{
+  "name": "@polywrap/version-verifier",
+  "version": "1.0.0",
+  "license": "MIT",
+  "scripts": {
+    "build": "yarn --cwd ./js build && yarn --cwd ./node build"
+  }
+}

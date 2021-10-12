@@ -1,19 +1,14 @@
 {
   "name": "@polywrap/version-verifier-js",
   "version": "1.0.0",
-  "main": "app.js",
+  "main": "bin/index.js",
+  "types": "bin/index.d.ts",
+  "files": [
+    "/bin"
+  ],
   "license": "MIT",
   "scripts": {
     "build": "tsc --project tsconfig.build.json",
-    "start:local": "ENV=local yarn build && node ./bin/app.js",
-    "start:docker": "ENV=docker yarn build && node ./bin/app.js",
-    "dev": "ENV=local ts-node ./src/app.ts",
-    "test": "yarn test:jest && yarn test:hardhat",
-    "test:jest": "jest test --passWithNoTests",
-    "test:hardhat": "hardhat test --show-stack-traces",
-    "docker:full": "docker-compose -f docker-compose-with-client.yml up",
-    "docker:base": "docker-compose -f docker-compose.yml up",
-    "docker:down": "docker-compose down",
     "fix": "eslint . --ext .ts --fix",
     "lint": "eslint . --ext .ts"
   },
@@ -23,15 +18,7 @@
     "@types/js-yaml": "^4.0.2",
     "@types/node": "^16.6.1",
     "@web3api/client-js": "^0.0.1-prealpha.45",
-    "@web3api/ens-plugin-js": "^0.0.1-prealpha.45",
-    "@web3api/ethereum-plugin-js": "^0.0.1-prealpha.45",
-    "@web3api/ipfs-plugin-js": "^0.0.1-prealpha.45",
-    "@web3api/schema-parse": "^0.0.1-prealpha.45",
-    "@web3api/tracing-js": "^0.0.1-prealpha.45",
-    "awilix": "^5.0.1",
-    "cors": "^2.8.5",
     "custom-env": "^2.0.1",
-    "dotenv": "^10.0.0",
     "ethers": "^5.4.6",
     "ipfs-http-client": "^52.0.1",
     "js-yaml": "^4.1.0",
@@ -40,17 +27,9 @@
     "winston": "^3.3.3"
   },
   "devDependencies": {
-    "@nomiclabs/hardhat-ethers": "npm:hardhat-deploy-ethers@0.3.0-beta.10",
-    "@nomiclabs/hardhat-etherscan": "^2.1.2",
-    "@polywrap/registry": "^1.0.0",
-    "@typechain/hardhat": "^2.0.0",
-    "@types/cors": "^2.8.12",
-    "@types/express": "^4.17.13",
     "@types/jest": "^27.0.1",
     "chai": "^4.3.4",
     "eslint": "^7.32.0",
-    "hardhat": "^2.6.4",
-    "hardhat-deploy": "^0.9.1",
     "jest": "^27.1.0",
     "ts-jest": "^27.0.5",
     "ts-node": "^10.2.0"
