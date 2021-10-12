@@ -5,7 +5,7 @@ import VersionsTab from "./tabs/VersionsTabComponent";
 import React from "react";
 import PolywrapperDefinitionComponent from "./PolywrapperDefinitionComponent";
 import { PolywrapperInfo } from "../../../types/PolywrapperInfo";
-import { useWeb3 } from "../../../hooks/useWeb3";
+import { useWeb3Context } from "../../../hooks/useWeb3Context";
 import { usePolywrapRegistry } from "../../../hooks/usePolywrapRegistry";
 import { fetchPolywrapperInfo } from "../../../helpers/fetchPolywrapInfo";
 import { EnsDomain } from "@polywrap/registry-js";
@@ -13,7 +13,7 @@ import { useToasts } from "react-toast-notifications";
 import { handlePromise } from "../../../helpers/handlePromise";
 
 const WrapperInfoComponent: React.FC = () => {
-  const [web3] = useWeb3();
+  const [web3] = useWeb3Context();
   const { packageOwner } = usePolywrapRegistry();
 
   const [isInfoLoading, setIsInfoLoading] = useState(false);

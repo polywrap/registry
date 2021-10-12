@@ -1,13 +1,14 @@
 import "./Sidebar.scss";
 import SidebarMenuItems from "./SidebarMenuItems";
 import Logo from "../../logo.png";
-import { useWeb3 } from "../../hooks/useWeb3";
+import { useWeb3Context } from "../../hooks/useWeb3Context";
 import { toPrettyHex } from "../../helpers/toPrettyHex";
 import { SupportedNetwork } from "../../constants";
 import { useEffect, useState } from "react";
+import { Web3 } from "../../types/Web3";
 
 const Sidebar: React.FC = () => {
-  const [web3, setWeb3] = useWeb3();
+  const [web3, setWeb3] = useWeb3Context();
   const [networkName, setNetworkName] = useState<SupportedNetwork>();
 
   useEffect(() => {
@@ -18,9 +19,11 @@ const Sidebar: React.FC = () => {
 
   useEffect(() => {
     if (web3 && networkName) {
-      setWeb3({
-        ...web3,
-        networkName: networkName,
+      setWeb3((web3: Web3 | undefined) => {
+        return {
+          ...web3,
+          networkName,
+        } as Web3 | undefined;
       });
     }
   }, [networkName]);
@@ -41,7 +44,7 @@ const Sidebar: React.FC = () => {
                 <select
                   className="relay-chain"
                   value={networkName}
-                  onChange={async (e) => {
+                  onChange={(e) => {
                     setNetworkName(e.target.value as SupportedNetwork);
                   }}
                 >

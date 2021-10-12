@@ -14,7 +14,6 @@ import VersionPublishPage from "../pages/version-publish/VersionPublishPage";
 import WrappersPage from "../pages/wrappers/WrappersPage";
 import { initWeb3 } from "../../hooks/initWeb3";
 import { Web3Context } from "../../providers/Web3Context";
-import { Web3 } from "../../types/Web3";
 
 const App: React.FC = () => {
   const [web3, setWeb3] = initWeb3();
@@ -54,16 +53,11 @@ const App: React.FC = () => {
     ]);
   }, [web3, web3?.networkName]);
 
-  const a: [Web3 | undefined, (web3: Web3 | undefined) => void] = [
-    web3,
-    setWeb3,
-  ];
-
   return (
     <div className="App">
       <ToastProvider>
         <Web3ApiProvider plugins={redirects}>
-          <Web3Context.Provider value={a}>
+          <Web3Context.Provider value={[web3, setWeb3]}>
             <PolywrapRegistryContext.Provider value={registry}>
               <Sidebar />
               {registry ? (

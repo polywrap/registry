@@ -5,7 +5,7 @@ import { relayOwnership } from "../../../../helpers/relayOwnership";
 import { toPrettyHex } from "../../../../helpers/toPrettyHex";
 import { updateOwnership } from "../../../../helpers/updateOwnership";
 import { usePolywrapRegistry } from "../../../../hooks/usePolywrapRegistry";
-import { useWeb3 } from "../../../../hooks/useWeb3";
+import { useWeb3Context } from "../../../../hooks/useWeb3Context";
 import { PolywrapperInfo } from "../../../../types/PolywrapperInfo";
 import NetworkSpecificView from "../../../network-specific-view/NetworkSpecificView";
 
@@ -14,7 +14,7 @@ const InfoTabComponent: React.FC<{
   loadPolywrapperInfo: (domain: EnsDomain) => Promise<void>;
 }> = ({ polywrapperInfo, loadPolywrapperInfo }) => {
   const { packageOwner } = usePolywrapRegistry();
-  const [web3] = useWeb3();
+  const [web3] = useWeb3Context();
   const networkName = web3?.networkName;
   const [relayChain, setRelayChain] = useState<BlockchainsWithRegistry>(
     "l2-chain-name"

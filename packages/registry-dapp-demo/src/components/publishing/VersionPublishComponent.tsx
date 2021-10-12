@@ -11,7 +11,7 @@ import { VersionVerificationStatusInfo } from "../../types/VersionVerificationSt
 import { VersionVerificationStatus } from "../../types/VersionVerificationStatus";
 import { ethers } from "ethers";
 import { DetailedVersionInfo } from "../../types/DetailedVersionInfo";
-import { useWeb3 } from "../../hooks/useWeb3";
+import { useWeb3Context } from "../../hooks/useWeb3Context";
 import NetworkSpecificView from "../network-specific-view/NetworkSpecificView";
 import { VersionNumber } from "../../types/VersionNumber";
 
@@ -23,7 +23,7 @@ const VersionPublishComponent: React.FC<{
   defaultDomainName?: string;
   defaultVersionNumber?: string;
 }> = ({ defaultDomainName, defaultVersionNumber }) => {
-  const [web3] = useWeb3();
+  const [web3] = useWeb3Context();
   const { packageOwner } = usePolywrapRegistry();
 
   const [domainName, setDomainName] = useState(defaultDomainName ?? "");
@@ -64,7 +64,7 @@ const VersionPublishComponent: React.FC<{
     } else if (proposedVersion.decided && !proposedVersion.verified) {
       verificationStatus = VersionVerificationStatus.Rejected;
     } else {
-      throw "";
+      throw "Proposed version is in an invalid state";
     }
 
     return verificationStatus;
@@ -100,6 +100,7 @@ const VersionPublishComponent: React.FC<{
         },
         status: VersionVerificationStatus.Unproposed,
       });
+      return;
     }
 
     let versionInfo: DetailedVersionInfo;
@@ -130,6 +131,53 @@ const VersionPublishComponent: React.FC<{
     setVersionStatusInfo({
       proposedVersion: versionInfo,
       status: verificationStatus,
+    });
+  };
+
+  const publishVersion = async () => {
+    if (!verificationProof) {
+      throw "Verification proof is not defined";
+    }
+
+    if (!versionStatusInfo) {
+      throw "Verification status is not defined";
+    }
+
+    const domain = new EnsDomain(domainName);
+
+    await packageOwner.publishVersion(
+      domain,
+      verificationProof.packageLocation,
+      versionStatusInfo.proposedVersion.versionNumber.major,
+      versionStatusInfo.proposedVersion.versionNumber.minor,
+      versionStatusInfo.proposedVersion.versionNumber.patch,
+      verificationProof
+    );
+
+    await reloadVersionStatusInfo();
+  };
+
+  const fetchAndCalculateVerificationProof = async () => {
+    if (!versionStatusInfo) {
+      throw "Verification status is not defined";
+    }
+
+    const domain = new EnsDomain(domainName);
+
+    const proposedVersion = await packageOwner.getProposedVersion(
+      versionStatusInfo.proposedVersion.patchNodeId
+    );
+
+    const proof = await packageOwner.fetchAndCalculateVerificationProof(
+      domain,
+      versionStatusInfo.proposedVersion.versionNumber.major,
+      versionStatusInfo.proposedVersion.versionNumber.minor,
+      versionStatusInfo.proposedVersion.versionNumber.patch
+    );
+
+    setVerificationProof({
+      ...proof,
+      packageLocation: proposedVersion.packageLocation,
     });
   };
 
@@ -183,24 +231,7 @@ const VersionPublishComponent: React.FC<{
               </div>
 
               {verificationProof ? (
-                <button
-                  onClick={async () => {
-                    const domain = new EnsDomain(domainName);
-
-                    await packageOwner.publishVersion(
-                      domain,
-                      verificationProof.packageLocation,
-                      versionStatusInfo.proposedVersion.versionNumber.major,
-                      versionStatusInfo.proposedVersion.versionNumber.minor,
-                      versionStatusInfo.proposedVersion.versionNumber.patch,
-                      verificationProof
-                    );
-
-                    await reloadVersionStatusInfo();
-                  }}
-                >
-                  Publish to Rinkeby
-                </button>
+                <button onClick={publishVersion}>Publish to Rinkeby</button>
               ) : (
                 <div>
                   Switch to xDAI to propose and get your version verified. Then
@@ -233,25 +264,7 @@ const VersionPublishComponent: React.FC<{
                   ) : (
                     <button
                       className="calc-proof-btn"
-                      onClick={async () => {
-                        const domain = new EnsDomain(domainName);
-
-                        const proposedVersion = await packageOwner.getProposedVersion(
-                          versionStatusInfo.proposedVersion.patchNodeId
-                        );
-
-                        const proof = await packageOwner.fetchAndCalculateVerificationProof(
-                          domain,
-                          versionStatusInfo.proposedVersion.versionNumber.major,
-                          versionStatusInfo.proposedVersion.versionNumber.minor,
-                          versionStatusInfo.proposedVersion.versionNumber.patch
-                        );
-
-                        setVerificationProof({
-                          ...proof,
-                          packageLocation: proposedVersion.packageLocation,
-                        });
-                      }}
+                      onClick={fetchAndCalculateVerificationProof}
                     >
                       Fetch and calculate proof
                     </button>

@@ -4,7 +4,7 @@ import { Web3 } from "../types/Web3";
 
 export const initWeb3 = (): [
   Web3 | undefined,
-  (web3: Web3 | undefined) => void
+  React.Dispatch<React.SetStateAction<Web3 | undefined>>
 ] => {
   const ethereum = (window as any).ethereum;
   const [web3, setWeb3] = useState<Web3>();

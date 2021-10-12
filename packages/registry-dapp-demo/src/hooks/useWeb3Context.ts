@@ -2,9 +2,7 @@ import React from "react";
 import { Web3Context } from "../providers/Web3Context";
 import { Web3 } from "../types/Web3";
 
-export const useWeb3 = (): [
+export const useWeb3Context = (): [
   Web3 | undefined,
-  (web3: Web3 | undefined) => void
-] => {
-  return React.useContext(Web3Context);
-};
+  React.Dispatch<React.SetStateAction<Web3 | undefined>>
+] => React.useContext(Web3Context);
