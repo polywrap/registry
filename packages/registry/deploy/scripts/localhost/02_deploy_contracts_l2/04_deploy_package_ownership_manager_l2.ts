@@ -12,7 +12,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     await deterministic("PackageOwnershipManagerL2", {
       contract: "PackageOwnershipManager",
       from: deployer,
-      args: [registryL2.address, [], []],
+      args: [deployer, registryL2.address, [], []],
       log: true,
     })
   ).deploy();

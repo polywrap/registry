@@ -150,13 +150,4 @@ export class RegistryContracts {
         throw "Network not supported";
     }
   }
-
-  static fromLocalhost(
-    provider: ethers.providers.BaseProvider
-  ): RegistryContracts {
-    return RegistryContracts.fromAddresses(
-      contractAddressesLocalhost,
-      provider
-    );
-  }
 }
