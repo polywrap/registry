@@ -18,6 +18,7 @@ export const contractAddressesTestnet = {
   registrar: "0x0",
   verificationTreeManager: "0x0",
   verificationRootRelayer: "0x0",
+  VotingMachine: "0x0",
 
   ensLink: "0x0",
 };

@@ -1,19 +1,24 @@
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
+import { ethers } from "hardhat";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deployer } = await hre.getNamedAccounts();
   const { deterministic } = hre.deployments;
   const useProxy = !hre.network.live;
+  const isLocalNetwork = !hre.network.live;
 
   const ensRegistry = await hre.deployments.get("EnsRegistryL1");
 
-  await(
+  await (
     await deterministic("EnsLinkL1", {
       contract: "EnsLink",
       from: deployer,
       args: [ensRegistry.address],
       log: true,
+      salt: isLocalNetwork
+        ? ethers.utils.formatBytes32String("l1")
+        : process.env.DEPLOYMENT_SALT,
     })
   ).deploy();
 

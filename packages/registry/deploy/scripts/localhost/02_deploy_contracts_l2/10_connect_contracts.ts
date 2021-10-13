@@ -65,8 +65,15 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     signer
   );
 
+  const registryL1 = PolywrapRegistry__factory.connect(
+    (await hre.deployments.get("PolywrapRegistryL1")).address,
+    signer
+  );
+
   await registrar.updateVotingMachine(votingMachine.address);
+
   await registryL2.updateOwnershipUpdater(packageOwnershipManagerL2.address);
+
   await votingMachine.updateVersionVerifiedListener(
     verificationTreeManager.address
   );
@@ -74,7 +81,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   await verificationRootBridgeLinkL2.updateVersionVerificationManager(
     versionVerificationManager.address
   );
-  await registryL2.updateOwnershipUpdater(packageOwnershipManagerL2.address);
   await registryL2.updateVersionPublisher(versionVerificationManager.address);
   await verificationTreeManager.updateVerificationRootRelayer(
     verificationRootRelayer.address
