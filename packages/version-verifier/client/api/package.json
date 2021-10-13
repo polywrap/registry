@@ -1,5 +1,5 @@
 {
-  "name": "@polywrap/verifier-client-api",
+  "name": "@polywrap/version-verifier-client-api",
   "version": "1.0.0",
   "main": "app.js",
   "license": "MIT",
@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@polywrap/registry-js": "^1.0.0",
+    "@polywrap/version-verifier-node": "^1.0.0",
     "@typechain/ethers-v5": "^7.0.1",
     "@types/js-yaml": "^4.0.2",
     "@types/node": "^16.6.1",

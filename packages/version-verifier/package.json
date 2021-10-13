@@ -3,6 +3,6 @@
   "version": "1.0.0",
   "license": "MIT",
   "scripts": {
-    "build": "yarn --cwd ./js build && yarn --cwd ./node build"
+    "build": "yarn --cwd ./js build && yarn --cwd ./node build && yarn --cwd ./client build"
   }
 }

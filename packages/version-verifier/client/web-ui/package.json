@@ -1,5 +1,5 @@
 {
-  "name": "@polywrap/verifier-client-web-ui",
+  "name": "@polywrap/version-verifier-client-web-ui",
   "version": "0.1.0",
   "private": true,
   "scripts": {

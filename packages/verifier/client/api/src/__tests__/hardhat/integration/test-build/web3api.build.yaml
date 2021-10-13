@@ -1,4 +1,0 @@
-format: 0.0.1-prealpha.1
-docker:
-  buildImageId: |
-    sha256:a295f7c54b5821820f67cab8906a13a0709a34215876c7e572c794a425678257
