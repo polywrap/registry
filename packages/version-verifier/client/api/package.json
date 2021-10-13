@@ -1,5 +1,5 @@
 {
-  "name": "@polywrap/verifier-client-api",
+  "name": "@polywrap/version-verifier-client-api",
   "version": "1.0.0",
   "main": "app.js",
   "license": "MIT",
@@ -8,9 +8,6 @@
     "start:local": "ENV=local yarn build && node ./bin/app.js",
     "start:docker": "ENV=docker yarn build && node ./bin/app.js",
     "dev": "ENV=local ts-node ./src/app.ts",
-    "test": "yarn test:jest && yarn test:hardhat",
-    "test:jest": "jest test --passWithNoTests",
-    "test:hardhat": "hardhat test --show-stack-traces",
     "docker:full": "docker-compose -f docker-compose-with-client.yml up",
     "docker:base": "docker-compose -f docker-compose.yml up",
     "docker:down": "docker-compose down",
@@ -19,6 +16,7 @@
   },
   "dependencies": {
     "@polywrap/registry-js": "^1.0.0",
+    "@polywrap/version-verifier-node": "^1.0.0",
     "@typechain/ethers-v5": "^7.0.1",
     "@types/js-yaml": "^4.0.2",
     "@types/node": "^16.6.1",

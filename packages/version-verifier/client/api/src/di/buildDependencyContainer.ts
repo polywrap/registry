@@ -1,23 +1,25 @@
-import * as awilix from "awilix";
-import { ethers } from "ethers";
-import { SchemaComparisonService } from "../services/SchemaComparisonService";
-import { VersionVerifierService } from "../services/VersionVerifierService";
-import { VersionProcessingService } from "../services/VersionProcessingService";
-import { VotingService } from "../services/VotingService";
-import { SchemaRetrievalService } from "../services/SchemaRetrievalService";
-import { VerifierStateManager } from "../services/VerifierStateManager";
-import { VerifierClient } from "../services/VerifierClient";
-import { NameAndRegistrationPair } from "awilix";
-import { setupWeb3ApiClient } from "../web3Api/setupClient";
 import { PolywrapVotingSystem, RegistryContracts } from "@polywrap/registry-js";
-import { VerifierClientConfig } from "../config/VerifierClientConfig";
-import { EthersConfig } from "../config/EthersConfig";
-import { PolywrapClientConfig } from "../config/PolywrapClientConfig";
-import { IpfsConfig } from "../config/IpfsConfig";
+import {
+  SchemaComparisonService,
+  SchemaRetrievalService,
+  VerifierClient,
+  VerifierStateManager,
+  VersionProcessingService,
+  VersionVerifierService,
+  VotingService,
+} from "@polywrap/version-verifier-node";
+import * as awilix from "awilix";
+import { NameAndRegistrationPair } from "awilix";
+import { ethers } from "ethers";
 import winston from "winston";
 import { ApiServerConfig } from "../config/ApiServerConfig";
-import { WebUiServerConfig } from "../config/WebUiServerConfig";
+import { EthersConfig } from "../config/EthersConfig";
+import { IpfsConfig } from "../config/IpfsConfig";
 import { LoggerConfig } from "../config/loggerConfig";
+import { PolywrapClientConfig } from "../config/PolywrapClientConfig";
+import { VerifierClientConfig } from "../config/VerifierClientConfig";
+import { WebUiServerConfig } from "../config/WebUiServerConfig";
+import { setupWeb3ApiClient } from "@polywrap/version-verifier-node";
 
 export const buildDependencyContainer = (
   extensionsAndOverrides?: NameAndRegistrationPair<unknown>

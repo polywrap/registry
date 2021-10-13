@@ -16,11 +16,5 @@
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "preserveSymlinks": true
-  },
-  "include": [
-    "../registry/deploy/*/*.js",
-  ],
-  "files": [
-    "./hardhat.config.ts",
-  ]
+  }
 }
