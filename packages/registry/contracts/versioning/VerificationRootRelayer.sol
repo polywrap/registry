@@ -66,11 +66,13 @@ contract VerificationRootRelayer is OwnableUpgradeable {
 
     updateVerificationRoot(verificationRoot);
 
-    if (block.number < lastRootRelayBlock + blocksPerRootRelay) {
+    if (blocksPerRootRelay != 0 && block.number < lastRootRelayBlock + blocksPerRootRelay) {
       return;
     }
 
     relayVerificationRoot();
+
+    lastRootRelayBlock = block.number;
   }
 
   function relayVerificationRoot() public {
