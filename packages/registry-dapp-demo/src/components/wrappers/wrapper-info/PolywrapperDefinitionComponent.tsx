@@ -32,17 +32,10 @@ const PolywrapperDefinitionComponent: React.FC<{
 
     if (error) {
       console.error(error);
-      if ("message" in (error as any)) {
-        addToast((error as any).message, {
-          appearance: "error",
-          autoDismiss: true,
-        });
-      } else {
-        addToast(`An error occurred`, {
-          appearance: "error",
-          autoDismiss: true,
-        });
-      }
+      addToast(error.message, {
+        appearance: "error",
+        autoDismiss: true,
+      });
       return;
     }
   };

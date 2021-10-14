@@ -22,6 +22,7 @@ const VersionsTabComponent: React.FC<{
         getLatestVersionInfo(polywrapperInfo.domain, packageOwner)
       )();
       if (error) {
+        console.error(error);
         addToast(error.revertMessage, {
           appearance: "error",
           autoDismiss: true,
@@ -38,6 +39,7 @@ const VersionsTabComponent: React.FC<{
       setLatestVersion(latestVersionInfo);
     })();
     if (error) {
+      console.error(error);
       addToast(error.message, {
         appearance: "error",
         autoDismiss: true,

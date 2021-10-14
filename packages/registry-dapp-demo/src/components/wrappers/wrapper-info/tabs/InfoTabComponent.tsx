@@ -38,6 +38,7 @@ const InfoTabComponent: React.FC<{
         updateOwnership(polywrapperInfo.domain, packageOwner)
       )();
       if (updateOwnershipError) {
+        console.error(updateOwnershipError);
         addToast(updateOwnershipError.revertMessage, {
           appearance: "error",
           autoDismiss: true,
@@ -48,6 +49,7 @@ const InfoTabComponent: React.FC<{
         loadPolywrapperInfo(polywrapperInfo.domain)
       )();
       if (polywrapperInfoError) {
+        console.error(polywrapperInfoError);
         addToast(polywrapperInfoError.revertMessage, {
           appearance: "error",
           autoDismiss: true,
@@ -56,6 +58,7 @@ const InfoTabComponent: React.FC<{
       }
     })();
     if (error) {
+      console.error(error);
       addToast(error.message, {
         appearance: "error",
         autoDismiss: true,
@@ -70,6 +73,7 @@ const InfoTabComponent: React.FC<{
         relayOwnership(polywrapperInfo.domain, relayChain, packageOwner)
       )();
       if (error) {
+        console.error(error);
         addToast(error.revertMessage, {
           appearance: "error",
           autoDismiss: true,
@@ -78,6 +82,7 @@ const InfoTabComponent: React.FC<{
       }
     })();
     if (error) {
+      console.error(error);
       addToast(error.message, {
         appearance: "error",
         autoDismiss: true,

@@ -97,6 +97,7 @@ const VersionPublishComponent: React.FC<{
     )();
 
     if (nodeInfoError) {
+      console.error(nodeInfoError);
       addToast(nodeInfoError.revertMessage, {
         appearance: "error",
         autoDismiss: true,
@@ -145,6 +146,7 @@ const VersionPublishComponent: React.FC<{
       )();
 
       if (proposedVersionError) {
+        console.error(proposedVersionError);
         addToast(proposedVersionError.revertMessage, {
           appearance: "error",
           autoDismiss: true,
@@ -178,6 +180,7 @@ const VersionPublishComponent: React.FC<{
   const reloadVersionStatusInfo = async () => {
     const [error] = await _reloadVersionStatusInfo();
     if (error) {
+      console.error(error);
       addToast(error.message, {
         appearance: "error",
         autoDismiss: true,
@@ -207,6 +210,7 @@ const VersionPublishComponent: React.FC<{
       )
     )();
     if (publishVersionError) {
+      console.error(publishVersionError);
       addToast(publishVersionError.revertMessage, {
         appearance: "error",
         autoDismiss: true,
@@ -231,6 +235,7 @@ const VersionPublishComponent: React.FC<{
   const publishVersion = async () => {
     const [error] = await _publishVersion();
     if (error) {
+      console.error(error);
       addToast(error.message, {
         appearance: "error",
         autoDismiss: true,
@@ -255,6 +260,7 @@ const VersionPublishComponent: React.FC<{
     )();
 
     if (proposedVersionError) {
+      console.error(proposedVersionError);
       addToast(proposedVersionError.revertMessage, {
         appearance: "error",
         autoDismiss: true,
@@ -279,6 +285,7 @@ const VersionPublishComponent: React.FC<{
     )();
 
     if (proofError) {
+      console.error(proofError);
       addToast(proofError.revertMessage, {
         appearance: "error",
         autoDismiss: true,
@@ -302,6 +309,7 @@ const VersionPublishComponent: React.FC<{
   const fetchAndCalculateVerificationProof = async () => {
     const [error] = await _fetchAndCalculateVerificationProof();
     if (error) {
+      console.error(error);
       addToast(error.message, {
         appearance: "error",
         autoDismiss: true,
