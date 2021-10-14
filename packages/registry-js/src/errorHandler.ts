@@ -61,18 +61,12 @@ export function handleContractError<TArgs extends Array<unknown>, TReturn>(
       const res = func(...args);
 
       if (isPromise(res)) {
-        const [error, data] = (res
+        const result = res
           .then((res: any) => [undefined, res])
-          .catch((error) => [
-            error,
-            undefined,
-          ]) as unknown) as ContractCallResult<TReturn>;
-
-        if (error) {
-          return parseContractError(error as Record<string, unknown>);
-        } else {
-          return [undefined, data];
-        }
+          .catch((err) => {
+            return [parseContractError(err), undefined];
+          });
+        return result as Promise<ContractCallResult<TReturn>>;
       } else {
         return [undefined, res];
       }
@@ -99,17 +93,12 @@ export function handleError<TArgs extends Array<unknown>, TReturn>(
       const res = func(...args);
 
       if (isPromise(res)) {
-        const [error, data] = (res
+        const result = res
           .then((res: any) => [undefined, res])
-          .catch((error) => [
-            error as Error,
-            undefined,
-          ]) as unknown) as FunctionResult<TReturn>;
-        if (error) {
-          return [parseError(error, func.name), undefined];
-        } else {
-          return [undefined, data];
-        }
+          .catch((err) => {
+            return [parseError(err, func.name), undefined];
+          });
+        return result as Promise<FunctionResult<TReturn>>;
       } else {
         return [undefined, res];
       }
