@@ -8,15 +8,13 @@ import { PolywrapperInfo } from "../../../types/PolywrapperInfo";
 import { useWeb3Context } from "../../../hooks/useWeb3Context";
 import { usePolywrapRegistry } from "../../../hooks/usePolywrapRegistry";
 import { fetchPolywrapperInfo } from "../../../helpers/fetchPolywrapInfo";
-import { EnsDomain, handleError } from "@polywrap/registry-js";
-import { useToasts } from "react-toast-notifications";
+import { EnsDomain } from "@polywrap/registry-js";
 
 const WrapperInfoComponent: React.FC = () => {
   const [web3] = useWeb3Context();
   const { packageOwner } = usePolywrapRegistry();
 
   const [isInfoLoading, setIsInfoLoading] = useState(false);
-  const { addToast } = useToasts();
 
   useEffect(() => {
     setPolywrapperInfo(undefined);
@@ -25,26 +23,7 @@ const WrapperInfoComponent: React.FC = () => {
   const [polywrapperInfo, setPolywrapperInfo] = useState<PolywrapperInfo>();
 
   const loadPolywrapperInfo = async (domain: EnsDomain) => {
-    const [error, info] = await handleError(() =>
-      fetchPolywrapperInfo(domain, packageOwner)
-    )();
-
-    if (error) {
-      if ("message" in (error as any)) {
-        addToast((error as any).message, {
-          appearance: "error",
-          autoDismiss: true,
-        });
-      } else {
-        addToast(`An error occurred`, {
-          appearance: "error",
-          autoDismiss: true,
-        });
-      }
-      console.error(error);
-      return;
-    }
-
+    const info = await fetchPolywrapperInfo(domain, packageOwner);
     setPolywrapperInfo(info);
   };
 
