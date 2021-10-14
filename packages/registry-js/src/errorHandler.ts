@@ -6,13 +6,12 @@ import {
   ContractCallResult,
   ErrorResponseBody,
   ContractError,
+  TError,
 } from "./types/contractResultTypes";
 import { FunctionResult } from "./types/FunctionResult";
 import { MaybeAsync } from "./types/MaybeAsync";
 
-function parseContractError<TReturn>(
-  errorObj: Record<string, any>
-): ContractCallResult<TReturn> {
+function parseContractError(errorObj: Record<string, any>): TError {
   if (errorObj["code"] in errors) {
     if ("tx" in errorObj) {
       const baseError = errorObj as BaseTransactionError;
@@ -25,13 +24,13 @@ function parseContractError<TReturn>(
           error: baseError,
           revertMessage: revertMessage,
         };
-        return [error, undefined];
+        return error;
       } else {
         const error: ContractError = {
           error: baseError,
           revertMessage: "Reverted without any message",
         };
-        return [error, undefined];
+        return error;
       }
     } else {
       if (errorObj["reason"]) {
@@ -39,13 +38,13 @@ function parseContractError<TReturn>(
           error: errorObj as BaseContractError,
           revertMessage: errorObj["reason"],
         };
-        return [error, undefined];
+        return error;
       } else {
         const error: ContractError = {
           error: errorObj as BaseContractError,
           revertMessage: "Reverted without any message",
         };
-        return [error, undefined];
+        return error;
       }
     }
   }
@@ -71,7 +70,7 @@ export function handleContractError<TArgs extends Array<unknown>, TReturn>(
         return [undefined, res];
       }
     } catch (err) {
-      return parseContractError(err as Record<string, unknown>);
+      return [parseContractError(err as Record<string, unknown>), undefined];
     }
   };
 }

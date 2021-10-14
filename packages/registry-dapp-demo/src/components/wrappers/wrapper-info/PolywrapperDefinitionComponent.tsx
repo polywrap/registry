@@ -21,6 +21,7 @@ const PolywrapperDefinitionComponent: React.FC<{
         loadPolywrapperInfo(new EnsDomain(domainName))
       )();
       if (polywrapperInfoError) {
+        console.error(polywrapperInfoError);
         addToast(polywrapperInfoError.revertMessage, {
           appearance: "error",
           autoDismiss: true,
@@ -30,6 +31,7 @@ const PolywrapperDefinitionComponent: React.FC<{
     })();
 
     if (error) {
+      console.error(error);
       if ("message" in (error as any)) {
         addToast((error as any).message, {
           appearance: "error",
@@ -41,7 +43,6 @@ const PolywrapperDefinitionComponent: React.FC<{
           autoDismiss: true,
         });
       }
-      console.error(error);
       return;
     }
   };
