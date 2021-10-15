@@ -1,6 +1,8 @@
 import { EnsDomain } from "@polywrap/registry-js";
 import { useState } from "react";
+import { useToasts } from "react-toast-notifications";
 import { usePolywrapRegistry } from "../../../../hooks/usePolywrapRegistry";
+import { useVersionVerifier } from "../../../../hooks/useVersionVerifier";
 import { VersionNumber } from "../../../../types/VersionNumber";
 import "./UnproposedStatusView.scss";
 
@@ -10,13 +12,43 @@ const UnproposedStatusView: React.FC<{
   reloadVersionStatusInfo: () => Promise<void>;
 }> = ({ domainName, versionNumber, reloadVersionStatusInfo }) => {
   const { packageOwner } = usePolywrapRegistry();
+  const { versionVerifierService } = useVersionVerifier();
 
   const [ipfsHash, setIpfsHash] = useState(
     "bafybeidftvdnn4wzpuipdfwqwkegmcm4ktnqrrch3p3web67mtmhu2d6ei"
   );
 
+  const [isPatch, setIsPatch] = useState(false);
+  const { addToast } = useToasts();
+
   const proposeVersion = async () => {
     const domain = new EnsDomain(domainName);
+
+    const patchNodeId = packageOwner.calculatePatchNodeId(
+      domain,
+      versionNumber.major,
+      versionNumber.minor,
+      versionNumber.patch
+    );
+
+    const { approved } = await versionVerifierService.verifyVersion(
+      domain.packageId,
+      patchNodeId,
+      versionNumber.major,
+      versionNumber.minor,
+      versionNumber.patch,
+      ipfsHash,
+      isPatch
+    );
+
+    if (!approved) {
+      console.error("Invalid version can't be proposed");
+      addToast("Invalid version can't be proposed!", {
+        appearance: "error",
+        autoDismiss: true,
+      });
+      return;
+    }
 
     await packageOwner.proposeVersion(
       domain,
