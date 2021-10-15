@@ -14,25 +14,27 @@ import {
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deployer } = await hre.getNamedAccounts();
   const { deploy } = hre.deployments;
-  const useProxy = !hre.network.live;
+  const isLocalNetwork = !hre.network.live;
   const signer = await ethers.getSigner(deployer);
 
   const registryL1 = PolywrapRegistry__factory.connect(
     (await hre.deployments.get("PolywrapRegistryL1")).address,
     signer
   );
-  const versionVerificationManagerL1 = VersionVerificationManager__factory.connect(
-    (await hre.deployments.get("VersionVerificationManagerL1")).address,
-    signer
-  );
+  const versionVerificationManagerL1 =
+    VersionVerificationManager__factory.connect(
+      (await hre.deployments.get("VersionVerificationManagerL1")).address,
+      signer
+    );
   const packageOwnershipManagerL1 = PackageOwnershipManager__factory.connect(
     (await hre.deployments.get("PackageOwnershipManagerL1")).address,
     signer
   );
-  const verificationRootBridgeLinkL1 = VerificationRootBridgeLink__factory.connect(
-    (await hre.deployments.get("VerificationRootBridgeLinkL1")).address,
-    signer
-  );
+  const verificationRootBridgeLinkL1 =
+    VerificationRootBridgeLink__factory.connect(
+      (await hre.deployments.get("VerificationRootBridgeLinkL1")).address,
+      signer
+    );
   const ownershipBridgeLinkL1 = OwnershipBridgeLink__factory.connect(
     (await hre.deployments.get("OwnershipBridgeLinkL1")).address,
     signer
@@ -57,8 +59,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     true
   );
 
-  return !useProxy;
+  return !isLocalNetwork;
 };
 export default func;
-func.id = "connect_contracts";
+func.id = "connect_contracts_l1";
 func.tags = ["ConnectContracts", "l1"];

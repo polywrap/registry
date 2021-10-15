@@ -10,7 +10,7 @@ import {
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deployer } = await hre.getNamedAccounts();
-  const useProxy = !hre.network.live;
+  const isLocalNetwork = !hre.network.live;
   const signer = await ethers.getSigner(deployer);
 
   const rootNode = ethers.utils.zeroPad([0], 32);
@@ -37,7 +37,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   await registrar.setResolver(publicResolver.address);
 
-  return !useProxy;
+  return !isLocalNetwork;
 };
 export default func;
 func.id = "setup_ens_l1";

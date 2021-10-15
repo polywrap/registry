@@ -40,12 +40,12 @@ abstract contract Registry is OwnableUpgradeable {
   constructor(
     address owner
   ) {
-    initialize();
-    transferOwnership(owner);
+    initialize(owner);
   }
 
-  function initialize() public initializer {
+  function initialize(address owner) public initializer {
     __Ownable_init();
+    transferOwnership(owner);
   }
 
   function updateOwnershipUpdater(address _ownershipUpdater) public onlyOwner {

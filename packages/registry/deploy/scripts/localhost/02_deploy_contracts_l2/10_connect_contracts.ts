@@ -17,7 +17,7 @@ import {
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deployer } = await hre.getNamedAccounts();
-  const useProxy = !hre.network.live;
+  const isLocalNetwork = !hre.network.live;
   const signer = await ethers.getSigner(deployer);
 
   const registryL2 = PolywrapRegistry__factory.connect(
@@ -32,22 +32,25 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     (await hre.deployments.get("VotingMachine")).address,
     signer
   );
-  const verificationRootBridgeLinkL1 = VerificationRootBridgeLink__factory.connect(
-    (await hre.deployments.get("VerificationRootBridgeLinkL1")).address,
-    signer
-  );
-  const verificationRootBridgeLinkL2 = VerificationRootBridgeLink__factory.connect(
-    (await hre.deployments.get("VerificationRootBridgeLinkL2")).address,
-    signer
-  );
+  const verificationRootBridgeLinkL1 =
+    VerificationRootBridgeLink__factory.connect(
+      (await hre.deployments.get("VerificationRootBridgeLinkL1")).address,
+      signer
+    );
+  const verificationRootBridgeLinkL2 =
+    VerificationRootBridgeLink__factory.connect(
+      (await hre.deployments.get("VerificationRootBridgeLinkL2")).address,
+      signer
+    );
   const verificationTreeManager = VerificationTreeManager__factory.connect(
     (await hre.deployments.get("VerificationTreeManager")).address,
     signer
   );
-  const versionVerificationManager = VersionVerificationManager__factory.connect(
-    (await hre.deployments.get("VersionVerificationManagerL2")).address,
-    signer
-  );
+  const versionVerificationManager =
+    VersionVerificationManager__factory.connect(
+      (await hre.deployments.get("VersionVerificationManagerL2")).address,
+      signer
+    );
   const verificationRootRelayer = VerificationRootRelayer__factory.connect(
     (await hre.deployments.get("VerificationRootRelayer")).address,
     signer
@@ -111,8 +114,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     verificationRootBridgeLinkL1.address
   );
 
-  return !useProxy;
+  return !isLocalNetwork;
 };
 export default func;
-func.id = "connect_contracts";
+func.id = "connect_contracts_l2";
 func.tags = ["ConnectContracts", "l2"];

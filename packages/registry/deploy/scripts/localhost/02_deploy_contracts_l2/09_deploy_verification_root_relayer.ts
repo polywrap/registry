@@ -5,25 +5,25 @@ import { ethers } from "hardhat";
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deployer } = await hre.getNamedAccounts();
   const { deterministic } = hre.deployments;
-  const useProxy = !hre.network.live;
   const isLocalNetwork = !hre.network.live;
+  const deploymentSalt = isLocalNetwork
+    ? ethers.utils.formatBytes32String("l2")
+    : process.env.DEPLOYMENT_SALT;
 
   const versionVerificationManagerL2 = await hre.deployments.get(
     "VersionVerificationManagerL2"
   );
 
-  await (
+  await(
     await deterministic("VerificationRootRelayer", {
       from: deployer,
       args: [deployer, versionVerificationManagerL2.address, 1],
       log: true,
-      salt: isLocalNetwork
-        ? ethers.utils.formatBytes32String("l2")
-        : process.env.DEPLOYMENT_SALT,
+      salt: deploymentSalt,
     })
   ).deploy();
 
-  return !useProxy;
+  return !isLocalNetwork;
 };
 export default func;
 func.id = "deploy_verification_root_relayer";
