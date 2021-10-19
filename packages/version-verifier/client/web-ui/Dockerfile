@@ -1,8 +1,7 @@
-FROM node:10.15.3-alpine
+FROM node:14.16.0-alpine
 
 RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
-COPY ./ ./
 
 RUN apk --no-cache --virtual build-dependencies add \
     bash \
@@ -10,10 +9,14 @@ RUN apk --no-cache --virtual build-dependencies add \
     openssh \
     python \
     make \
-    g++ \
-    yarn \
-    && yarn build
+    g++
+RUN npm install -g serve
+
+COPY ./ ./
+
+RUN yarn install 
+RUN yarn build
 
 EXPOSE ${WEB_UI_PORT}
 
-ENTRYPOINT yarn start
+ENTRYPOINT ["serve", "-s", "build"]
