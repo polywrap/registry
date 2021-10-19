@@ -6,6 +6,7 @@ services:
       dockerfile: ./packages/version-verifier/client/api/Dockerfile
     extra_hosts:
       - "host.docker.internal:host-gateway"
-    network_mode: "host"
     env_file:
       - .env.docker
+    ports:
+      - 8091:8091
