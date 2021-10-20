@@ -1,6 +1,6 @@
 import * as awilix from "awilix";
 import { NameAndRegistrationPair } from "awilix";
-import { EnsApi } from "../../../../helpers/EnsApi";
+import { EnsApi } from "../helpers/EnsApi";
 import {
   ContractAddressesL1,
   ContractAddressesL2,
