@@ -2,8 +2,8 @@ version: "3"
 services:
   api-server:
     build:
-      context: ./
-      dockerfile: Dockerfile
+      context: ./../../../../ # project root
+      dockerfile: ./packages/version-verifier/client/web-ui/Dockerfile
     extra_hosts:
       - "host.docker.internal:host-gateway"
     env_file:
