@@ -30,3 +30,6 @@ coverage.json
 
 # Logging
 *.log
+
+# secrets
+secret.json
