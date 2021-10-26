@@ -1,43 +1,30 @@
-import { ethers, Signer } from "ethers";
 import { EnsDomain } from "@polywrap/registry-js";
+import { ethers, Signer } from "ethers";
 import { POLYWRAP_OWNER_RECORD_NAME } from "../constants";
-import {
-  ENSRegistry,
-  TestEthRegistrar,
-  TestPublicResolver,
-} from "../typechain";
-
-const rootNode = ethers.utils.zeroPad([0], 32);
+import { EnsTestContracts } from "./EnsTestContracts";
 
 export class EnsApi {
-  private ensRegistryL1: ENSRegistry;
-  private testEthRegistrarL1: TestEthRegistrar;
-  private testPublicResolverL1: TestPublicResolver;
+  private ensTestContracts: EnsTestContracts;
 
-  constructor(deps: {
-    ensRegistryL1: ENSRegistry;
-    testEthRegistrarL1: TestEthRegistrar;
-    testPublicResolverL1: TestPublicResolver;
-  }) {
-    this.ensRegistryL1 = deps.ensRegistryL1;
-    this.testEthRegistrarL1 = deps.testEthRegistrarL1;
-    this.testPublicResolverL1 = deps.testPublicResolverL1;
+  constructor(ensTestContracts: EnsTestContracts) {
+    this.ensTestContracts = ensTestContracts;
   }
 
   async registerDomainName(
     domainOwner: Signer,
     domain: EnsDomain
   ): Promise<void> {
-    await this.testEthRegistrarL1.register(
+    this.ensTestContracts.connect(domainOwner);
+
+    await this.ensTestContracts.testEthRegistrarL1.register(
       domain.labelHash,
       await domainOwner.getAddress(),
       10 * 60
     );
-    const ownedRegistry = this.ensRegistryL1.connect(domainOwner);
 
-    const tx = await ownedRegistry.setResolver(
+    const tx = await this.ensTestContracts.ensRegistryL1.setResolver(
       domain.node,
-      this.testPublicResolverL1!.address
+      this.ensTestContracts.testPublicResolverL1.address
     );
 
     await tx.wait();
@@ -47,9 +34,9 @@ export class EnsApi {
     domainOwner: Signer,
     domain: EnsDomain
   ): Promise<void> {
-    const ownedPublicResolver = this.testPublicResolverL1.connect(domainOwner);
+    this.ensTestContracts.connect(domainOwner);
 
-    const tx = await ownedPublicResolver.setText(
+    const tx = await this.ensTestContracts.testPublicResolverL1.setText(
       domain.node,
       POLYWRAP_OWNER_RECORD_NAME,
       await domainOwner.getAddress()
@@ -59,7 +46,7 @@ export class EnsApi {
   }
 
   async getPolywrapOwner(domain: EnsDomain): Promise<string> {
-    return await this.testPublicResolverL1.text(
+    return await this.ensTestContracts.testPublicResolverL1.text(
       domain.node,
       POLYWRAP_OWNER_RECORD_NAME
     );
