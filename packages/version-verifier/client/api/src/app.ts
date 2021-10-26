@@ -7,6 +7,7 @@ import fs from "fs";
 import { EnsDomain } from "@polywrap/registry-core-js";
 import { ethers } from "ethers";
 import { configureDomainForPolywrap } from "@polywrap/version-verifier-node";
+import { waitForEthereumNode } from "./helpers/waitForEthereumNode";
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 require("custom-env").env(process.env.ENV);
@@ -149,6 +150,8 @@ async function run() {
       `API is running on port ${apiServerConfig.port}. Check status here: http://localhost:${apiServerConfig.port}/info`
     );
   });
+
+  await waitForEthereumNode(ethersProvider, logger);
 
   await verifierClient.run();
 }
