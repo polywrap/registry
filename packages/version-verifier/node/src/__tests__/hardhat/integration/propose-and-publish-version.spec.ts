@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
 import { buildDependencyContainer } from "../../../di/buildDependencyContainer";
-import { EnsApi } from "../../../helpers/EnsApi";
+import { EnsApi } from "./helpers/EnsApi";
 import { buildHelpersDependencyExtensions } from "./helpers/buildHelpersDependencyExtensions";
 import {
   EnsDomain,

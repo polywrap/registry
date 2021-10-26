@@ -1,6 +1,6 @@
 import { ethers, Signer } from "ethers";
 import { EnsDomain } from "@polywrap/registry-core-js";
-import { EnsApi } from "./EnsApi";
+import { EnsApi } from "@polywrap/registry-test-utils";
 
 export const configureDomainForPolywrap = async (
   ensOwner: Signer,
