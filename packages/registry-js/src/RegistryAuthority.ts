@@ -11,11 +11,13 @@ export class RegistryAuthority {
   }
 
   signer: ethers.Signer;
-  private votingMachine: VotingMachine;
+  public votingMachine: VotingMachine;
 
   async authorizeVerifiers(
     verifierAddresses: string[]
   ): Promise<ContractReceipt> {
+    console.log("Hello");
+    console.log(await this.signer.getAddress());
     const tx = await this.votingMachine.authorizeVerifiers(verifierAddresses);
     return await tx.wait();
   }
