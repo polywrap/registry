@@ -131,9 +131,14 @@ export class RegistryContracts {
     switch (networkName) {
       case "ethereum":
         throw "Not implemented";
-      case "l2-chain-name":
+      case "l1-chain-name":
         return RegistryContracts.fromAddresses(
           contractAddressesDefaultLocalhostL1,
+          provider
+        );
+      case "l2-chain-name":
+        return RegistryContracts.fromAddresses(
+          contractAddressesDefaultLocalhostL2,
           provider
         );
       case "rinkeby":
