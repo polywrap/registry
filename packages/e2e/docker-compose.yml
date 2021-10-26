@@ -1,0 +1,26 @@
+version: "3"
+services:
+  api-server:
+    build:
+      context: ./../../ # project root
+      dockerfile: ./packages/version-verifier/client/api/Dockerfile
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    env_file:
+      - .env.docker
+    ports:
+      - 8091:8091
+    depends_on:
+      - "ganache"
+      - "ipfs"
+  ganache:
+    image: "trufflesuite/ganache-cli:v6.12.2"
+    ports:
+      - "8545:8545"
+    command: -l 8000000 --networkId 1576478390085 --deterministic --hostname=0.0.0.0 -m "test test test test test test test test test test test test"
+  ipfs:
+    image: "ipfs/go-ipfs:v0.4.23"
+    ports:
+      - "5001:5001"
+      - "8080:8080"
+      - "4001:4001"

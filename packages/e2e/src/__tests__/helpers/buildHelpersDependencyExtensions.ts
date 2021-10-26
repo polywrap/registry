@@ -1,57 +1,85 @@
 import * as awilix from "awilix";
-import { ethers } from "ethers";
 import { NameAndRegistrationPair } from "awilix";
+import { PackageOwner, PolywrapVotingSystem } from "@polywrap/registry-js";
+import { Wallet } from "ethers";
 import { create } from "ipfs-http-client";
-import {
-  ENSRegistry__factory,
-  PackageOwnershipManager__factory,
-  PolywrapRegistrar__factory,
-  TestEthRegistrar__factory,
-  TestPublicResolver__factory,
-  VerificationTreeManager__factory,
-  VersionVerificationManager__factory,
-  VotingMachine__factory,
-} from "../../typechain";
-import * as EnsRegistryL1 from "../../deployments/localhost/EnsRegistryL1.json";
-import * as TestEthRegistrarL1 from "../../deployments/localhost/TestEthRegistrarL1.json";
-import * as TestPublicResolverL1 from "../../deployments/localhost/TestPublicResolverL1.json";
-import { EnsApi } from "./ens/EnsApi";
-import * as VersionVerificationManagerL2 from "../../deployments/localhost/VersionVerificationManagerL2.json";
-import * as PackageOwnershipManagerL1 from "../../deployments/localhost/PackageOwnershipManagerL1.json";
-import * as PolywrapRegistrar from "../../deployments/localhost/PolywrapRegistrar.json";
-import * as VerificationTreeManager from "../../deployments/localhost/PolywrapRegistrar.json";
-import * as VotingMachine from "../../deployments/localhost/VotingMachine.json";
-import {
-  PackageOwner,
-  RegistryAuthority,
-  RegistryContracts,
-} from "@polywrap/registry-js";
+import { RegistryContracts, RegistryAuthority } from "@polywrap/registry-js";
+import winston from "winston";
+import { SignerConfig } from "../../config/SignerConfig";
+import { EnsTestContracts, EnsApi } from "@polywrap/registry-test-utils";
 import { IpfsConfig } from "../../config/IpfsConfig";
 
-export const buildHelpersDependencyExtensions = (): NameAndRegistrationPair<any> => {
+export const buildHelpersDependencyExtensions = (loggerConfig: {
+  consoleLogLevel: string;
+  fileLogLevel: string;
+  logFileName: string;
+}): NameAndRegistrationPair<any> => {
   return {
-    ipfsConfig: awilix.asFunction(() => {
-      return new IpfsConfig();
-    }),
-    registryContracts: awilix.asFunction(({ ethersProvider }) => {
-      return RegistryContracts.fromTestnet(ethersProvider);
-    }),
-    ipfsClient: awilix.asFunction(({ ipfsConfig }) => {
+    logger: awilix
+      .asFunction(() => {
+        const consoleFormat = winston.format.printf(
+          ({ level, message, timestamp }) =>
+            `${new Date(timestamp)} - ${level} - ${message}`
+        );
+        const jsonFormat = winston.format.printf((object) =>
+          JSON.stringify(object)
+        );
+
+        return winston.createLogger({
+          transports: [
+            new winston.transports.Console({
+              level: loggerConfig.consoleLogLevel,
+              format: winston.format.combine(
+                winston.format.simple(),
+                winston.format.colorize(),
+                winston.format.timestamp(),
+                consoleFormat
+              ),
+            }),
+            new winston.transports.File({
+              filename: loggerConfig.logFileName,
+              level: loggerConfig.fileLogLevel,
+              format: winston.format.combine(
+                winston.format.json(),
+                winston.format.timestamp(),
+                jsonFormat
+              ),
+            }),
+          ],
+        });
+      })
+      .singleton(),
+    ipfsConfig: awilix.asClass(IpfsConfig).singleton(),
+    ipfsClient: awilix.asFunction(() => {
       return create({
-        url: ipfsConfig.ipfsProvider,
+        url: process.env.IPFS_URI,
       });
     }),
-    verifierSigner: awilix.asFunction(({ ethersProvider }) => {
-      return new ethers.Wallet(
-        process.env.VERIFIER_PRIVATE_KEY!,
-        ethersProvider
+    signerConfig: awilix.asClass(SignerConfig).singleton(),
+    signers: awilix.asFunction(({ signerConfig }) => ({
+      verifierSigner: new Wallet(signerConfig.verifierPrivateKey),
+      registryAuthoritySigner: new Wallet(
+        signerConfig.registryAuthorityPrivateKey
+      ),
+      packageOwnerSigner: new Wallet(signerConfig.packageOwnerPrivateKey),
+    })),
+    registryContracts: awilix.asFunction(({ ethersProvider }) => {
+      return RegistryContracts.fromDefaultLocalhost(
+        ethersProvider,
+        "l2-chain-name"
       );
     }),
-    registryAuthoritySigner: awilix.asFunction(({ ethersProvider }) => {
-      return new ethers.Wallet(
-        process.env.REGISTRY_AUTHORITY_PRIVATE_KEY!,
-        ethersProvider
+    registryContractsL1: awilix.asFunction(({ ethersProvider }) => {
+      return RegistryContracts.fromDefaultLocalhost(
+        ethersProvider,
+        "l1-chain-name"
       );
+    }),
+    verifierSigner: awilix.asFunction(({ signers }) => {
+      return signers.verifierSigner;
+    }),
+    registryAuthoritySigner: awilix.asFunction(({ signers }) => {
+      return signers.registryAuthoritySigner;
     }),
     registryAuthority: awilix.asFunction(
       ({ registryAuthoritySigner, registryContracts }) => {
@@ -61,67 +89,24 @@ export const buildHelpersDependencyExtensions = (): NameAndRegistrationPair<any>
         );
       }
     ),
-    ensApi: awilix.asClass(EnsApi),
-    packageOwnerSigner: awilix.asFunction(({ ethersProvider }) => {
-      return new ethers.Wallet(
-        process.env.PACKAGE_OWNER_PRIVATE_KEY!,
-        ethersProvider
-      );
+    packageOwnerSigner: awilix.asFunction(({ signers }) => {
+      return signers.packageOwnerSigner;
     }),
     packageOwner: awilix.asFunction(
       ({ packageOwnerSigner, registryContracts }) => {
         return new PackageOwner(packageOwnerSigner, registryContracts);
       }
     ),
-    versionVerificationManagerL2: awilix.asFunction(
-      ({ packageOwnerSigner }) => {
-        return VersionVerificationManager__factory.connect(
-          VersionVerificationManagerL2.address,
-          packageOwnerSigner
-        );
+    ensTestContracts: awilix.asFunction(({ ethersProvider }) => {
+      return EnsTestContracts.fromTestnet(ethersProvider);
+    }),
+    ensApi: awilix.asFunction(({ ensTestContracts }) => {
+      return new EnsApi(ensTestContracts);
+    }),
+    polywrapVotingSystem: awilix.asFunction(
+      ({ verifierSigner, registryContracts }) => {
+        return new PolywrapVotingSystem(verifierSigner, registryContracts);
       }
     ),
-    packageOwnershipManagerL1: awilix.asFunction(({ packageOwnerSigner }) => {
-      return PackageOwnershipManager__factory.connect(
-        PackageOwnershipManagerL1.address,
-        packageOwnerSigner
-      );
-    }),
-    registrar: awilix.asFunction(({ packageOwnerSigner }) => {
-      return PolywrapRegistrar__factory.connect(
-        PolywrapRegistrar.address,
-        packageOwnerSigner
-      );
-    }),
-    verificationTreeManager: awilix.asFunction(({ packageOwnerSigner }) => {
-      return VerificationTreeManager__factory.connect(
-        VerificationTreeManager.address,
-        packageOwnerSigner
-      );
-    }),
-    ensRegistryL1: awilix.asFunction(({ registryAuthoritySigner }) => {
-      return ENSRegistry__factory.connect(
-        EnsRegistryL1.address,
-        registryAuthoritySigner
-      );
-    }),
-    testEthRegistrarL1: awilix.asFunction(({ registryAuthoritySigner }) => {
-      return TestEthRegistrar__factory.connect(
-        TestEthRegistrarL1.address,
-        registryAuthoritySigner
-      );
-    }),
-    testPublicResolverL1: awilix.asFunction(({ registryAuthoritySigner }) => {
-      return TestPublicResolver__factory.connect(
-        TestPublicResolverL1.address,
-        registryAuthoritySigner
-      );
-    }),
-    votingMachine: awilix.asFunction(({ verifierSigner }) => {
-      return VotingMachine__factory.connect(
-        VotingMachine.address,
-        verifierSigner
-      );
-    }),
   };
 };

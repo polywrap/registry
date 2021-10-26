@@ -1,25 +1,66 @@
-import { EnsApi } from "./helpers/ens/EnsApi";
-import { IPFSHTTPClient } from "ipfs-http-client";
+import { Wallet } from "@ethersproject/wallet";
 import {
   EnsDomain,
   PackageOwner,
   RegistryAuthority,
 } from "@polywrap/registry-js";
-import { publishToIPFS, runCommand } from "@polywrap/registry-test-utils";
-import { Wallet } from "@ethersproject/wallet";
+import {
+  EnsApi,
+  publishToIPFS,
+  runCommand,
+} from "@polywrap/registry-test-utils";
+import { IPFSHTTPClient } from "ipfs-http-client";
+import { IpfsConfig } from "../config/IpfsConfig";
+import { buildDependencyContainer } from "../di/buildDependencyContainer";
+import { buildHelpersDependencyExtensions } from "./helpers/buildHelpersDependencyExtensions";
+import { down, up } from "./helpers/testEnv";
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 require("custom-env").env(process.env.ENV || "local");
 
-import { buildDependencyContainer } from "../di/buildDependencyContainer";
-import { buildHelpersDependencyExtensions } from "./helpers/buildHelpersDependencyExtensions";
-
-import { up, down } from "./helpers/testEnv";
-import { IpfsConfig } from "../config/IpfsConfig";
-
 jest.setTimeout(2000000);
 
 const shouldLog = process.env.LOG_TESTS === "true";
+
+const publishAndVerifyVersion = async (
+  packageOwner: PackageOwner,
+  domain: EnsDomain,
+  majorNumber: number,
+  minorNumber: number,
+  patchNumber: number,
+  packageLocation: string
+) => {
+  const proof = await packageOwner.fetchAndCalculateVerificationProof(
+    domain,
+    majorNumber,
+    minorNumber,
+    patchNumber
+  );
+
+  await packageOwner.publishVersion(
+    domain,
+    packageLocation,
+    majorNumber,
+    minorNumber,
+    patchNumber,
+    proof
+  );
+
+  const versionInfo = await packageOwner.getVersionNodeInfo(
+    domain,
+    majorNumber,
+    minorNumber,
+    patchNumber
+  );
+  const resolvedPackageLocation = await packageOwner.resolveToPackageLocation(
+    domain,
+    majorNumber,
+    minorNumber,
+    patchNumber
+  );
+  expect(versionInfo.location).toBe(packageLocation);
+  expect(resolvedPackageLocation).toBe(packageLocation);
+};
 
 describe("e2e", () => {
   let packageOwner: PackageOwner;
@@ -31,7 +72,11 @@ describe("e2e", () => {
 
   beforeAll(async () => {
     const dependencyContainer = buildDependencyContainer(
-      buildHelpersDependencyExtensions()
+      buildHelpersDependencyExtensions({
+        consoleLogLevel: "debug",
+        fileLogLevel: "debug",
+        logFileName: "test_verifier_client.log",
+      })
     );
 
     packageOwner = dependencyContainer.cradle.packageOwner;
@@ -43,7 +88,7 @@ describe("e2e", () => {
   });
 
   beforeEach(async () => {
-    await up(`${__dirname}/../../../verifier-client`, ipfsConfig.ipfsProvider);
+    // await up(`${__dirname}/../../`, ipfsConfig.ipfsProvider);
     await runCommand(
       "yarn hardhat deploy --network localhost",
       !shouldLog,
@@ -52,7 +97,7 @@ describe("e2e", () => {
   });
 
   afterEach(async () => {
-    await down(`${__dirname}/../../../verifier-client`);
+    // await down(`${__dirname}/../../`);
   });
 
   it("sanity", async () => {
@@ -72,6 +117,13 @@ describe("e2e", () => {
       patchNumber
     );
     console.log("Hello 3");
+
+    const verifierAddresses = await verifierSigner.getAddress();
+    const tx = await registryAuthority.votingMachine.authorizeVerifiers([
+      verifierAddresses,
+    ]);
+    const receipt = await tx.wait();
+    console.log(receipt);
 
     await registryAuthority.authorizeVerifiers([
       await verifierSigner.getAddress(),
@@ -109,12 +161,13 @@ describe("e2e", () => {
     expect(votingResult.patchNodeId).toBe(patchNodeId);
     expect(votingResult.verified).toBe(true);
 
-    await packageOwner.publishVersion(
+    await publishAndVerifyVersion(
+      packageOwner,
       domain,
-      packageLocation,
       majorNumber,
       minorNumber,
-      patchNumber
+      patchNumber,
+      packageLocation
     );
     console.log("Hello 9");
 
