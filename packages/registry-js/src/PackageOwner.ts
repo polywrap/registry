@@ -16,6 +16,7 @@ import {
 } from "./types";
 
 export type BlockchainsWithRegistry =
+  | "l1-chain-name"
   | "l2-chain-name"
   | "ethereum"
   | "xdai"
