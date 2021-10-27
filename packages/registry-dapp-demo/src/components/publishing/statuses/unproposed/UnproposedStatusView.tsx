@@ -42,11 +42,13 @@ const UnproposedStatusView: React.FC<{
     );
 
     if (!approved) {
-      console.error("Invalid version can't be proposed");
-      addToast("Invalid version can't be proposed!", {
-        appearance: "error",
-        autoDismiss: true,
-      });
+      addToast(
+        "Proposed version does not match the requirements for a valid version",
+        {
+          appearance: "error",
+          autoDismiss: true,
+        }
+      );
       return;
     }
 
