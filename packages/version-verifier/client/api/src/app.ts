@@ -17,6 +17,7 @@ const {
   apiServerConfig,
   webUiServerConfig,
   logger,
+  ethersProvider,
 } = dependencyContainer.cradle;
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires

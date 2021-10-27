@@ -10,7 +10,7 @@ export async function waitForEthereumNode(
   ethersProvider: providers.Provider,
   logger: Logger
 ): Promise<void> {
-  let delay = 1000;
+  let delay = 2000;
   while (delay) {
     const [error] = await handleError(async () => {
       return await ethersProvider.getBlockNumber();
@@ -22,9 +22,12 @@ export async function waitForEthereumNode(
           delay / 1000
         } seconds`
       );
-    } else break;
+    } else {
+      logger.info(`Connected to the ethereum node.`);
+      break;
+    }
 
     await sleep(delay);
-    delay *= 2;
+    delay += 2;
   }
 }
