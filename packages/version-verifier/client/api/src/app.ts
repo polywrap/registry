@@ -2,11 +2,8 @@ import { buildDependencyContainer } from "./di/buildDependencyContainer";
 import express from "express";
 import { query, validationResult } from "express-validator";
 import cors from "cors";
-import { RegistryAuthority, Tracer } from "@polywrap/registry-js";
+import { Tracer } from "@polywrap/registry-js";
 import fs from "fs";
-import { EnsDomain } from "@polywrap/registry-core-js";
-import { ethers } from "ethers";
-import { configureDomainForPolywrap } from "@polywrap/version-verifier-node";
 import { waitForEthereumNode } from "./helpers/waitForEthereumNode";
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -17,11 +14,8 @@ Tracer.enableTracing("verifier-client");
 const dependencyContainer = buildDependencyContainer();
 const {
   verifierClient,
-  verifierSigner,
-  registryContracts,
   apiServerConfig,
   webUiServerConfig,
-  ethersProvider,
   logger,
 } = dependencyContainer.cradle;
 
@@ -64,38 +58,6 @@ async function run() {
     res.send({
       status: "running",
     });
-  });
-
-  app.get("/dev/configureEnsDomain", async (req, res) => {
-    logger.debug(`API request: configureEnsDomain`);
-    try {
-      await configureDomainForPolywrap(
-        new ethers.Wallet(req.query.ensOwner as string, ethersProvider),
-        new ethers.Wallet(req.query.owner as string, ethersProvider),
-        new EnsDomain(req.query.domain as string),
-        ethersProvider
-      );
-      res.send("Success");
-    } catch (ex) {
-      logger.debug(`API request failure: configureEnsDomain`);
-      res.send(ex);
-    }
-  });
-
-  app.get("/dev/authorizeVerifier", async (req, res) => {
-    logger.debug(`API request: authorizeVerifier`);
-    try {
-      const authority = new RegistryAuthority(
-        verifierSigner,
-        registryContracts.votingMachine.address
-      );
-
-      await authority.authorizeVerifiers([await verifierSigner.getAddress()]);
-      res.send("Success");
-    } catch (ex) {
-      logger.debug(`API request failure: authorizeVerifier`);
-      res.send(ex);
-    }
   });
 
   app.get(

@@ -1,12 +1,15 @@
 import { ethers, Signer } from "ethers";
 import { EnsDomain } from "@polywrap/registry-js";
-import { POLYWRAP_OWNER_RECORD_NAME } from "../constants";
 import {
   ENSRegistry,
+  ENSRegistry__factory,
   TestEthRegistrar,
+  TestEthRegistrar__factory,
   TestPublicResolver,
+  TestPublicResolver__factory,
 } from "../typechain";
 
+export const POLYWRAP_OWNER_RECORD_NAME = "polywrap-owner";
 const rootNode = ethers.utils.zeroPad([0], 32);
 
 export class EnsApi {
@@ -14,28 +17,48 @@ export class EnsApi {
   private testEthRegistrarL1: TestEthRegistrar;
   private testPublicResolverL1: TestPublicResolver;
 
-  constructor(deps: {
-    ensRegistryL1: ENSRegistry;
-    testEthRegistrarL1: TestEthRegistrar;
-    testPublicResolverL1: TestPublicResolver;
-  }) {
-    this.ensRegistryL1 = deps.ensRegistryL1;
-    this.testEthRegistrarL1 = deps.testEthRegistrarL1;
-    this.testPublicResolverL1 = deps.testPublicResolverL1;
+  constructor(
+    contractAddresses: {
+      ensRegistryL1: string;
+      testEthRegistrarL1: string;
+      testPublicResolverL1: string;
+    },
+    provider: ethers.providers.Provider
+  ) {
+    this.ensRegistryL1 = ENSRegistry__factory.connect(
+      contractAddresses.ensRegistryL1,
+      provider
+    );
+    this.testEthRegistrarL1 = TestEthRegistrar__factory.connect(
+      contractAddresses.testEthRegistrarL1,
+      provider
+    );
+    this.testPublicResolverL1 = TestPublicResolver__factory.connect(
+      contractAddresses.testPublicResolverL1,
+      provider
+    );
   }
 
   async registerDomainName(
+    owner: Signer,
     domainOwner: Signer,
     domain: EnsDomain
   ): Promise<void> {
-    await this.testEthRegistrarL1.register(
-      domain.labelHash,
-      await domainOwner.getAddress(),
-      10 * 60
-    );
+    let tx = await this.testEthRegistrarL1
+      .connect(owner)
+      .addController(await domainOwner.getAddress());
+
+    await tx.wait();
+
+    tx = await this.testEthRegistrarL1
+      .connect(domainOwner)
+      .register(domain.labelHash, await domainOwner.getAddress(), 10 * 60);
+
+    await tx.wait();
+
     const ownedRegistry = this.ensRegistryL1.connect(domainOwner);
 
-    const tx = await ownedRegistry.setResolver(
+    tx = await ownedRegistry.setResolver(
       domain.node,
       this.testPublicResolverL1!.address
     );
