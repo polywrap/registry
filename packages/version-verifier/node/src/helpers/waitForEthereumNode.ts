@@ -1,10 +1,7 @@
 import { handleError } from "@polywrap/registry-js";
 import { providers } from "ethers";
 import { Logger } from "winston";
-
-function sleep(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
+import { sleep } from "./sleep";
 
 export async function waitForEthereumNode(
   ethersProvider: providers.Provider,
@@ -28,6 +25,6 @@ export async function waitForEthereumNode(
     }
 
     await sleep(delay);
-    delay += 2;
+    delay += 2000;
   }
 }

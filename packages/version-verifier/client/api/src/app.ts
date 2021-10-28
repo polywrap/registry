@@ -4,7 +4,6 @@ import { query, validationResult } from "express-validator";
 import cors from "cors";
 import { Tracer } from "@polywrap/registry-js";
 import fs from "fs";
-import { waitForEthereumNode } from "./helpers/waitForEthereumNode";
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 require("custom-env").env(process.env.ENV);
@@ -113,8 +112,6 @@ async function run() {
       `API is running on port ${apiServerConfig.port}. Check status here: http://localhost:${apiServerConfig.port}/info`
     );
   });
-
-  await waitForEthereumNode(ethersProvider, logger);
 
   await verifierClient.run();
 }
