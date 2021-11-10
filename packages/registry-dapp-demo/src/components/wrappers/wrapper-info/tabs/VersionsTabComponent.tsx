@@ -4,6 +4,8 @@ import { PolywrapperInfo } from "../../../../types/PolywrapperInfo";
 import { usePolywrapRegistry } from "../../../../hooks/usePolywrapRegistry";
 import { getLatestVersionInfo } from "../../../../helpers/getLatestVersionInfo";
 import VersionInfoComponent from "../../../versions/VersionInfoComponent";
+import { handleContractError, handleError } from "@polywrap/registry-js";
+import { useToasts } from "react-toast-notifications";
 
 const VersionsTabComponent: React.FC<{
   polywrapperInfo: PolywrapperInfo;
@@ -12,6 +14,39 @@ const VersionsTabComponent: React.FC<{
 
   const [versionNumberText, setVersionNumberText] = useState("");
   const [latestVersion, setLatestVersion] = useState<VersionInfo | undefined>();
+  const { addToast } = useToasts();
+
+  const onFindLatest = async () => {
+    const [error] = await handleError(async () => {
+      const [error, latestVersionInfo] = await handleContractError(() =>
+        getLatestVersionInfo(polywrapperInfo.domain, packageOwner)
+      )();
+      if (error) {
+        console.error(error);
+        addToast(error.revertMessage, {
+          appearance: "error",
+          autoDismiss: true,
+        });
+        return;
+      }
+      if (!latestVersionInfo) {
+        addToast("Error: unable to fetch latestVersionInfo", {
+          appearance: "error",
+          autoDismiss: true,
+        });
+        return;
+      }
+      setLatestVersion(latestVersionInfo);
+    })();
+    if (error) {
+      console.error(error);
+      addToast(error.message, {
+        appearance: "error",
+        autoDismiss: true,
+      });
+      return;
+    }
+  };
 
   return (
     <div className="VersionsTab">
@@ -24,14 +59,7 @@ const VersionsTabComponent: React.FC<{
           setVersionNumberText(e.target.value);
         }}
       />
-      <button
-        className="find-btn"
-        onClick={async () => {
-          setLatestVersion(
-            await getLatestVersionInfo(polywrapperInfo.domain, packageOwner)
-          );
-        }}
-      >
+      <button className="find-btn" onClick={onFindLatest}>
         Find latest
       </button>
       <div className="version-info">

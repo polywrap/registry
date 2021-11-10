@@ -2,6 +2,8 @@ import "./VersionPublishComponent.scss";
 import { useEffect, useState } from "react";
 import {
   EnsDomain,
+  handleContractError,
+  handleError,
   ProposedVersion,
   VerificationProof,
 } from "@polywrap/registry-js";
@@ -14,6 +16,7 @@ import { DetailedVersionInfo } from "../../types/DetailedVersionInfo";
 import { useWeb3Context } from "../../hooks/useWeb3Context";
 import NetworkSpecificView from "../network-specific-view/NetworkSpecificView";
 import { VersionNumber } from "../../types/VersionNumber";
+import { useToasts } from "react-toast-notifications";
 
 type VerificationProofWithLocation = VerificationProof & {
   packageLocation: string;
@@ -25,6 +28,7 @@ const VersionPublishComponent: React.FC<{
 }> = ({ defaultDomainName, defaultVersionNumber }) => {
   const [web3] = useWeb3Context();
   const { packageOwner } = usePolywrapRegistry();
+  const { addToast } = useToasts();
 
   const [domainName, setDomainName] = useState(defaultDomainName ?? "");
   const [versionNumberText, setVersionNumberText] = useState(
@@ -47,9 +51,9 @@ const VersionPublishComponent: React.FC<{
     setVersionStatusInfo(undefined);
   }, [web3, web3?.networkName]);
 
-  const getProposedVersionStatus = async (
+  const getProposedVersionStatus = (
     proposedVersion: ProposedVersion
-  ): Promise<VersionVerificationStatus> => {
+  ): VersionVerificationStatus => {
     let verificationStatus: VersionVerificationStatus =
       VersionVerificationStatus.Published;
 
@@ -70,7 +74,7 @@ const VersionPublishComponent: React.FC<{
     return verificationStatus;
   };
 
-  const reloadVersionStatusInfo = async () => {
+  const _reloadVersionStatusInfo = handleError(async () => {
     if (!versionNumber) {
       return;
     }
@@ -83,12 +87,31 @@ const VersionPublishComponent: React.FC<{
       versionNumber.patch
     );
 
-    const nodeInfo = await packageOwner.getVersionNodeInfo(
-      domain,
-      versionNumber.major,
-      versionNumber.minor,
-      versionNumber.patch
-    );
+    const [nodeInfoError, nodeInfo] = await handleContractError(() =>
+      packageOwner.getVersionNodeInfo(
+        domain,
+        versionNumber.major,
+        versionNumber.minor,
+        versionNumber.patch
+      )
+    )();
+
+    if (nodeInfoError) {
+      console.error(nodeInfoError);
+      addToast(nodeInfoError.revertMessage, {
+        appearance: "error",
+        autoDismiss: true,
+      });
+      return;
+    }
+
+    if (!nodeInfo) {
+      addToast("Error: Unable to fetch nodeInfo!", {
+        appearance: "error",
+        autoDismiss: true,
+      });
+      return;
+    }
 
     if (!nodeInfo.created && web3?.networkName === "rinkeby") {
       setVersionStatusInfo({
@@ -115,9 +138,29 @@ const VersionPublishComponent: React.FC<{
         packageLocation: nodeInfo.location,
       };
     } else {
-      const proposedVersion = await packageOwner.getProposedVersion(
-        patchNodeId
-      );
+      const [
+        proposedVersionError,
+        proposedVersion,
+      ] = await handleContractError(() =>
+        packageOwner.getProposedVersion(patchNodeId)
+      )();
+
+      if (proposedVersionError) {
+        console.error(proposedVersionError);
+        addToast(proposedVersionError.revertMessage, {
+          appearance: "error",
+          autoDismiss: true,
+        });
+        return;
+      }
+      if (!proposedVersion) {
+        addToast("Error: Unable to fetch proposedVersion!", {
+          appearance: "error",
+          autoDismiss: true,
+        });
+        return;
+      }
+
       versionInfo = {
         patchNodeId: patchNodeId.toString(),
         domain,
@@ -125,16 +168,27 @@ const VersionPublishComponent: React.FC<{
         packageLocation: proposedVersion.packageLocation,
       };
 
-      verificationStatus = await getProposedVersionStatus(proposedVersion);
+      verificationStatus = getProposedVersionStatus(proposedVersion);
     }
 
     setVersionStatusInfo({
       proposedVersion: versionInfo,
       status: verificationStatus,
     });
+  });
+
+  const reloadVersionStatusInfo = async () => {
+    const [error] = await _reloadVersionStatusInfo();
+    if (error) {
+      console.error(error);
+      addToast(error.message, {
+        appearance: "error",
+        autoDismiss: true,
+      });
+    }
   };
 
-  const publishVersion = async () => {
+  const _publishVersion = handleError(async () => {
     if (!verificationProof) {
       throw "Verification proof is not defined";
     }
@@ -145,40 +199,122 @@ const VersionPublishComponent: React.FC<{
 
     const domain = new EnsDomain(domainName);
 
-    await packageOwner.publishVersion(
-      domain,
-      verificationProof.packageLocation,
-      versionStatusInfo.proposedVersion.versionNumber.major,
-      versionStatusInfo.proposedVersion.versionNumber.minor,
-      versionStatusInfo.proposedVersion.versionNumber.patch,
-      verificationProof
-    );
+    const [publishVersionError, tx] = await handleContractError(() =>
+      packageOwner.publishVersion(
+        domain,
+        verificationProof.packageLocation,
+        versionStatusInfo.proposedVersion.versionNumber.major,
+        versionStatusInfo.proposedVersion.versionNumber.minor,
+        versionStatusInfo.proposedVersion.versionNumber.patch,
+        verificationProof
+      )
+    )();
+    if (publishVersionError) {
+      console.error(publishVersionError);
+      addToast(publishVersionError.revertMessage, {
+        appearance: "error",
+        autoDismiss: true,
+      });
+      return;
+    }
+    if (tx) {
+      addToast(
+        `Version published successfully with transaction hash: ${tx.transactionHash}`,
+        {
+          appearance: "success",
+          autoDismiss: true,
+        }
+      );
+
+      return;
+    }
 
     await reloadVersionStatusInfo();
+  });
+
+  const publishVersion = async () => {
+    const [error] = await _publishVersion();
+    if (error) {
+      console.error(error);
+      addToast(error.message, {
+        appearance: "error",
+        autoDismiss: true,
+      });
+    }
   };
 
-  const fetchAndCalculateVerificationProof = async () => {
+  const _fetchAndCalculateVerificationProof = handleError(async () => {
     if (!versionStatusInfo) {
       throw "Verification status is not defined";
     }
 
     const domain = new EnsDomain(domainName);
 
-    const proposedVersion = await packageOwner.getProposedVersion(
-      versionStatusInfo.proposedVersion.patchNodeId
-    );
+    const [
+      proposedVersionError,
+      proposedVersion,
+    ] = await handleContractError(() =>
+      packageOwner.getProposedVersion(
+        versionStatusInfo.proposedVersion.patchNodeId
+      )
+    )();
 
-    const proof = await packageOwner.fetchAndCalculateVerificationProof(
-      domain,
-      versionStatusInfo.proposedVersion.versionNumber.major,
-      versionStatusInfo.proposedVersion.versionNumber.minor,
-      versionStatusInfo.proposedVersion.versionNumber.patch
-    );
+    if (proposedVersionError) {
+      console.error(proposedVersionError);
+      addToast(proposedVersionError.revertMessage, {
+        appearance: "error",
+        autoDismiss: true,
+      });
+      return;
+    }
+    if (!proposedVersion) {
+      addToast("Error: Unable to fetch proposedVersion!", {
+        appearance: "error",
+        autoDismiss: true,
+      });
+      return;
+    }
+
+    const [proofError, proof] = await handleContractError(() =>
+      packageOwner.fetchAndCalculateVerificationProof(
+        domain,
+        versionStatusInfo.proposedVersion.versionNumber.major,
+        versionStatusInfo.proposedVersion.versionNumber.minor,
+        versionStatusInfo.proposedVersion.versionNumber.patch
+      )
+    )();
+
+    if (proofError) {
+      console.error(proofError);
+      addToast(proofError.revertMessage, {
+        appearance: "error",
+        autoDismiss: true,
+      });
+      return;
+    }
+    if (!proof) {
+      addToast("Error: Unable to fetch proof!", {
+        appearance: "error",
+        autoDismiss: true,
+      });
+      return;
+    }
 
     setVerificationProof({
       ...proof,
       packageLocation: proposedVersion.packageLocation,
     });
+  });
+
+  const fetchAndCalculateVerificationProof = async () => {
+    const [error] = await _fetchAndCalculateVerificationProof();
+    if (error) {
+      console.error(error);
+      addToast(error.message, {
+        appearance: "error",
+        autoDismiss: true,
+      });
+    }
   };
 
   return (

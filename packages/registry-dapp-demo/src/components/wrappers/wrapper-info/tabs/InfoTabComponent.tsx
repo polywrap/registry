@@ -1,5 +1,11 @@
-import { BlockchainsWithRegistry, EnsDomain } from "@polywrap/registry-js";
+import {
+  BlockchainsWithRegistry,
+  EnsDomain,
+  handleContractError,
+  handleError,
+} from "@polywrap/registry-js";
 import { useEffect, useState } from "react";
+import { useToasts } from "react-toast-notifications";
 import { hasDomainRegistry } from "../../../../constants";
 import { relayOwnership } from "../../../../helpers/relayOwnership";
 import { toPrettyHex } from "../../../../helpers/toPrettyHex";
@@ -23,6 +29,67 @@ const InfoTabComponent: React.FC<{
   const [showRelayOwnershipButton, setShowRelayOwnershipButton] = useState(
     false
   );
+
+  const { addToast } = useToasts();
+
+  const onUpdateOwner = async () => {
+    const [error] = await handleError(async () => {
+      const [updateOwnershipError] = await handleContractError(() =>
+        updateOwnership(polywrapperInfo.domain, packageOwner)
+      )();
+      if (updateOwnershipError) {
+        console.error(updateOwnershipError);
+        addToast(updateOwnershipError.revertMessage, {
+          appearance: "error",
+          autoDismiss: true,
+        });
+        return;
+      }
+      const [polywrapperInfoError] = await handleContractError(() =>
+        loadPolywrapperInfo(polywrapperInfo.domain)
+      )();
+      if (polywrapperInfoError) {
+        console.error(polywrapperInfoError);
+        addToast(polywrapperInfoError.revertMessage, {
+          appearance: "error",
+          autoDismiss: true,
+        });
+        return;
+      }
+    })();
+    if (error) {
+      console.error(error);
+      addToast(error.message, {
+        appearance: "error",
+        autoDismiss: true,
+      });
+      return;
+    }
+  };
+
+  const onRelayOwnership = async () => {
+    const [error] = await handleError(async () => {
+      const [error] = await handleContractError(() =>
+        relayOwnership(polywrapperInfo.domain, relayChain, packageOwner)
+      )();
+      if (error) {
+        console.error(error);
+        addToast(error.revertMessage, {
+          appearance: "error",
+          autoDismiss: true,
+        });
+        return;
+      }
+    })();
+    if (error) {
+      console.error(error);
+      addToast(error.message, {
+        appearance: "error",
+        autoDismiss: true,
+      });
+      return;
+    }
+  };
 
   useEffect(() => {
     if (networkName) {
@@ -51,18 +118,7 @@ const InfoTabComponent: React.FC<{
                   {networkName === "rinkeby" &&
                   polywrapperInfo.polywrapOwner !==
                     polywrapperInfo.domainPolywrapOwner ? (
-                    <button
-                      onClick={async () => {
-                        await updateOwnership(
-                          polywrapperInfo.domain,
-                          packageOwner
-                        );
-
-                        await loadPolywrapperInfo(polywrapperInfo.domain);
-                      }}
-                    >
-                      Update owner
-                    </button>
+                    <button onClick={onUpdateOwner}>Update owner</button>
                   ) : (
                     <></>
                   )}
@@ -108,15 +164,7 @@ const InfoTabComponent: React.FC<{
                       >
                         <option value="l2-chain-name">xDAI</option>
                       </select>
-                      <button
-                        onClick={() =>
-                          relayOwnership(
-                            polywrapperInfo.domain,
-                            relayChain,
-                            packageOwner
-                          )
-                        }
-                      >
+                      <button onClick={onRelayOwnership}>
                         Relay ownership
                       </button>
                     </td>

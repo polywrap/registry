@@ -6,9 +6,80 @@ import {
   ContractCallResult,
   ErrorResponseBody,
   ContractError,
+  TError,
+  MetaMaskError,
 } from "./types/contractResultTypes";
 import { FunctionResult } from "./types/FunctionResult";
 import { MaybeAsync } from "./types/MaybeAsync";
+
+function parseContractError(errorObj: Record<string, any>): TError {
+  if (errorObj["reason"] && errorObj["code"] in errors) {
+    // Ethers Error
+    return parseEthersError(errorObj);
+  }
+  if (errorObj["data"] && !isNaN(errorObj["code"])) {
+    // Metamask Error
+    return parseMetamaskError(errorObj as MetaMaskError);
+  }
+  throw errorObj;
+}
+
+function parseMetamaskError(error: MetaMaskError): TError {
+  const message = error.data.message;
+  const regex = new RegExp("reverted with reason string '([^~]*)'");
+  const result = regex.exec(message);
+  if (result && result.length) {
+    if (result.length > 1) {
+      return {
+        error: error,
+        revertMessage: result[1],
+      };
+    } else {
+      return {
+        error: error,
+        revertMessage: "Reverted without any message",
+      };
+    }
+  }
+  throw error;
+}
+
+function parseEthersError(errorObj: Record<string, any>): TError {
+  if ("tx" in errorObj) {
+    const baseError = errorObj as BaseTransactionError;
+    const responseBody = JSON.parse(
+      baseError.error.error.body
+    ) as ErrorResponseBody;
+    if (responseBody.error.message.startsWith("execution reverted: ")) {
+      const revertMessage = responseBody.error.message.substring(20).trim();
+      const error: ContractError = {
+        error: baseError,
+        revertMessage: revertMessage,
+      };
+      return error;
+    } else {
+      const error: ContractError = {
+        error: baseError,
+        revertMessage: "Reverted without any message",
+      };
+      return error;
+    }
+  } else {
+    if (errorObj["reason"]) {
+      const error: ContractError = {
+        error: errorObj as BaseContractError,
+        revertMessage: errorObj["reason"],
+      };
+      return error;
+    } else {
+      const error: ContractError = {
+        error: errorObj as BaseContractError,
+        revertMessage: "Reverted without any message",
+      };
+      return error;
+    }
+  }
+}
 
 export function handleContractError<TArgs extends Array<unknown>, TReturn>(
   func: (...args: TArgs) => MaybeAsync<TReturn>
@@ -18,61 +89,28 @@ export function handleContractError<TArgs extends Array<unknown>, TReturn>(
       const res = func(...args);
 
       if (isPromise(res)) {
-        const result = (res
+        const result = res
           .then((res: any) => [undefined, res])
-          .catch((error) => [
-            error,
-            undefined,
-          ]) as unknown) as ContractCallResult<TReturn>;
-        return result;
+          .catch((err) => {
+            return [parseContractError(err), undefined];
+          });
+        return result as Promise<ContractCallResult<TReturn>>;
       } else {
         return [undefined, res];
       }
     } catch (err) {
-      const errorObj = err as Record<string, any>;
-
-      if (errorObj["code"] in errors) {
-        if ("tx" in errorObj) {
-          const baseError = errorObj as BaseTransactionError;
-          const responseBody = JSON.parse(
-            baseError.error.error.body
-          ) as ErrorResponseBody;
-          if (responseBody.error.message.startsWith("execution reverted: ")) {
-            const revertMessage = responseBody.error.message
-              .substring(20)
-              .trim();
-            const error: ContractError = {
-              error: baseError,
-              revertMessage: revertMessage,
-            };
-            return [error, undefined];
-          } else {
-            const error: ContractError = {
-              error: baseError,
-              revertMessage: "Reverted without any message",
-            };
-            return [error, undefined];
-          }
-        } else {
-          if (errorObj["reason"]) {
-            const error: ContractError = {
-              error: errorObj as BaseContractError,
-              revertMessage: errorObj["reason"],
-            };
-            return [error, undefined];
-          } else {
-            const error: ContractError = {
-              error: errorObj as BaseContractError,
-              revertMessage: "Reverted without any message",
-            };
-            return [error, undefined];
-          }
-        }
-      }
-
-      throw err;
+      return [parseContractError(err as Record<string, unknown>), undefined];
     }
   };
+}
+
+function parseError(error: Error, funcName: string): Error {
+  if (error.message) {
+    return error;
+  } else {
+    error.message = `Error: call to the function: ${funcName} failed`;
+    return error;
+  }
 }
 
 export function handleError<TArgs extends Array<unknown>, TReturn>(
@@ -83,18 +121,17 @@ export function handleError<TArgs extends Array<unknown>, TReturn>(
       const res = func(...args);
 
       if (isPromise(res)) {
-        const result = (res
+        const result = res
           .then((res: any) => [undefined, res])
-          .catch((error) => [
-            error,
-            undefined,
-          ]) as unknown) as FunctionResult<TReturn>;
-        return result;
+          .catch((err) => {
+            return [parseError(err, func.name), undefined];
+          });
+        return result as Promise<FunctionResult<TReturn>>;
       } else {
         return [undefined, res];
       }
     } catch (err) {
-      return [err as Error, undefined];
+      return [parseError(err as Error, func.name), undefined];
     }
   };
 }

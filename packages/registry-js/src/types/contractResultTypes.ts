@@ -34,7 +34,7 @@ export type BaseTransactionError = BaseContractError & {
 
 export type ContractError = {
   revertMessage: string;
-  error: BaseContractError | BaseTransactionError;
+  error: BaseContractError | BaseTransactionError | MetaMaskError;
 };
 
 export type ErrorResponseBody = {
@@ -45,4 +45,13 @@ export type ErrorResponseBody = {
     data: string;
     message: string;
   };
+};
+
+export type MetaMaskError = {
+  code: number;
+  data: {
+    code: number;
+    message: string;
+  };
+  message: string;
 };
