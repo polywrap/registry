@@ -1,9 +1,15 @@
 import { program } from "commander";
 import { run } from "./app";
-import { setup } from "./setup";
+import { wallet } from "./wallet";
 
-program.command("run").action(run);
+program
+  .command("run")
+  .description("starts the version verifier node")
+  .action(run);
 
-program.command("setup").action(setup);
+program
+  .command("wallet [action]")
+  .description("setup or view wallet")
+  .action(wallet);
 
 program.parse(process.argv);
