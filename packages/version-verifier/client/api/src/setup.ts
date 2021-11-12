@@ -2,26 +2,16 @@ import fs from "fs/promises";
 import { Wallet } from "ethers";
 import { prompt } from "inquirer";
 
-type WalletType = {
-  type: "mnemonic" | "privateKey" | "new";
-};
-
-type WalletPayload = {
-  payload?: string;
-};
-
-type WalletPassword = {
-  password: string;
-};
-
 interface SecretOptions {
   type: "mnemonic" | "privateKey" | "new";
   password: string;
   payload?: string;
 }
 
-async function getWalletType(): Promise<WalletType> {
-  const walletType = await prompt<WalletType>([
+async function promptWalletType(): Promise<{
+  type: "mnemonic" | "privateKey" | "new";
+}> {
+  return await prompt([
     {
       type: "list",
       name: "type",
@@ -36,34 +26,36 @@ async function getWalletType(): Promise<WalletType> {
       ],
     },
   ]);
-  return walletType;
 }
 
-async function getPrivateKey(): Promise<WalletPayload> {
-  const privateKey = await prompt<WalletPayload>({
+async function promptPrivateKey(): Promise<{
+  payload?: string;
+}> {
+  return await prompt({
     type: "input",
     name: "payload",
     message: "Enter your privateKey",
   });
-  return privateKey;
 }
 
-async function getMnemonic(): Promise<WalletPayload> {
-  const mnemonic = await prompt<WalletPayload>({
+async function promptMnemonic(): Promise<{
+  payload?: string;
+}> {
+  return await prompt({
     type: "input",
     name: "payload",
     message: "Enter your mnemonic",
   });
-  return mnemonic;
 }
 
-async function getPassword(): Promise<WalletPassword> {
-  const password = await prompt<WalletPassword>({
+async function promptPassword(): Promise<{
+  password: string;
+}> {
+  return await prompt({
     type: "password",
     name: "password",
     message: "Enter a strong password that will be used to encrypt your wallet",
   });
-  return password;
 }
 
 async function createSecret(options: SecretOptions): Promise<void> {
@@ -97,19 +89,21 @@ export async function setup(): Promise<void> {
     await fs.access("./secret.json");
   } catch (e) {
     // File does not exists
-    const walletType = await getWalletType();
-    let payload: WalletPayload = {};
+    const walletType = await promptWalletType();
+    let payload: {
+      payload?: string;
+    } = {};
     switch (walletType.type) {
       case "mnemonic": {
-        payload = await getMnemonic();
+        payload = await promptMnemonic();
         break;
       }
       case "privateKey": {
-        payload = await getPrivateKey();
+        payload = await promptPrivateKey();
         break;
       }
     }
-    const password = await getPassword();
+    const password = await promptPassword();
 
     await createSecret({ ...walletType, ...payload, ...password });
   }
