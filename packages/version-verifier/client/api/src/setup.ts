@@ -3,13 +3,13 @@ import { Wallet } from "ethers";
 import { prompt } from "inquirer";
 
 interface SecretOptions {
-  type: "mnemonic" | "privateKey" | "new";
+  type: "privateKey" | "new";
   password: string;
   payload?: string;
 }
 
 async function promptWalletType(): Promise<{
-  type: "mnemonic" | "privateKey" | "new";
+  type: "privateKey" | "new";
 }> {
   return await prompt([
     {
@@ -38,16 +38,6 @@ async function promptPrivateKey(): Promise<{
   });
 }
 
-async function promptMnemonic(): Promise<{
-  payload?: string;
-}> {
-  return await prompt({
-    type: "input",
-    name: "payload",
-    message: "Enter your mnemonic",
-  });
-}
-
 async function promptPassword(): Promise<{
   password: string;
 }> {
@@ -61,12 +51,6 @@ async function promptPassword(): Promise<{
 async function createSecret(options: SecretOptions): Promise<void> {
   let wallet: Wallet;
   switch (options.type) {
-    case "mnemonic": {
-      if (!options.payload)
-        throw Error("mnemonic type require payload in options");
-      wallet = Wallet.fromMnemonic(options.payload);
-      break;
-    }
     case "privateKey": {
       if (!options.payload)
         throw Error("privateKey type require payload in options");
@@ -94,10 +78,6 @@ export async function setup(): Promise<void> {
       payload?: string;
     } = {};
     switch (walletType.type) {
-      case "mnemonic": {
-        payload = await promptMnemonic();
-        break;
-      }
       case "privateKey": {
         payload = await promptPrivateKey();
         break;
