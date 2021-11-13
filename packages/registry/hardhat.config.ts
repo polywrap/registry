@@ -8,6 +8,7 @@ import "@nomiclabs/hardhat-etherscan";
 import "solidity-coverage";
 import "hardhat-deploy";
 import "@nomiclabs/hardhat-ethers";
+import "hardhat-gas-reporter";
 
 task("accounts", "Prints the list of accounts", async (args, hre) => {
   const accounts = await hre.ethers.getSigners();
@@ -67,6 +68,9 @@ const config: HardhatUserConfig = {
   },
   etherscan: {
     apiKey: "FZ1ANB251FC8ISFDXFGFCUDCANSJNWPF9Q",
+  },
+  gasReporter: {
+    enabled: false,
   },
 };
 export default config;
