@@ -24,7 +24,9 @@ abstract contract RegistryV1 is OwnableUpgradeable {
   struct VersionNode {
     bool leaf;
     bool created;
-    uint256 latestSubVersion;
+    bool patch;
+    uint256 latestPrereleaseVersion;
+    uint256 latestReleaseVersion;
     string location;
   }
 
@@ -108,10 +110,13 @@ abstract contract RegistryV1 is OwnableUpgradeable {
       pointer := version
     }
     
-    if(version.length < 128) {
+    if(version.length < 96) {
       revert VersionNotFullLength();
     }
 
+    bool isPrerelease = version.length > 96;
+
+    console.log("publish");
     while(cnt < version.length) {
       assembly {
         pointer := add(pointer, 32)
@@ -125,15 +130,18 @@ abstract contract RegistryV1 is OwnableUpgradeable {
       //Then concat the two numbers(1. byte and last 31 bytes) with bitwise OR
       identifier = (identifier & uint256(2 ** 248)) | (uint256(uint248(identifier)));
 
-
       if(cnt <= 96 && bytes32(identifier)[0] != 0) {
         revert ReleaseIdentifierMustBeNumeric();
       }
 
       //Numeric identifier are always lower than alphanumeric ones
       //Alphanumeric identifiers are ordered lexically in utf-8 order
-      if (node.latestSubVersion < identifier) {
-        node.latestSubVersion = identifier;
+      if (node.latestPrereleaseVersion < identifier) {
+        node.latestPrereleaseVersion = identifier;
+      }
+
+      if (!isPrerelease && node.latestReleaseVersion < identifier) {
+        node.latestReleaseVersion = identifier;
       }
 
       nodeId = keccak256(abi.encodePacked(nodeId, identifier));
@@ -147,6 +155,11 @@ abstract contract RegistryV1 is OwnableUpgradeable {
       if(!node.created) {
         node.created = true;
         newNodeCreated = true;
+
+        //The third identifier (3*32=96) is the patch identifier
+        if(cnt == 96) {
+          node.patch = true;
+        }
       }
     }
 
@@ -173,5 +186,18 @@ abstract contract RegistryV1 is OwnableUpgradeable {
 
   function getPackageOwner(bytes32 packageId) public view returns (address) {
     return packages[packageId].owner;
+  }
+   
+  function getVersionNode(bytes32 nodeId) public view returns (
+    bool leaf,
+    bool created,
+    bool patch,
+    uint256 latestPrereleaseVersion,
+    uint256 latestReleaseVersion,
+    string memory location
+  ) {
+    VersionNode memory node = versionNodes[nodeId];
+
+    return (node.leaf, node.created, node.patch, node.latestPrereleaseVersion, node.latestReleaseVersion, node.location);
   }
 }
