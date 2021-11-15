@@ -26,6 +26,7 @@
     "dist/deploy/*.js"
   ],
   "dependencies": {
+    "@nomiclabs/hardhat-waffle": "^2.0.1",
     "hardhat-gas-reporter": "^1.0.4",
     "solhint-plugin-prettier": "^0.0.5"
   },

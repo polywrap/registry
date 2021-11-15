@@ -54,17 +54,14 @@ describe("Voting", () => {
     );
   });
 
-  it("can propose and publish a version", async () => {
+  it("can propose and publish a development version", async () => {
     registryV1 = registryV1.connect(polywrapOwner);
 
     const { versionId, packageLocation, tx } = await publishVersion(
       registryV1,
       testDomain.packageId,
-      1,
-      0,
-      0,
-      "alpha",
-      "a"
+      "0.1.0",
+      "some-location"
     );
 
     await expectEvent(tx, "VersionPublished", {
@@ -79,7 +76,136 @@ describe("Voting", () => {
     expect(versionNodeL1.location).to.equal(packageLocation);
   });
 
-  it("should order versions properly", async () => {
+  it("can propose and publish a production release version", async () => {
+    registryV1 = registryV1.connect(polywrapOwner);
+
+    const { versionId, packageLocation, tx } = await publishVersion(
+      registryV1,
+      testDomain.packageId,
+      "1.0.0",
+      "some-location"
+    );
+
+    await expectEvent(tx, "VersionPublished", {
+      packageId: testDomain.packageId,
+      versionId: versionId,
+      location: packageLocation,
+    });
+
+    const versionNodeL1 = await registryV1.versionNodes(versionId);
+    expect(versionNodeL1.leaf).to.be.true;
+    expect(versionNodeL1.created).to.be.true;
+    expect(versionNodeL1.location).to.equal(packageLocation);
+  });
+
+  it("can propose and publish a prerelease version", async () => {
+    registryV1 = registryV1.connect(polywrapOwner);
+
+    const { versionId, packageLocation, tx } = await publishVersion(
+      registryV1,
+      testDomain.packageId,
+      "1.0.0-alpha",
+      "some-location"
+    );
+
+    await expectEvent(tx, "VersionPublished", {
+      packageId: testDomain.packageId,
+      versionId: versionId,
+      location: packageLocation,
+    });
+
+    const versionNodeL1 = await registryV1.versionNodes(versionId);
+    expect(versionNodeL1.leaf).to.be.true;
+    expect(versionNodeL1.created).to.be.true;
+    expect(versionNodeL1.location).to.equal(packageLocation);
+  });
+
+  it("forbids publishing a version without major, minor and patch identifiers", async () => {
+    registryV1 = registryV1.connect(polywrapOwner);
+
+    let result = await publishVersionWithPromise(
+      registryV1,
+      testDomain.packageId,
+      "1.0",
+      "some-location"
+    );
+
+    await expect(result.txPromise).to.revertedWith(
+      "reverted with custom error 'VersionNotFullLength()'"
+    );
+
+    result = await publishVersionWithPromise(
+      registryV1,
+      testDomain.packageId,
+      "1",
+      "some-location"
+    );
+
+    await expect(result.txPromise).to.revertedWith(
+      "reverted with custom error 'VersionNotFullLength()'"
+    );
+  });
+
+  it("forbids publishing a non numeric release identifier", async () => {
+    registryV1 = registryV1.connect(polywrapOwner);
+
+    let result = await publishVersionWithPromise(
+      registryV1,
+      testDomain.packageId,
+      "1.0.alpha",
+      "some-location"
+    );
+
+    await expect(result.txPromise).to.revertedWith(
+      "reverted with custom error 'ReleaseIdentifierMustBeNumeric()'"
+    );
+
+    result = await publishVersionWithPromise(
+      registryV1,
+      testDomain.packageId,
+      "1.alpha.0",
+      "some-location"
+    );
+
+    await expect(result.txPromise).to.revertedWith(
+      "reverted with custom error 'ReleaseIdentifierMustBeNumeric()'"
+    );
+
+    result = await publishVersionWithPromise(
+      registryV1,
+      testDomain.packageId,
+      "alpha.0.0",
+      "some-location"
+    );
+
+    await expect(result.txPromise).to.revertedWith(
+      "reverted with custom error 'ReleaseIdentifierMustBeNumeric()'"
+    );
+  });
+
+  it("forbids publishing the same version more than once", async () => {
+    registryV1 = registryV1.connect(polywrapOwner);
+
+    let result = await publishVersionWithPromise(
+      registryV1,
+      testDomain.packageId,
+      "1.0.0",
+      "some-location-1"
+    );
+
+    result = await publishVersionWithPromise(
+      registryV1,
+      testDomain.packageId,
+      "1.0.0",
+      "some-location-2"
+    );
+
+    await expect(result.txPromise).to.revertedWith(
+      "reverted with custom error 'VersionAlreadyPublished()'"
+    );
+  });
+
+  it("should order prerelease versions properly", async () => {
     registryV1 = registryV1.connect(polywrapOwner);
 
     const preleaseTags = [
@@ -106,24 +232,18 @@ describe("Voting", () => {
 
     const publishTags = async (
       preleaseTags: string[]
-    ): Promise<[string, string, string]> => {
+    ): Promise<[BytesLike, BytesLike, BytesLike]> => {
       const { versionId: versionId1, patchNodeId } = await publishVersion(
         registryV1,
         testDomain.packageId,
-        1,
-        0,
-        patch,
-        preleaseTags[0],
+        `1.0.${patch}-${preleaseTags[0]}`,
         "test-location"
       );
 
       const { versionId: versionId2 } = await publishVersion(
         registryV1,
         testDomain.packageId,
-        1,
-        0,
-        patch,
-        preleaseTags[1],
+        `1.0.${patch}-${preleaseTags[1]}`,
         "test-location"
       );
 
@@ -150,68 +270,76 @@ describe("Voting", () => {
   });
 });
 
-const publishVersion = async (
+const publishVersionWithPromise = async (
   registryV1: PolywrapRegistryV1,
   packageId: BytesLike,
-  major: number,
-  minor: number,
-  patch: number,
-  pre: string,
+  version: string,
   packageLocation: string
 ): Promise<{
-  versionId: string;
-  patchNodeId: string;
+  versionId: BytesLike;
+  patchNodeId: BytesLike;
   packageLocation: string;
-  tx: ContractTransaction;
+  txPromise: Promise<ContractTransaction>;
 }> => {
-  const majorNodeId = solidityKeccak256(
-    ["bytes32", "bytes32"],
-    [packageId, zeroPad(BigNumber.from(major).toHexString(), 32)]
-  );
-  const minorNodeId = solidityKeccak256(
-    ["bytes32", "bytes32"],
-    [majorNodeId, zeroPad(BigNumber.from(minor).toHexString(), 32)]
-  );
-  const patchNodeId = solidityKeccak256(
-    ["bytes32", "bytes32"],
-    [minorNodeId, zeroPad(BigNumber.from(patch).toHexString(), 32)]
-  );
+  const parseVersionString = (version: string) => {
+    const dashSplit = version.split("-");
+    const releaseIdentifiers = dashSplit[0].split(".");
 
-  const preArray = pre.split(".");
-  let nodeId = patchNodeId;
-  const versionArray = [
-    zeroPad(BigNumber.from(major).toHexString(), 32),
-    zeroPad(BigNumber.from(minor).toHexString(), 32),
-    zeroPad(BigNumber.from(patch).toHexString(), 32),
-  ];
+    const identifiers = releaseIdentifiers.concat(
+      dashSplit.slice(1).join("-").split(".")
+    );
 
-  for (const pre of preArray) {
-    let preHex: Uint8Array;
+    return identifiers;
+  };
+  const versionIdentifiers = parseVersionString(version);
 
-    if (Number.isInteger(+pre)) {
-      preHex = zeroPad(
-        Uint8Array.from([0, ...arrayify(BigNumber.from(+pre))]),
+  const calculateNodeId = (
+    prevNodeId: BytesLike,
+    identifier: number
+  ): BytesLike => {
+    return solidityKeccak256(
+      ["bytes32", "bytes32"],
+      [prevNodeId, zeroPad(BigNumber.from(identifier).toHexString(), 32)]
+    );
+  };
+
+  let nodeId = packageId;
+  const versionArray = [];
+  let patchNodeId: BytesLike = packageId;
+
+  for (let i = 0; i < versionIdentifiers.length; i++) {
+    const identifier = versionIdentifiers[i];
+
+    let hex: Uint8Array;
+
+    if (Number.isInteger(+identifier)) {
+      hex = zeroPad(
+        Uint8Array.from([0, ...arrayify(BigNumber.from(+identifier))]),
         32
       );
     } else {
-      const utf8Bytes = arrayify(formatBytes32String(pre));
+      const utf8Bytes = arrayify(formatBytes32String(identifier));
 
-      preHex = zeroPadEnd(
+      hex = zeroPadEnd(
         Uint8Array.from([1, ...utf8Bytes.slice(0, utf8Bytes.length - 1)]),
         32
       );
     }
 
-    nodeId = solidityKeccak256(["bytes32", "bytes32"], [nodeId, preHex]);
+    nodeId = solidityKeccak256(["bytes32", "bytes32"], [nodeId, hex]);
 
-    versionArray.push(preHex);
+    if (i == 2) {
+      patchNodeId = nodeId;
+    }
+
+    versionArray.push(hex);
   }
 
-  const version = concat(versionArray);
+  const versionBytes = concat(versionArray);
 
-  const tx = await registryV1.publishVersion(
+  const txPromise = registryV1.publishVersion(
     packageId,
-    version,
+    versionBytes,
     packageLocation
   );
 
@@ -219,6 +347,32 @@ const publishVersion = async (
     versionId: nodeId,
     patchNodeId,
     packageLocation,
+    txPromise,
+  };
+};
+
+const publishVersion = async (
+  registryV1: PolywrapRegistryV1,
+  packageId: BytesLike,
+  version: string,
+  packageLocation: string
+): Promise<{
+  versionId: BytesLike;
+  patchNodeId: BytesLike;
+  packageLocation: string;
+  tx: ContractTransaction;
+}> => {
+  const result = await publishVersionWithPromise(
+    registryV1,
+    packageId,
+    version,
+    packageLocation
+  );
+
+  const tx = await result.txPromise;
+
+  return {
+    ...result,
     tx,
   };
 };

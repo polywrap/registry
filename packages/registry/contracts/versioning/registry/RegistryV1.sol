@@ -3,6 +3,10 @@ pragma solidity ^0.8.4;
 import "hardhat/console.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
+error VersionNotFullLength();
+error ReleaseIdentifierMustBeNumeric();
+error VersionAlreadyPublished();
+
 abstract contract RegistryV1 is OwnableUpgradeable {
   event OwnershipUpdated(
     bytes32 indexed domainRegistryNode,
@@ -103,6 +107,10 @@ abstract contract RegistryV1 is OwnableUpgradeable {
     assembly {
       pointer := version
     }
+    
+    if(version.length < 128) {
+      revert VersionNotFullLength();
+    }
 
     while(cnt < version.length) {
       assembly {
@@ -117,6 +125,11 @@ abstract contract RegistryV1 is OwnableUpgradeable {
       //Then concat the two numbers(1. byte and last 31 bytes) with bitwise OR
       identifier = (identifier & uint256(2 ** 248)) | (uint256(uint248(identifier)));
 
+
+      if(cnt <= 96 && bytes32(identifier)[0] != 0) {
+        revert ReleaseIdentifierMustBeNumeric();
+      }
+
       //Numeric identifier are always lower than alphanumeric ones
       //Alphanumeric identifiers are ordered lexically in utf-8 order
       if (node.latestSubVersion < identifier) {
@@ -130,14 +143,17 @@ abstract contract RegistryV1 is OwnableUpgradeable {
         node.leaf = false;
       }
       node = versionNodes[nodeId];
-      //Checking this saves gas    
+
       if(!node.created) {
         node.created = true;
         newNodeCreated = true;
       }
     }
-    
-    assert(node.created);
+
+    //If there's already a location specified, it means that the version is already published
+    if(bytes(node.location).length != 0) {
+      revert VersionAlreadyPublished();
+    }
 
     node.location = location;
 
