@@ -7,6 +7,7 @@ import {
 import { EnsApi } from "../../helpers/ens/EnsApi";
 import { PolywrapRegistrar } from "../../../typechain/PolywrapRegistrar";
 import {
+  arrayify,
   BytesLike,
   concat,
   formatBytes32String,
@@ -82,11 +83,10 @@ describe("Voting", () => {
     registryV1 = registryV1.connect(polywrapOwner);
 
     const preleaseTags = [
-      // ["1", "2"],
-      ["alpha", "beta"],
-      // ["alpha", "alpha.beta"],
-      ["1", "a"],
+      ["1", "2"],
       ["2", "11"],
+      ["alpha", "beta"],
+      ["1", "a"],
       ["a11", "a2"],
       ["11a", "2a"],
       ["2", "1a"],
@@ -94,8 +94,12 @@ describe("Voting", () => {
       ["alpha", "alpha1"],
       ["alpha-1", "alpha-2"],
       ["alpha-12", "alpha-2"],
-      // ["alpha.1", "alpha.2"],
-      // ["alpha.2", "beta.1"],
+      ["alpha.1", "alpha.2"],
+      ["alpha.2", "beta.1"],
+      ["alpha.2", "alpha.1a"],
+      ["alpha", "alpha.beta"],
+      ["alpha.2", "alpha.beta.1"],
+      ["alpha.2.1", "alpha.beta"],
     ];
 
     let patch = 0;
@@ -127,8 +131,6 @@ describe("Voting", () => {
     };
 
     for (const examples of preleaseTags) {
-      console.log(examples);
-
       const [example1_versionId1, example1_versionId2, example1_patchNodeId] =
         await publishTags(examples);
 
@@ -136,8 +138,6 @@ describe("Voting", () => {
       expect(versionNode).to.equal(example1_versionId2);
 
       patch++;
-
-      console.log("2");
 
       const [example2_versionId1, example2_versionId2, example2_patchNodeId] =
         await publishTags([examples[1], examples[0]]);
@@ -164,11 +164,6 @@ const publishVersion = async (
   packageLocation: string;
   tx: ContractTransaction;
 }> => {
-  const preHex = zeroPad(
-    Uint8Array.from(pre.split("").map((x) => x.charCodeAt(0))),
-    32
-  );
-
   const majorNodeId = solidityKeccak256(
     ["bytes32", "bytes32"],
     [packageId, zeroPad(BigNumber.from(major).toHexString(), 32)]
@@ -181,29 +176,63 @@ const publishVersion = async (
     ["bytes32", "bytes32"],
     [minorNodeId, zeroPad(BigNumber.from(patch).toHexString(), 32)]
   );
-  const prereleaseNodeId = solidityKeccak256(
-    ["bytes32", "bytes32"],
-    [patchNodeId, preHex]
-  );
 
-  const version = concat([
+  const preArray = pre.split(".");
+  let nodeId = patchNodeId;
+  const versionArray = [
     zeroPad(BigNumber.from(major).toHexString(), 32),
     zeroPad(BigNumber.from(minor).toHexString(), 32),
     zeroPad(BigNumber.from(patch).toHexString(), 32),
-    preHex,
-  ]);
+  ];
+
+  for (const pre of preArray) {
+    let preHex: Uint8Array;
+
+    if (Number.isInteger(+pre)) {
+      preHex = zeroPad(
+        Uint8Array.from([0, ...arrayify(BigNumber.from(+pre))]),
+        32
+      );
+    } else {
+      const utf8Bytes = arrayify(formatBytes32String(pre));
+
+      preHex = zeroPadEnd(
+        Uint8Array.from([1, ...utf8Bytes.slice(0, utf8Bytes.length - 1)]),
+        32
+      );
+    }
+
+    nodeId = solidityKeccak256(["bytes32", "bytes32"], [nodeId, preHex]);
+
+    versionArray.push(preHex);
+  }
+
+  const version = concat(versionArray);
 
   const tx = await registryV1.publishVersion(
     packageId,
-    ethers.constants.HashZero,
     version,
     packageLocation
   );
 
   return {
-    versionId: prereleaseNodeId,
+    versionId: nodeId,
     patchNodeId,
     packageLocation,
     tx,
   };
+};
+
+//Pads the end of the array with zeroes
+const zeroPadEnd = (value: BytesLike, length: number): Uint8Array => {
+  value = ethers.utils.arrayify(value);
+
+  if (value.length > length) {
+    throw Error("Value out of range");
+  }
+
+  const result = new Uint8Array(length);
+  result.set(value, 0);
+
+  return result;
 };

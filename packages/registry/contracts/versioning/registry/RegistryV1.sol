@@ -19,10 +19,9 @@ abstract contract RegistryV1 is OwnableUpgradeable {
 
   struct VersionNode {
     bool leaf;
-    bytes32 latestSubVersion;
     bool created;
-    string location; // empty on non-leaf nodes
-    bytes32 packageId;
+    uint256 latestSubVersion;
+    string location;
   }
 
   struct PackageInfo {
@@ -82,25 +81,28 @@ abstract contract RegistryV1 is OwnableUpgradeable {
 
   function publishVersion(
     bytes32 packageId,
-    bytes32 parentNodeId,
     bytes memory version,
     string memory location
   ) public returns (bytes32) {
     // assert(msg.sender == versionPublisher);
-    
-    bytes32 lastNodeId;
 
-    VersionNode storage lastNode = versionNodes[packageId];
-    lastNode.created = true;
-    VersionNode storage currentNode = lastNode;
-    lastNodeId = packageId;
+    VersionNode storage node = versionNodes[packageId];
 
-    uint256 cnt = 0;
+    //Checking this saves gas    
+    if(!node.created) {
+      node.created = true;
+    }
+
+    bytes32 nodeId = packageId;
+
     uint256 pointer;
+    uint256 identifier;
+    uint256 cnt;
+    bool newNodeCreated;
+
     assembly {
       pointer := version
     }
-    bytes32 identifier;
 
     while(cnt < version.length) {
       assembly {
@@ -108,81 +110,49 @@ abstract contract RegistryV1 is OwnableUpgradeable {
         identifier := mload(pointer)
       }
       cnt += 32;
-      bytes32 nodeId = keccak256(abi.encodePacked(lastNodeId, identifier));
-      lastNodeId = nodeId;
-      currentNode = versionNodes[nodeId];
-      if (hasLowerPrecedence(lastNode.latestSubVersion, identifier)) {
-        lastNode.latestSubVersion = identifier;
+
+      //The first byte of the identifier is a bool indicating if the version is alphanumeric
+      //Use a mask uint256(2 ** 248) = 0x0100..00 to sanitize the first byte to 0 or 1
+      //Discard the first 8 bits to get the value of the identifier
+      //Then concat the two numbers(1. byte and last 31 bytes) with bitwise OR
+      identifier = (identifier & uint256(2 ** 248)) | (uint256(uint248(identifier)));
+
+      //Numeric identifier are always lower than alphanumeric ones
+      //Alphanumeric identifiers are ordered lexically in utf-8 order
+      if (node.latestSubVersion < identifier) {
+        node.latestSubVersion = identifier;
       }
-      currentNode.created = true;
-      lastNode = currentNode;
+
+      nodeId = keccak256(abi.encodePacked(nodeId, identifier));
+
+      //Checking this saves gas    
+      if(node.leaf) {
+        node.leaf = false;
+      }
+      node = versionNodes[nodeId];
+      //Checking this saves gas    
+      if(!node.created) {
+        node.created = true;
+        newNodeCreated = true;
+      }
     }
     
-    if(currentNode.created) {
-      currentNode.leaf = true;
-      currentNode.location = location;
+    assert(node.created);
+
+    node.location = location;
+
+    //If a new node was created, then it doesn't have children and is a leaf node
+    if(newNodeCreated) {
+      node.leaf = true;
     }
 
     emit VersionPublished(
       packageId,
-      lastNodeId,
+      nodeId,
       location
     );
 
-    return lastNodeId;
-  }
-
-  function hasLowerPrecedence(bytes32 a, bytes32 b) private returns(bool) {
-    bool aAlphaNumeric = false;
-    bool bAlphaNumeric = false;
-    uint8 aI = 0;
-    uint8 bI = 0;
-
-    for(uint8 i = 0; i < 32; i++) {
-      if(a[i] != 0x0) {
-        aI = i;
-        break;
-      }
-    }
-
-    for(uint8 i = 0; i < 32; i++) {
-      if(b[i] != 0x0) {
-        bI = i;
-        break;
-      }
-    }
-    for(uint8 i = 0; i + aI < 32 && i + bI < 32; i++) {
-      if(!(a[i+aI] >= 0x30 && a[i+aI] <= 0x39)) {
-        aAlphaNumeric = true;
-      }
-      if(!(b[i+bI] >= 0x30 && b[i+bI] <= 0x39)) {
-        bAlphaNumeric = true;
-      }
-
-      if(a[i+aI] < b[i+bI]) {
-        for(uint8 j = i + 1; j + aI < 32 && j + bI < 32; j++) {
-          if(!(a[j+aI] >= 0x30 && a[j+aI] <= 0x39)) {
-            aAlphaNumeric = true;
-          }
-          if(!(b[j+bI] >= 0x30 && b[j+bI] <= 0x39)) {
-            bAlphaNumeric = true;
-          }
-        }
-
-        return (!aAlphaNumeric && aI <= bI) || aAlphaNumeric && bAlphaNumeric;
-      } else if(a[i+aI] > b[i+bI]) {
-        for(uint8 j = i + 1; j + aI < 32 && j + bI < 32; j++) {
-          if(!(a[j+aI] >= 0x30 && a[j+aI] <= 0x39)) {
-            aAlphaNumeric = true;
-          }
-          if(!(b[j+bI] >= 0x30 && b[j+bI] <= 0x39)) {
-            bAlphaNumeric = true;
-          }
-        }
-
-        return aAlphaNumeric && !bAlphaNumeric;
-      }
-    }
+    return nodeId;
   }
 
   function getPackageOwner(bytes32 packageId) public view returns (address) {
