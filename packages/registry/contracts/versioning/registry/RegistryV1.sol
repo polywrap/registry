@@ -116,7 +116,6 @@ abstract contract RegistryV1 is OwnableUpgradeable {
 
     bool isPrerelease = version.length > 96;
 
-    console.log("publish");
     while(cnt < version.length) {
       assembly {
         pointer := add(pointer, 32)

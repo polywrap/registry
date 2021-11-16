@@ -236,6 +236,17 @@ describe("Voting", () => {
     );
   });
 
+  it("prerelease should have lower precedence than release", async () => {
+    await testPrereleaseResolution(
+      registryV1,
+      resolver,
+      testDomain.packageId,
+      ["1.0.0", "1.0.1-alpha", "1.0.1"],
+      "1.0",
+      "1.0.1"
+    );
+  });
+
   it("should order prerelease versions properly", async () => {
     const preleaseTags = [
       ["1", "2"],

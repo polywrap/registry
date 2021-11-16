@@ -15,13 +15,16 @@ contract VersionResolverV1 {
   }
 
   function resolveToLatestPrereleaseNode(bytes32 versionNodeId) public view returns (bytes32) {
-    (bool leaf, bool created, , uint256 latestPrereleaseVersion,,) = RegistryV1(registry).getVersionNode(versionNodeId);
+    (bool leaf, bool created, bool patch, uint256 latestPrereleaseVersion,, string memory location) = RegistryV1(registry).getVersionNode(versionNodeId);
  
     if(!created) {
       revert NodeNotFound();
     }
 
-    if (leaf) {
+    //patch && bytes(location).length != 0) is true if it's a patch version (eg. 1.0.0) and it has a location
+    //This follows SemVer rules where a prerelease version has lower precedence than a release(patch) version
+    //eg. 1.0.0-alpha < 1.0.0
+    if (leaf || (patch && bytes(location).length != 0)) {
       return versionNodeId;
     }
 

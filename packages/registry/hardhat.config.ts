@@ -71,7 +71,7 @@ const config: HardhatUserConfig = {
     apiKey: "FZ1ANB251FC8ISFDXFGFCUDCANSJNWPF9Q",
   },
   gasReporter: {
-    enabled: true,
+    enabled: false,
   },
 };
 export default config;
