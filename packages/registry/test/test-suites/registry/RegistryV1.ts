@@ -24,7 +24,7 @@ import { expectEvent } from "../../helpers";
 import { BigNumber, ContractTransaction, Signer, version } from "ethers";
 import { computeMerkleProof, EnsDomain } from "@polywrap/registry-core-js";
 
-describe("Voting", () => {
+describe("Publishing versions", () => {
   const testDomain = new EnsDomain("test-domain");
 
   let registryV1: PolywrapRegistryV1;
@@ -95,7 +95,7 @@ describe("Voting", () => {
     expect(versionNodeL1.location).to.equal(packageLocation);
   });
 
-  it("can propose and publish a production release version", async () => {
+  it("can publish production release versions", async () => {
     const { versionId, packageLocation, tx } = await publishVersion(
       registryV1,
       testDomain.packageId,
@@ -115,11 +115,51 @@ describe("Voting", () => {
     expect(versionNodeL1.location).to.equal(packageLocation);
   });
 
-  it("can propose and publish a prerelease version", async () => {
+  it("can publish development release versions", async () => {
+    const { versionId, packageLocation, tx } = await publishVersion(
+      registryV1,
+      testDomain.packageId,
+      "0.0.1",
+      "some-location"
+    );
+
+    await expectEvent(tx, "VersionPublished", {
+      packageId: testDomain.packageId,
+      versionId: versionId,
+      location: packageLocation,
+    });
+
+    const versionNodeL1 = await registryV1.versionNodes(versionId);
+    expect(versionNodeL1.leaf).to.be.true;
+    expect(versionNodeL1.created).to.be.true;
+    expect(versionNodeL1.location).to.equal(packageLocation);
+  });
+
+  it("can publish production prerelease versions", async () => {
     const { versionId, packageLocation, tx } = await publishVersion(
       registryV1,
       testDomain.packageId,
       "1.0.0-alpha",
+      "some-location"
+    );
+
+    await expectEvent(tx, "VersionPublished", {
+      packageId: testDomain.packageId,
+      versionId: versionId,
+      location: packageLocation,
+    });
+
+    const versionNodeL1 = await registryV1.versionNodes(versionId);
+    expect(versionNodeL1.leaf).to.be.true;
+    expect(versionNodeL1.created).to.be.true;
+    expect(versionNodeL1.location).to.equal(packageLocation);
+  });
+
+  it("can publish development prerelease versions", async () => {
+    const { versionId, packageLocation, tx } = await publishVersion(
+      registryV1,
+      testDomain.packageId,
+      "0.0.0-alpha",
       "some-location"
     );
 
