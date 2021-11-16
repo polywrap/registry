@@ -214,7 +214,7 @@ describe("Voting", () => {
     );
   });
 
-  it("can resolve properly", async () => {
+  it("can resolve to release version", async () => {
     await testReleaseResolution(
       registryV1,
       resolver,
@@ -225,12 +225,12 @@ describe("Voting", () => {
     );
   });
 
-  it("can resolve properly", async () => {
+  it("can resolve to prerelease version", async () => {
     await testPrereleaseResolution(
       registryV1,
       resolver,
       testDomain.packageId,
-      ["1.0.0", "1.0.1", "1.0.1-alpha", "1.0.2-alpha"],
+      ["1.0.0", "1.0.1", "1.0.2-alpha", "1.0.1-alpha"],
       "1.0",
       "1.0.2-alpha"
     );
