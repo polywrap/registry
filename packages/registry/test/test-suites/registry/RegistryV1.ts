@@ -287,6 +287,17 @@ describe("Publishing versions", () => {
     );
   });
 
+  it("larger set of pre-release fields has a higher precedence than a smaller set", async () => {
+    await testPrereleaseResolution(
+      registryV1,
+      resolver,
+      testDomain.packageId,
+      ["1.0.0", "1.0.1-alpha", "1.0.1-alpha.1"],
+      "1.0",
+      "1.0.1-alpha.1"
+    );
+  });
+
   it("should order prerelease versions properly", async () => {
     const preleaseTags = [
       ["1", "2"],

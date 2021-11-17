@@ -134,6 +134,7 @@ abstract contract RegistryV1 is OwnableUpgradeable {
         identifier := mload(pointer)
       }
       cnt += 32;
+      level += 1;
 
       //The first byte of the identifier is a bool indicating if the version is alphanumeric
       //Use a mask uint256(2 ** 248) = 0x0100..00 to sanitize the first byte to 0 or 1
