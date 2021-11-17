@@ -7,22 +7,17 @@ import {
   VersionResolverV1,
   VersionResolverV1__factory,
 } from "../../../typechain";
-import { EnsApi } from "../../helpers/ens/EnsApi";
-import { PolywrapRegistrar } from "../../../typechain/PolywrapRegistrar";
 import {
   arrayify,
   BytesLike,
   concat,
   formatBytes32String,
-  keccak256,
   solidityKeccak256,
   zeroPad,
 } from "ethers/lib/utils";
-import { VerificationRootBridgeLinkMock } from "../../../typechain/VerificationRootBridgeLinkMock";
-import { OwnershipBridgeLinkMock } from "../../../typechain/OwnershipBridgeLinkMock";
 import { expectEvent } from "../../helpers";
-import { BigNumber, ContractTransaction, Signer, version } from "ethers";
-import { computeMerkleProof, EnsDomain } from "@polywrap/registry-core-js";
+import { BigNumber, ContractTransaction, Signer } from "ethers";
+import { EnsDomain } from "@polywrap/registry-core-js";
 
 describe("Publishing versions", () => {
   const testDomain = new EnsDomain("test-domain");
@@ -173,6 +168,31 @@ describe("Publishing versions", () => {
     expect(versionNodeL1.leaf).to.be.true;
     expect(versionNodeL1.created).to.be.true;
     expect(versionNodeL1.location).to.equal(packageLocation);
+  });
+
+  it("can publish version with build metadata", async () => {
+    const buildMetadata = "test-metadata";
+
+    const { versionId, packageLocation, tx } = await publishVersion(
+      registryV1,
+      testDomain.packageId,
+      `1.0.0+${buildMetadata}`,
+      "some-location"
+    );
+
+    await expectEvent(tx, "VersionPublished", {
+      packageId: testDomain.packageId,
+      versionId: versionId,
+      location: packageLocation,
+    });
+
+    const versionNodeL1 = await registryV1.versionNodes(versionId);
+    expect(versionNodeL1.leaf).to.be.true;
+    expect(versionNodeL1.created).to.be.true;
+    expect(versionNodeL1.location).to.equal(packageLocation);
+    expect(versionNodeL1.buildMetadata).to.equal(
+      formatBytes32String(buildMetadata)
+    );
   });
 
   it("forbids publishing a version without major, minor and patch identifiers", async () => {
@@ -410,7 +430,7 @@ const publishVersionWithPromise = async (
   packageLocation: string;
   txPromise: Promise<ContractTransaction>;
 }> => {
-  const versionIdentifiers = parseVersionString(version);
+  const [versionIdentifiers, buildMetadata] = parseVersionString(version);
 
   let nodeId = packageId;
   const versionArray = [];
@@ -449,6 +469,7 @@ const publishVersionWithPromise = async (
   const txPromise = registryV1.publishVersion(
     packageId,
     versionBytes,
+    formatBytes32String(buildMetadata),
     packageLocation
   );
 
@@ -505,7 +526,7 @@ const publishVersions = async (
 };
 
 const toVersionNodeId = (packageId: BytesLike, version: string): BytesLike => {
-  const versionIdentifiers = parseVersionString(version);
+  const [versionIdentifiers] = parseVersionString(version);
 
   let nodeId = packageId;
 
@@ -547,13 +568,16 @@ const zeroPadEnd = (value: BytesLike, length: number): Uint8Array => {
 
   return result;
 };
-const parseVersionString = (version: string) => {
-  const dashSplit = version.split("-");
+const parseVersionString = (
+  version: string
+): [identifiers: string[], buildMetadata: string] => {
+  const metadataSplit = version.split("+");
+  const dashSplit = metadataSplit[0].split("-");
   const releaseIdentifiers = dashSplit[0].split(".");
 
   const identifiers = releaseIdentifiers.concat(
     dashSplit.length > 1 ? dashSplit.slice(1).join("-").split(".") : []
   );
 
-  return identifiers;
+  return [identifiers, metadataSplit.length > 1 ? metadataSplit[1] : ""];
 };

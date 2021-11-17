@@ -28,6 +28,7 @@ abstract contract RegistryV1 is OwnableUpgradeable {
     uint8 level;
     uint256 latestPrereleaseVersion;
     uint256 latestReleaseVersion;
+    bytes32 buildMetadata;
     string location;
   }
 
@@ -89,6 +90,7 @@ abstract contract RegistryV1 is OwnableUpgradeable {
   function publishVersion(
     bytes32 packageId,
     bytes memory version,
+    bytes32 buildMetadata,
     string memory location
   ) public returns (bytes32) {
     // assert(msg.sender == versionPublisher);
@@ -178,6 +180,10 @@ abstract contract RegistryV1 is OwnableUpgradeable {
 
     node.location = location;
 
+    if(buildMetadata != 0x0) {
+      node.buildMetadata = buildMetadata;
+    }
+
     //If a new node was created, then it doesn't have children and is a leaf node
     if(newNodeCreated) {
       node.leaf = true;
@@ -202,10 +208,11 @@ abstract contract RegistryV1 is OwnableUpgradeable {
     uint8 level,
     uint256 latestPrereleaseVersion,
     uint256 latestReleaseVersion,
+    bytes32 buildMetadata,
     string memory location
   ) {
     VersionNode memory node = versionNodes[nodeId];
 
-    return (node.leaf, node.created, node.level, node.latestPrereleaseVersion, node.latestReleaseVersion, node.location);
+    return (node.leaf, node.created, node.level, node.latestPrereleaseVersion, node.latestReleaseVersion, node.buildMetadata, node.location);
   }
 }

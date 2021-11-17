@@ -15,7 +15,7 @@ contract VersionResolverV1 {
   }
 
   function resolveToLatestPrereleaseNode(bytes32 versionNodeId) public view returns (bytes32) {
-    (bool leaf, bool created, uint8 level, uint256 latestPrereleaseVersion,, string memory location) = RegistryV1(registry).getVersionNode(versionNodeId);
+    (bool leaf, bool created, uint8 level, uint256 latestPrereleaseVersion,,, string memory location) = RegistryV1(registry).getVersionNode(versionNodeId);
  
     if(!created) {
       revert NodeNotFound();
@@ -36,7 +36,7 @@ contract VersionResolverV1 {
   }
 
   function resolveToLatestReleaseNode(bytes32 versionNodeId) public view returns (bytes32) {
-    (bool leaf, bool created, uint8 level, , uint256 latestReleaseVersion,) = RegistryV1(registry).getVersionNode(versionNodeId);
+    (bool leaf, bool created, uint8 level, , uint256 latestReleaseVersion,,) = RegistryV1(registry).getVersionNode(versionNodeId);
 
     if(!created) {
       revert NodeNotFound();
@@ -61,7 +61,7 @@ contract VersionResolverV1 {
     returns (string memory)
   {
     bytes32 concreteVersionId = resolveToLatestPrereleaseNode(versionNodeId);
-    (,,,,, string memory location) = RegistryV1(registry).getVersionNode(concreteVersionId);
+    (,,,,,, string memory location) = RegistryV1(registry).getVersionNode(concreteVersionId);
 
     return location;
   }
@@ -72,7 +72,7 @@ contract VersionResolverV1 {
     returns (string memory)
   {
     bytes32 concreteVersionId = resolveToLatestReleaseNode(versionNodeId);
-    (,,,,, string memory location) = RegistryV1(registry).getVersionNode(concreteVersionId);
+    (,,,,,, string memory location) = RegistryV1(registry).getVersionNode(concreteVersionId);
 
     return location;
   }
