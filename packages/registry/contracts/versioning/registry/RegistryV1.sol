@@ -6,6 +6,7 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 error VersionNotFullLength();
 error ReleaseIdentifierMustBeNumeric();
 error VersionAlreadyPublished();
+error TooManyIdentifiers();
 
 abstract contract RegistryV1 is OwnableUpgradeable {
   event OwnershipUpdated(
@@ -24,7 +25,7 @@ abstract contract RegistryV1 is OwnableUpgradeable {
   struct VersionNode {
     bool leaf;
     bool created;
-    bool patch;
+    uint8 level;
     uint256 latestPrereleaseVersion;
     uint256 latestReleaseVersion;
     string location;
@@ -105,15 +106,26 @@ abstract contract RegistryV1 is OwnableUpgradeable {
     uint256 identifier;
     uint256 cnt;
     bool newNodeCreated;
+    uint8 level;
 
     assembly {
       pointer := version
     }
     
+    //32 bytes per identifier, 3 * 32 = 96
+    //A proper version requires at least 3 identifiers (major, minor, patch)
     if(version.length < 96) {
       revert VersionNotFullLength();
     }
 
+    //level is used for identifier numbering
+    //level is an uint8 which has a max value of 255
+    //8160 = 32 * 255
+    if(version.length > 8160) {
+      revert TooManyIdentifiers();
+    }
+
+    //If a version has more than 3 identifiers then it's a prerelease
     bool isPrerelease = version.length > 96;
 
     while(cnt < version.length) {
@@ -154,11 +166,7 @@ abstract contract RegistryV1 is OwnableUpgradeable {
       if(!node.created) {
         node.created = true;
         newNodeCreated = true;
-
-        //The third identifier (3*32=96) is the patch identifier
-        if(cnt == 96) {
-          node.patch = true;
-        }
+        node.level = level;
       }
     }
 
@@ -190,13 +198,13 @@ abstract contract RegistryV1 is OwnableUpgradeable {
   function getVersionNode(bytes32 nodeId) public view returns (
     bool leaf,
     bool created,
-    bool patch,
+    uint8 level,
     uint256 latestPrereleaseVersion,
     uint256 latestReleaseVersion,
     string memory location
   ) {
     VersionNode memory node = versionNodes[nodeId];
 
-    return (node.leaf, node.created, node.patch, node.latestPrereleaseVersion, node.latestReleaseVersion, node.location);
+    return (node.leaf, node.created, node.level, node.latestPrereleaseVersion, node.latestReleaseVersion, node.location);
   }
 }
