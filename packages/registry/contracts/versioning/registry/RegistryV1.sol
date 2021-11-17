@@ -3,10 +3,17 @@ pragma solidity ^0.8.4;
 import "hardhat/console.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
+//Version requires at least major, minor and patch identifiers specified
 error VersionNotFullLength();
+//Major, minor and patch are release identifiers and they must be numeric (not alphanumeric)
 error ReleaseIdentifierMustBeNumeric();
 error VersionAlreadyPublished();
+//Max count of identifiers is 255
 error TooManyIdentifiers();
+//Identifiers must satisfy [0-9A-Za-z-]+
+error InvalidIdentifier();
+//Build metadata must satisfy [0-9A-Za-z-]*
+error InvalidBuildMetadata();
 
 abstract contract RegistryV1 is OwnableUpgradeable {
   event OwnershipUpdated(
@@ -89,6 +96,7 @@ abstract contract RegistryV1 is OwnableUpgradeable {
 
   function publishVersion(
     bytes32 packageId,
+    //Array of byte32 identifiers
     bytes memory version,
     bytes32 buildMetadata,
     string memory location
@@ -139,10 +147,11 @@ abstract contract RegistryV1 is OwnableUpgradeable {
       level += 1;
 
       //The first byte of the identifier is a bool indicating if the version is alphanumeric
-      //Use a mask uint256(2 ** 248) = 0x0100..00 to sanitize the first byte to 0 or 1
+      //Use a mask = 0x0100..00 to sanitize the first byte to 0 or 1
       //Discard the first 8 bits to get the value of the identifier
       //Then concat the two numbers(1. byte and last 31 bytes) with bitwise OR
-      identifier = (identifier & uint256(2 ** 248)) | (uint256(uint248(identifier)));
+      identifier = (identifier & 0x0100000000000000000000000000000000000000000000000000000000000000) 
+        | (uint256(uint248(identifier)));
 
       if(cnt <= 96 && bytes32(identifier)[0] != 0) {
         revert ReleaseIdentifierMustBeNumeric();
@@ -168,6 +177,10 @@ abstract contract RegistryV1 is OwnableUpgradeable {
 
       if(!node.created) {
         node.created = true;
+        if(!isSemverCompliantIdentifier(bytes32(identifier))) {
+          revert InvalidIdentifier();
+        }
+
         newNodeCreated = true;
         node.level = level;
       }
@@ -181,6 +194,10 @@ abstract contract RegistryV1 is OwnableUpgradeable {
     node.location = location;
 
     if(buildMetadata != 0x0) {
+      //Unlike identifiers, build metadata is alphanumeric, so it doesn't have the first byte to specify if it's numeric or alphanumeric
+      if(!isSemverCompliantString(buildMetadata, 0)) {
+        revert InvalidBuildMetadata();
+      }
       node.buildMetadata = buildMetadata;
     }
 
@@ -198,6 +215,55 @@ abstract contract RegistryV1 is OwnableUpgradeable {
     return nodeId;
   }
 
+  function isSemverCompliantIdentifier(bytes32 identifier) private view returns (bool) {
+    //The identifier is numeric
+    if(identifier[0] == 0) {
+      return true;
+    }
+
+    //If the identifier is alphanumeric, then it can not start with a 0
+    //This is used to cover the case when the whole identifier is 0 (apart from the first byte that indicates it being alphanumeric) 
+    //since it's not caught by the isSemverCompliantString function
+    if(identifier == 0x0100000000000000000000000000000000000000000000000000000000000000) {
+      return false;
+    }
+
+    //The identifier is alphanumeric from index 1 to end
+    return isSemverCompliantString(identifier, 1);
+  }
+
+  //A SemVer compliant string is an ASCII encoded string that satisfies the regex [0-9A-Za-z-]+
+  //Returns true if the string is 0x0 which means empty
+  function isSemverCompliantString(bytes32 identifier, uint256 startIndex) private pure returns (bool) {
+    bool foundZero = false;
+    for(uint256 i = startIndex; i < 32; i++) {
+      //If a character is 0x0 then the rest of the identifier should be 0x0
+      if(identifier[i] == 0) {
+        foundZero = true;
+        continue;
+      }
+
+      if(foundZero && identifier[i] != 0) {
+        return false;
+      }
+
+      if(!(
+          //0-9
+          (identifier[i] >=0x30 && identifier[i] <= 0x39) || 
+          //A-Z
+          (identifier[i] >=0x41 && identifier[i] <= 0x5a) || 
+          //a-z
+          (identifier[i] >=0x61 && identifier[i] <= 0x7a) || 
+          //Hyphen(-)
+          identifier[i] == 0x2d
+        )){
+        return false;
+      }
+    }
+
+    return true;
+  }
+
   function getPackageOwner(bytes32 packageId) public view returns (address) {
     return packages[packageId].owner;
   }
@@ -213,6 +279,14 @@ abstract contract RegistryV1 is OwnableUpgradeable {
   ) {
     VersionNode memory node = versionNodes[nodeId];
 
-    return (node.leaf, node.created, node.level, node.latestPrereleaseVersion, node.latestReleaseVersion, node.buildMetadata, node.location);
+    return (
+      node.leaf,
+      node.created, 
+      node.level, 
+      node.latestPrereleaseVersion, 
+      node.latestReleaseVersion, 
+      node.buildMetadata, 
+      node.location
+    );
   }
 }

@@ -195,6 +195,76 @@ describe("Publishing versions", () => {
     );
   });
 
+  it("forbids publishing non [0-9A-Za-z-] strings for identifiers", async () => {
+    let result = await publishVersionWithPromise(
+      registryV1,
+      testDomain.packageId,
+      `1.0.0-test_prerelease`,
+      "some-location"
+    );
+
+    await expect(result.txPromise).to.revertedWith(
+      "reverted with custom error 'InvalidIdentifier()'"
+    );
+
+    result = await publishVersionWithPromise(
+      registryV1,
+      testDomain.packageId,
+      `1.0.1-test.`,
+      "some-location"
+    );
+
+    await expect(result.txPromise).to.revertedWith(
+      "reverted with custom error 'InvalidIdentifier()'"
+    );
+
+    result = await publishVersionWithPromise(
+      registryV1,
+      testDomain.packageId,
+      `1.0.2-test prerelease`,
+      "some-location"
+    );
+
+    await expect(result.txPromise).to.revertedWith(
+      "reverted with custom error 'InvalidIdentifier()'"
+    );
+  });
+
+  it("forbids publishing non [0-9A-Za-z-] strings for build metadata", async () => {
+    let result = await publishVersionWithPromise(
+      registryV1,
+      testDomain.packageId,
+      `1.0.0+test_metadata`,
+      "some-location"
+    );
+
+    await expect(result.txPromise).to.revertedWith(
+      "reverted with custom error 'InvalidBuildMetadata()'"
+    );
+
+    result = await publishVersionWithPromise(
+      registryV1,
+      testDomain.packageId,
+      `1.0.0+test metadata`,
+      "some-location"
+    );
+
+    await expect(result.txPromise).to.revertedWith(
+      "reverted with custom error 'InvalidBuildMetadata()'"
+    );
+
+    result = await publishVersionWithPromise(
+      registryV1,
+      testDomain.packageId,
+      `1.0.0+test.`,
+      "some-location"
+    );
+
+    await expect(result.txPromise).to.revertedWith(
+      "reverted with custom error 'InvalidBuildMetadata()'"
+    );
+  });
+
   it("forbids publishing a version without major, minor and patch identifiers", async () => {
     let result = await publishVersionWithPromise(
       registryV1,
@@ -441,7 +511,7 @@ const publishVersionWithPromise = async (
 
     let hex: Uint8Array;
 
-    if (Number.isInteger(+identifier)) {
+    if (Number.isInteger(+identifier) && identifier !== "") {
       hex = zeroPad(
         Uint8Array.from([0, ...arrayify(BigNumber.from(+identifier))]),
         32
