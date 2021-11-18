@@ -14,6 +14,10 @@ error TooManyIdentifiers();
 error InvalidIdentifier();
 //Build metadata must satisfy [0-9A-Za-z-]*
 error InvalidBuildMetadata();
+//When incrementing the major number, the minor and patch numbers must be reset to 0
+//When incrementing the minor number, the patch number must be reset to 0
+//Does not apply to development versions (0.x.x)
+error IdentifierNotReset();
 
 abstract contract RegistryV1 is OwnableUpgradeable {
   event OwnershipUpdated(
@@ -110,33 +114,32 @@ abstract contract RegistryV1 is OwnableUpgradeable {
       node.created = true;
     }
 
-    bytes32 nodeId = packageId;
-
-    uint256 pointer;
-    uint256 identifier;
-    uint256 cnt;
-    bool newNodeCreated;
-    uint8 level;
-
-    assembly {
-      pointer := version
-    }
-    
     //32 bytes per identifier, 3 * 32 = 96
     //A proper version requires at least 3 identifiers (major, minor, patch)
     if(version.length < 96) {
       revert VersionNotFullLength();
     }
 
-    //level is used for identifier numbering
+    //level is used for numbering nodes/identifiers from (0 - packageNode, 1 - major node/identifier, etc)
     //level is an uint8 which has a max value of 255
     //8160 = 32 * 255
     if(version.length > 8160) {
       revert TooManyIdentifiers();
     }
 
+    bytes32 nodeId = packageId;
+    uint256 pointer;
+    uint256 identifier;
+    uint256 cnt;
+    uint8 level;
     //If a version has more than 3 identifiers then it's a prerelease
     bool isPrerelease = version.length > 96;
+    bool lastNodeCreated = false;
+    bool isDevelopmentVersion = false;
+
+    assembly {
+      pointer := version
+    }
 
     while(cnt < version.length) {
       assembly {
@@ -157,6 +160,11 @@ abstract contract RegistryV1 is OwnableUpgradeable {
         revert ReleaseIdentifierMustBeNumeric();
       }
 
+      //If a version starts with 0 (0.x.x) then it's a development version
+      if(level == 1 && identifier == 0) {
+        isDevelopmentVersion = true;
+      }
+
       //Numeric identifier are always lower than alphanumeric ones
       //Alphanumeric identifiers are ordered lexically in utf-8 order
       if (node.latestPrereleaseVersion < identifier) {
@@ -175,14 +183,30 @@ abstract contract RegistryV1 is OwnableUpgradeable {
       }
       node = versionNodes[nodeId];
 
+      //If the node doesn't exist then create it
       if(!node.created) {
         node.created = true;
+          
+        //Check whether the identifier matches [0-9A-Za-z-]+
         if(!isSemverCompliantIdentifier(bytes32(identifier))) {
           revert InvalidIdentifier();
         }
 
-        newNodeCreated = true;
         node.level = level;
+
+        //Check whether the identifier needs to be reset to 0 (when incrementing major or minor numbers)
+        if(
+          !isDevelopmentVersion &&
+          (level == 2 || level == 3) && 
+          lastNodeCreated && 
+          identifier != 0
+        ) {
+          revert IdentifierNotReset();
+        }
+
+        lastNodeCreated = true;
+      } else {
+        lastNodeCreated = false;
       }
     }
 
@@ -202,7 +226,7 @@ abstract contract RegistryV1 is OwnableUpgradeable {
     }
 
     //If a new node was created, then it doesn't have children and is a leaf node
-    if(newNodeCreated) {
+    if(lastNodeCreated) {
       node.leaf = true;
     }
 

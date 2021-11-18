@@ -154,7 +154,7 @@ describe("Publishing versions", () => {
     const { versionId, packageLocation, tx } = await publishVersion(
       registryV1,
       testDomain.packageId,
-      "0.0.0-alpha",
+      "0.0.1-alpha",
       "some-location"
     );
 
@@ -210,7 +210,7 @@ describe("Publishing versions", () => {
     result = await publishVersionWithPromise(
       registryV1,
       testDomain.packageId,
-      `1.0.1-test.`,
+      `1.0.0-test.`,
       "some-location"
     );
 
@@ -221,7 +221,7 @@ describe("Publishing versions", () => {
     result = await publishVersionWithPromise(
       registryV1,
       testDomain.packageId,
-      `1.0.2-test prerelease`,
+      `1.0.0-test prerelease`,
       "some-location"
     );
 
@@ -385,6 +385,140 @@ describe("Publishing versions", () => {
       ["1.0.0", "1.0.1-alpha", "1.0.1-alpha.1"],
       "1.0",
       "1.0.1-alpha.1"
+    );
+  });
+
+  it("requires patch to be reset when incrementing minor for release versions", async () => {
+    await publishVersion(
+      registryV1,
+      testDomain.packageId,
+      "1.0.0",
+      "some-location"
+    );
+
+    //The rule applies even if there's a greater minor version already published
+    await publishVersion(
+      registryV1,
+      testDomain.packageId,
+      "1.2.0",
+      "some-location"
+    );
+
+    const result = await publishVersionWithPromise(
+      registryV1,
+      testDomain.packageId,
+      "1.1.1",
+      "some-location"
+    );
+
+    await expect(result.txPromise).to.revertedWith(
+      "reverted with custom error 'IdentifierNotReset()'"
+    );
+  });
+
+  it("requires minor to be reset when incrementing major for release versions", async () => {
+    await publishVersion(
+      registryV1,
+      testDomain.packageId,
+      "1.0.0",
+      "some-location"
+    );
+
+    //The rule applies even if there's a greater major version already published
+    await publishVersion(
+      registryV1,
+      testDomain.packageId,
+      "3.0.0",
+      "some-location"
+    );
+
+    let result = await publishVersionWithPromise(
+      registryV1,
+      testDomain.packageId,
+      "2.1.0",
+      "some-location"
+    );
+
+    await expect(result.txPromise).to.revertedWith(
+      "reverted with custom error 'IdentifierNotReset()'"
+    );
+
+    result = await publishVersionWithPromise(
+      registryV1,
+      testDomain.packageId,
+      "2.0.1",
+      "some-location"
+    );
+
+    await expect(result.txPromise).to.revertedWith(
+      "reverted with custom error 'IdentifierNotReset()'"
+    );
+  });
+
+  it("requires patch to be reset when incrementing minor for prerelease versions", async () => {
+    await publishVersion(
+      registryV1,
+      testDomain.packageId,
+      "1.0.0-alpha",
+      "some-location"
+    );
+
+    //The rule applies even if there's a greater minor version already published
+    await publishVersion(
+      registryV1,
+      testDomain.packageId,
+      "1.2.0.alpha",
+      "some-location"
+    );
+
+    const result = await publishVersionWithPromise(
+      registryV1,
+      testDomain.packageId,
+      "1.1.1-alpha",
+      "some-location"
+    );
+
+    await expect(result.txPromise).to.revertedWith(
+      "reverted with custom error 'IdentifierNotReset()'"
+    );
+  });
+
+  it("requires minor to be reset when incrementing major for prerelease versions", async () => {
+    await publishVersion(
+      registryV1,
+      testDomain.packageId,
+      "1.0.0-alpha",
+      "some-location"
+    );
+
+    //The rule applies even if there's a greater major version already published
+    await publishVersion(
+      registryV1,
+      testDomain.packageId,
+      "3.0.0-alpha",
+      "some-location"
+    );
+
+    let result = await publishVersionWithPromise(
+      registryV1,
+      testDomain.packageId,
+      "2.1.0-alpha",
+      "some-location"
+    );
+
+    await expect(result.txPromise).to.revertedWith(
+      "reverted with custom error 'IdentifierNotReset()'"
+    );
+
+    result = await publishVersionWithPromise(
+      registryV1,
+      testDomain.packageId,
+      "2.0.1-alpha",
+      "some-location"
+    );
+
+    await expect(result.txPromise).to.revertedWith(
+      "reverted with custom error 'IdentifierNotReset()'"
     );
   });
 
@@ -570,6 +704,8 @@ const publishVersion = async (
   );
 
   const tx = await result.txPromise;
+
+  await tx.wait();
 
   return {
     ...result,
