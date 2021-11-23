@@ -6,18 +6,17 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deploy } = hre.deployments;
   const useProxy = !hre.network.live;
 
-  const versionVerificationManagerL2 = await hre.deployments.get(
-    "VersionVerificationManagerL2"
-  );
+  const ensRegistry = await hre.deployments.get("EnsRegistryL1");
 
-  await deploy("VerificationRootRelayer", {
+  await deploy("EnsLinkL1", {
+    contract: "EnsLinkV1",
     from: deployer,
-    args: [versionVerificationManagerL2.address, 5],
+    args: [ensRegistry.address],
     log: true,
   });
 
   return !useProxy;
 };
 export default func;
-func.id = "deploy_verification_root_relayer";
-func.tags = ["VerificationRootRelayer", "l2"];
+func.id = "deploy_ens_link_l1";
+func.tags = ["EnsLinkL1", "v1"];

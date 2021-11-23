@@ -48,7 +48,7 @@ const config: HardhatUserConfig = {
       accounts: {
         mnemonic: "test test test test test test test test test test test test",
       },
-      deploy: ["./deploy/scripts/localhost"],
+      deploy: ["./deploy/scripts/v1/localhost"],
 
       // live: false,
       // forking: {

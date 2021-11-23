@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.10;
 import "./interfaces/IOrganizationRegistry.sol";
-import "./PackageRegistryV1.sol";
+import "./VersionRegistryV1.sol";
+import "hardhat/console.sol";
 
 error OnlyOrganizationOwnershipManager();
 error OnlyOrganizationOwner();
@@ -9,7 +10,7 @@ error OnlyOrganizationController();
 error OnlyOrganizationOwnerOrController();
 error PackageAlreadyExists();
 
-abstract contract OrganizationRegistryV1 is PackageRegistryV1, IOrganizationRegistry {
+abstract contract OrganizationRegistryV1 is VersionRegistryV1, IOrganizationRegistry {
 	struct Organization {
     bool exists;
     address owner;
@@ -17,19 +18,10 @@ abstract contract OrganizationRegistryV1 is PackageRegistryV1, IOrganizationRegi
 		bytes32[] packageList;
   }
 
-	address public organizationOwnershipManager;
   mapping(bytes32 => Organization) organizations;
   bytes32[] organizationList;
 
-	function setOrganizationOwnershipManager(address organizationOwnershipManagerAddress) public virtual override {
-		organizationOwnershipManager = organizationOwnershipManagerAddress;
-	}
-
-	function claimOrganization(bytes32 organizationId, address owner) public virtual override {
-  	if(msg.sender != organizationOwnershipManager) {
-      revert OnlyOrganizationOwnershipManager();
-    }
-
+	function claimOrganization(bytes32 organizationId, address owner) internal {
 		if(!organizations[organizationId].exists) {
 			organizationList.push(organizationId);
 
@@ -96,7 +88,7 @@ abstract contract OrganizationRegistryV1 is PackageRegistryV1, IOrganizationRegi
     emit OrganizationControllerChanged(
       organizationId, 
 			previousController,
-      owner
+      controller
     );
 	}
 
@@ -121,7 +113,7 @@ abstract contract OrganizationRegistryV1 is PackageRegistryV1, IOrganizationRegi
 			packageOwner
 		);
 
-		setPackageOwner(packageId, packageOwner);
+		_setPackageOwner(packageId, packageOwner);
 	}
 
 	function organizationOwner(bytes32 organizationId) public virtual override view returns (address) {
@@ -147,9 +139,15 @@ abstract contract OrganizationRegistryV1 is PackageRegistryV1, IOrganizationRegi
 	}
 	
 	function listOrganizations(uint256 start, uint256 count) public virtual override view returns (bytes32[] memory) {
-		bytes32[] memory organizationArray = new bytes32[](count);
+		uint256 packageListLength = organizationList.length;
+		
+		uint256 len = start + count > organizationList.length 
+			? organizationList.length - start 
+			: count;
 
-		for(uint256 i = 0; i < count; i++) {
+		bytes32[] memory organizationArray = new bytes32[](len);
+
+		for(uint256 i = 0; i < len; i++) {
 			organizationArray[i] = organizationList[start + i];
 		}
 
@@ -161,11 +159,17 @@ abstract contract OrganizationRegistryV1 is PackageRegistryV1, IOrganizationRegi
 	}
 	
 	function listPackages(bytes32 organizationId, uint256 start, uint256 count) public virtual override view returns (bytes32[] memory) {
-		bytes32[] memory packageArray = new bytes32[](count);
-
 		Organization memory organization = organizations[organizationId];
 
-		for(uint256 i = 0; i < count; i++) {
+		uint256 packageListLength = organization.packageList.length;
+
+		uint256 len = start + count > packageListLength 
+			? packageListLength - start 
+			: count;
+
+		bytes32[] memory packageArray = new bytes32[](len);
+
+		for(uint256 i = 0; i < len; i++) {
 			packageArray[i] = organization.packageList[start + i];
 		}
 

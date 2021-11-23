@@ -3,14 +3,13 @@ pragma solidity ^0.8.4;
 import "hardhat/console.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "./interfaces/IPackageRegistry.sol";
-import "./VersionRegistryV1.sol";
 
 error OnlyPackageOwner();
 error OnlyPackageOwnerOrController();
 error OnlyOwnershipUpdater();
 error OnlyPackageOwnerOrOwnershipUpdater();
 
-abstract contract PackageRegistryV1 is VersionRegistryV1, IPackageRegistry {
+abstract contract PackageRegistryV1 is OwnableUpgradeable, IPackageRegistry {
   struct Package {
     bool exists;
     address owner;
@@ -27,6 +26,13 @@ abstract contract PackageRegistryV1 is VersionRegistryV1, IPackageRegistry {
       revert OnlyPackageOwner();
     }
 
+    _setPackageOwner(packageId, owner);
+  }
+
+  function _setPackageOwner(
+    bytes32 packageId,
+    address owner
+  ) internal {
     address previousOwner = packages[packageId].owner;
     packages[packageId].owner = owner;
 

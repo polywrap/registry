@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.10;
 import "hardhat/console.sol";
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "./interfaces/IVersionRegistry.sol";
+import "./PackageRegistryV1.sol";
 
 error OnlyTrustedVersionPublisher();
 //Version requires at least major, minor and patch identifiers specified
@@ -16,13 +16,12 @@ error TooManyIdentifiers();
 error InvalidIdentifier();
 //Build metadata must satisfy [0-9A-Za-z-]*
 error InvalidBuildMetadata();
-error OnlyPackageController();
 //When incrementing the major number, the minor and patch numbers must be reset to 0
 //When incrementing the minor number, the patch number must be reset to 0
 //Does not apply to development versions (0.x.x)
 error IdentifierNotReset();
 
-abstract contract VersionRegistryV1 is OwnableUpgradeable, IVersionRegistry {
+abstract contract VersionRegistryV1 is PackageRegistryV1, IVersionRegistry {
   struct VersionNode {
     bool leaf;
     bool exists;
@@ -33,7 +32,6 @@ abstract contract VersionRegistryV1 is OwnableUpgradeable, IVersionRegistry {
     string location;
   }
 
-	address public trustedVersionPublisher;
   mapping(bytes32 => VersionNode) versionNodes;
   mapping(bytes32 => bytes32[]) packageVersionLists;
 
@@ -46,11 +44,6 @@ abstract contract VersionRegistryV1 is OwnableUpgradeable, IVersionRegistry {
 
   function initialize() public initializer {
     __Ownable_init();
-  }
-
-  //Sets the address of the contract that is trusted to publish versions (it does it's own validation on who the owner/controller of a package is)
-	function setTrustedVersionPublisher(address trustedVersionPublisherAddress) public virtual override {
-    trustedVersionPublisher = trustedVersionPublisherAddress;
   }
 
   /**
@@ -67,9 +60,9 @@ abstract contract VersionRegistryV1 is OwnableUpgradeable, IVersionRegistry {
     bytes32 buildMetadata,
     string memory location
   ) public returns (bytes32 nodeId) {
-    if(msg.sender != trustedVersionPublisher) {
-      revert OnlyTrustedVersionPublisher();
-    }
+    if(msg.sender != packageController(packageId) && msg.sender != packageOwner(packageId)) {
+			revert OnlyPackageOwnerOrController();
+		}
 
     VersionNode storage node = versionNodes[packageId];
 
@@ -113,7 +106,7 @@ abstract contract VersionRegistryV1 is OwnableUpgradeable, IVersionRegistry {
       cnt += 32;
       level += 1;
 
-      //The first byte of the identifier is a bool indicating if the version is alphanumeric
+      //The first byte of the identifier is a boolean indicating if the version is alphanumeric
       //Use a mask = 0x0100..00 to sanitize the first byte to 0 or 1
       //Discard the first 8 bits to get the value of the identifier
       //Then concat the two numbers(1. byte and last 31 bytes) with bitwise OR
@@ -205,7 +198,7 @@ abstract contract VersionRegistryV1 is OwnableUpgradeable, IVersionRegistry {
     return nodeId;
   }
 
-  function isSemverCompliantIdentifier(bytes32 identifier) private view returns (bool) {
+  function isSemverCompliantIdentifier(bytes32 identifier) private pure returns (bool) {
     //The identifier is numeric
     if(identifier[0] == 0) {
       return true;
@@ -288,10 +281,17 @@ abstract contract VersionRegistryV1 is OwnableUpgradeable, IVersionRegistry {
   }
 
   function listVersions(bytes32 packageId, uint256 start, uint256 count) public virtual override view returns (bytes32[] memory) {
-		bytes32[] memory versionArray = new bytes32[](count);
     bytes32[] memory versionList = packageVersionLists[packageId];
 
-		for(uint256 i = 0; i < count; i++) {
+		uint256 versionListLength = versionList.length;
+		
+		uint256 len = start + count > versionListLength
+			? versionListLength - start 
+			: count;
+
+		bytes32[] memory versionArray = new bytes32[](len);
+
+		for(uint256 i = 0; i < len; i++) {
 			versionArray[i] = versionList[start + i];
 		}
 

@@ -22,13 +22,18 @@ import {
   toVersionNodeId,
 } from "../../../helpers";
 import { BigNumber, ContractTransaction, Signer } from "ethers";
-import { EnsDomain } from "@polywrap/registry-core-js";
+import { EnsApi } from "../../../helpers/ens/EnsApi";
+import { buildPolywrapPackage } from "../../../helpers/buildPolywrapPackage";
+import { PolywrapPackage } from "../../../helpers/PolywrapPackage";
+import { EnsDomain } from "../../../helpers/EnsDomain";
 
 describe("Publishing versions", () => {
-  const testDomain = new EnsDomain("test-domain");
+  let testPackage: PolywrapPackage;
 
-  let registryV1: PolywrapRegistryV1;
+  let registry: PolywrapRegistryV1;
   let resolver: VersionResolverV1;
+
+  let ens: EnsApi;
 
   let owner: Signer;
   let domainOwner: Signer;
@@ -47,61 +52,63 @@ describe("Publishing versions", () => {
   });
 
   beforeEach(async () => {
+    const deploys = await deployments.fixture(["ens", "v1"]);
+
     const provider = ethers.getDefaultProvider();
 
-    const registryFactory = await ethers.getContractFactory(
-      "PolywrapRegistryV1"
-    );
-    const registryContract = await registryFactory.deploy();
-
-    registryV1 = PolywrapRegistryV1__factory.connect(
-      registryContract.address,
+    registry = PolywrapRegistryV1__factory.connect(
+      deploys["PolywrapRegistryL1"].address,
       provider
     );
 
-    const resolverFactory = await ethers.getContractFactory(
-      "VersionResolverV1"
-    );
-    const resolverContract = await resolverFactory.deploy(
-      registryContract.address
-    );
-
-    resolver = VersionResolverV1__factory.connect(
-      resolverContract.address,
+    ens = new EnsApi(
+      {
+        ensRegistryL1: deploys["EnsRegistryL1"].address,
+        testEthRegistrarL1: deploys["TestEthRegistrarL1"].address,
+        testPublicResolverL1: deploys["TestPublicResolverL1"].address,
+      },
       provider
     );
 
-    const resolverFactory = await ethers.getContractFactory(
-      "VersionResolverV1"
-    );
-    const resolverContract = await resolverFactory.deploy(
-      registryContract.address
+    const testDomain = new EnsDomain("test-domain");
+    testPackage = buildPolywrapPackage(testDomain, "test-package");
+
+    await ens.registerDomainName(owner, polywrapOwner, testDomain);
+
+    registry = registry.connect(polywrapOwner);
+
+    resolver = registry;
+
+    let tx = await registry.claimOrganizationOwnership(
+      testDomain.registryBytes32,
+      testDomain.node,
+      await polywrapOwner.getAddress()
     );
 
-    resolver = VersionResolverV1__factory.connect(
-      resolverContract.address,
-      provider
+    await tx.wait();
+
+    tx = await registry.registerPackage(
+      testPackage.organizationId,
+      formatBytes32String(testPackage.packageName),
+      await polywrapOwner.getAddress()
     );
 
-    registryV1 = registryV1.connect(polywrapOwner);
-    resolver = resolver.connect(polywrapOwner);
+    await tx.wait();
   });
 
-  it("can propose and publish a development version", async () => {
+  it("can publish a development version", async () => {
     const { versionId, packageLocation, tx } = await publishVersion(
-      registryV1,
-      testDomain.packageId,
+      registry,
+      testPackage.packageId,
       "0.1.0",
       "some-location"
     );
-
     await expectEvent(tx, "VersionPublished", {
-      packageId: testDomain.packageId,
+      packageId: testPackage.packageId,
       versionNodeId: versionId,
       location: packageLocation,
     });
-
-    const versionNodeL1 = await registryV1.version(versionId);
+    const versionNodeL1 = await registry.version(versionId);
     expect(versionNodeL1.leaf).to.be.true;
     expect(versionNodeL1.exists).to.be.true;
     expect(versionNodeL1.location).to.equal(packageLocation);
@@ -109,19 +116,19 @@ describe("Publishing versions", () => {
 
   it("can publish production release versions", async () => {
     const { versionId, packageLocation, tx } = await publishVersion(
-      registryV1,
-      testDomain.packageId,
+      registry,
+      testPackage.packageId,
       "1.0.0",
       "some-location"
     );
 
     await expectEvent(tx, "VersionPublished", {
-      packageId: testDomain.packageId,
+      packageId: testPackage.packageId,
       versionNodeId: versionId,
       location: packageLocation,
     });
 
-    const versionNodeL1 = await registryV1.version(versionId);
+    const versionNodeL1 = await registry.version(versionId);
     expect(versionNodeL1.leaf).to.be.true;
     expect(versionNodeL1.exists).to.be.true;
     expect(versionNodeL1.location).to.equal(packageLocation);
@@ -129,19 +136,19 @@ describe("Publishing versions", () => {
 
   it("can publish development release versions", async () => {
     const { versionId, packageLocation, tx } = await publishVersion(
-      registryV1,
-      testDomain.packageId,
+      registry,
+      testPackage.packageId,
       "0.0.1",
       "some-location"
     );
 
     await expectEvent(tx, "VersionPublished", {
-      packageId: testDomain.packageId,
+      packageId: testPackage.packageId,
       versionNodeId: versionId,
       location: packageLocation,
     });
 
-    const versionNodeL1 = await registryV1.version(versionId);
+    const versionNodeL1 = await registry.version(versionId);
     expect(versionNodeL1.leaf).to.be.true;
     expect(versionNodeL1.exists).to.be.true;
     expect(versionNodeL1.location).to.equal(packageLocation);
@@ -149,19 +156,19 @@ describe("Publishing versions", () => {
 
   it("can publish production prerelease versions", async () => {
     const { versionId, packageLocation, tx } = await publishVersion(
-      registryV1,
-      testDomain.packageId,
+      registry,
+      testPackage.packageId,
       "1.0.0-alpha",
       "some-location"
     );
 
     await expectEvent(tx, "VersionPublished", {
-      packageId: testDomain.packageId,
+      packageId: testPackage.packageId,
       versionNodeId: versionId,
       location: packageLocation,
     });
 
-    const versionNodeL1 = await registryV1.version(versionId);
+    const versionNodeL1 = await registry.version(versionId);
     expect(versionNodeL1.leaf).to.be.true;
     expect(versionNodeL1.exists).to.be.true;
     expect(versionNodeL1.location).to.equal(packageLocation);
@@ -169,19 +176,19 @@ describe("Publishing versions", () => {
 
   it("can publish development prerelease versions", async () => {
     const { versionId, packageLocation, tx } = await publishVersion(
-      registryV1,
-      testDomain.packageId,
+      registry,
+      testPackage.packageId,
       "0.0.1-alpha",
       "some-location"
     );
 
     await expectEvent(tx, "VersionPublished", {
-      packageId: testDomain.packageId,
+      packageId: testPackage.packageId,
       versionNodeId: versionId,
       location: packageLocation,
     });
 
-    const versionNodeL1 = await registryV1.version(versionId);
+    const versionNodeL1 = await registry.version(versionId);
     expect(versionNodeL1.leaf).to.be.true;
     expect(versionNodeL1.exists).to.be.true;
     expect(versionNodeL1.location).to.equal(packageLocation);
@@ -191,19 +198,19 @@ describe("Publishing versions", () => {
     const buildMetadata = "test-metadata";
 
     const { versionId, packageLocation, tx } = await publishVersion(
-      registryV1,
-      testDomain.packageId,
+      registry,
+      testPackage.packageId,
       `1.0.0+${buildMetadata}`,
       "some-location"
     );
 
     await expectEvent(tx, "VersionPublished", {
-      packageId: testDomain.packageId,
+      packageId: testPackage.packageId,
       versionNodeId: versionId,
       location: packageLocation,
     });
 
-    const versionNodeL1 = await registryV1.version(versionId);
+    const versionNodeL1 = await registry.version(versionId);
     expect(versionNodeL1.leaf).to.be.true;
     expect(versionNodeL1.exists).to.be.true;
     expect(versionNodeL1.location).to.equal(packageLocation);
@@ -214,8 +221,8 @@ describe("Publishing versions", () => {
 
   it("forbids publishing non [0-9A-Za-z-] strings for identifiers", async () => {
     let result = await publishVersionWithPromise(
-      registryV1,
-      testDomain.packageId,
+      registry,
+      testPackage.packageId,
       `1.0.0-test_prerelease`,
       "some-location"
     );
@@ -225,8 +232,8 @@ describe("Publishing versions", () => {
     );
 
     result = await publishVersionWithPromise(
-      registryV1,
-      testDomain.packageId,
+      registry,
+      testPackage.packageId,
       `1.0.0-test.`,
       "some-location"
     );
@@ -236,8 +243,8 @@ describe("Publishing versions", () => {
     );
 
     result = await publishVersionWithPromise(
-      registryV1,
-      testDomain.packageId,
+      registry,
+      testPackage.packageId,
       `1.0.0-test prerelease`,
       "some-location"
     );
@@ -249,8 +256,8 @@ describe("Publishing versions", () => {
 
   it("forbids publishing non [0-9A-Za-z-] strings for build metadata", async () => {
     let result = await publishVersionWithPromise(
-      registryV1,
-      testDomain.packageId,
+      registry,
+      testPackage.packageId,
       `1.0.0+test_metadata`,
       "some-location"
     );
@@ -260,8 +267,8 @@ describe("Publishing versions", () => {
     );
 
     result = await publishVersionWithPromise(
-      registryV1,
-      testDomain.packageId,
+      registry,
+      testPackage.packageId,
       `1.0.0+test metadata`,
       "some-location"
     );
@@ -271,8 +278,8 @@ describe("Publishing versions", () => {
     );
 
     result = await publishVersionWithPromise(
-      registryV1,
-      testDomain.packageId,
+      registry,
+      testPackage.packageId,
       `1.0.0+test.`,
       "some-location"
     );
@@ -284,8 +291,8 @@ describe("Publishing versions", () => {
 
   it("forbids publishing a version without major, minor and patch identifiers", async () => {
     let result = await publishVersionWithPromise(
-      registryV1,
-      testDomain.packageId,
+      registry,
+      testPackage.packageId,
       "1.0",
       "some-location"
     );
@@ -295,8 +302,8 @@ describe("Publishing versions", () => {
     );
 
     result = await publishVersionWithPromise(
-      registryV1,
-      testDomain.packageId,
+      registry,
+      testPackage.packageId,
       "1",
       "some-location"
     );
@@ -308,8 +315,8 @@ describe("Publishing versions", () => {
 
   it("forbids publishing a non numeric release identifier", async () => {
     let result = await publishVersionWithPromise(
-      registryV1,
-      testDomain.packageId,
+      registry,
+      testPackage.packageId,
       "1.0.alpha",
       "some-location"
     );
@@ -319,8 +326,8 @@ describe("Publishing versions", () => {
     );
 
     result = await publishVersionWithPromise(
-      registryV1,
-      testDomain.packageId,
+      registry,
+      testPackage.packageId,
       "1.alpha.0",
       "some-location"
     );
@@ -330,8 +337,8 @@ describe("Publishing versions", () => {
     );
 
     result = await publishVersionWithPromise(
-      registryV1,
-      testDomain.packageId,
+      registry,
+      testPackage.packageId,
       "alpha.0.0",
       "some-location"
     );
@@ -343,15 +350,15 @@ describe("Publishing versions", () => {
 
   it("forbids publishing the same version more than once", async () => {
     let result = await publishVersionWithPromise(
-      registryV1,
-      testDomain.packageId,
+      registry,
+      testPackage.packageId,
       "1.0.0",
       "some-location-1"
     );
 
     result = await publishVersionWithPromise(
-      registryV1,
-      testDomain.packageId,
+      registry,
+      testPackage.packageId,
       "1.0.0",
       "some-location-2"
     );
@@ -363,9 +370,9 @@ describe("Publishing versions", () => {
 
   it("can resolve to release version", async () => {
     await testReleaseResolution(
-      registryV1,
+      registry,
       resolver,
-      testDomain.packageId,
+      testPackage.packageId,
       ["1.0.0", "1.0.1-alpha", "1.0.1", "1.0.2-alpha"],
       "1.0",
       "1.0.1"
@@ -374,9 +381,9 @@ describe("Publishing versions", () => {
 
   it("can resolve to prerelease version", async () => {
     await testPrereleaseResolution(
-      registryV1,
+      registry,
       resolver,
-      testDomain.packageId,
+      testPackage.packageId,
       ["1.0.0", "1.0.1", "1.0.2-alpha", "1.0.1-alpha"],
       "1.0",
       "1.0.2-alpha"
@@ -385,9 +392,9 @@ describe("Publishing versions", () => {
 
   it("prerelease should have lower precedence than release", async () => {
     await testPrereleaseResolution(
-      registryV1,
+      registry,
       resolver,
-      testDomain.packageId,
+      testPackage.packageId,
       ["1.0.0", "1.0.1-alpha", "1.0.1"],
       "1.0",
       "1.0.1"
@@ -396,9 +403,9 @@ describe("Publishing versions", () => {
 
   it("larger set of pre-release fields has a higher precedence than a smaller set", async () => {
     await testPrereleaseResolution(
-      registryV1,
+      registry,
       resolver,
-      testDomain.packageId,
+      testPackage.packageId,
       ["1.0.0", "1.0.1-alpha", "1.0.1-alpha.1"],
       "1.0",
       "1.0.1-alpha.1"
@@ -407,23 +414,23 @@ describe("Publishing versions", () => {
 
   it("requires patch to be reset when incrementing minor for release versions", async () => {
     await publishVersion(
-      registryV1,
-      testDomain.packageId,
+      registry,
+      testPackage.packageId,
       "1.0.0",
       "some-location"
     );
 
     //The rule applies even if there's a greater minor version already published
     await publishVersion(
-      registryV1,
-      testDomain.packageId,
+      registry,
+      testPackage.packageId,
       "1.2.0",
       "some-location"
     );
 
     const result = await publishVersionWithPromise(
-      registryV1,
-      testDomain.packageId,
+      registry,
+      testPackage.packageId,
       "1.1.1",
       "some-location"
     );
@@ -435,23 +442,23 @@ describe("Publishing versions", () => {
 
   it("requires minor to be reset when incrementing major for release versions", async () => {
     await publishVersion(
-      registryV1,
-      testDomain.packageId,
+      registry,
+      testPackage.packageId,
       "1.0.0",
       "some-location"
     );
 
     //The rule applies even if there's a greater major version already published
     await publishVersion(
-      registryV1,
-      testDomain.packageId,
+      registry,
+      testPackage.packageId,
       "3.0.0",
       "some-location"
     );
 
     let result = await publishVersionWithPromise(
-      registryV1,
-      testDomain.packageId,
+      registry,
+      testPackage.packageId,
       "2.1.0",
       "some-location"
     );
@@ -461,8 +468,8 @@ describe("Publishing versions", () => {
     );
 
     result = await publishVersionWithPromise(
-      registryV1,
-      testDomain.packageId,
+      registry,
+      testPackage.packageId,
       "2.0.1",
       "some-location"
     );
@@ -474,23 +481,23 @@ describe("Publishing versions", () => {
 
   it("requires patch to be reset when incrementing minor for prerelease versions", async () => {
     await publishVersion(
-      registryV1,
-      testDomain.packageId,
+      registry,
+      testPackage.packageId,
       "1.0.0-alpha",
       "some-location"
     );
 
     //The rule applies even if there's a greater minor version already published
     await publishVersion(
-      registryV1,
-      testDomain.packageId,
+      registry,
+      testPackage.packageId,
       "1.2.0.alpha",
       "some-location"
     );
 
     const result = await publishVersionWithPromise(
-      registryV1,
-      testDomain.packageId,
+      registry,
+      testPackage.packageId,
       "1.1.1-alpha",
       "some-location"
     );
@@ -502,23 +509,23 @@ describe("Publishing versions", () => {
 
   it("requires minor to be reset when incrementing major for prerelease versions", async () => {
     await publishVersion(
-      registryV1,
-      testDomain.packageId,
+      registry,
+      testPackage.packageId,
       "1.0.0-alpha",
       "some-location"
     );
 
     //The rule applies even if there's a greater major version already published
     await publishVersion(
-      registryV1,
-      testDomain.packageId,
+      registry,
+      testPackage.packageId,
       "3.0.0-alpha",
       "some-location"
     );
 
     let result = await publishVersionWithPromise(
-      registryV1,
-      testDomain.packageId,
+      registry,
+      testPackage.packageId,
       "2.1.0-alpha",
       "some-location"
     );
@@ -528,8 +535,8 @@ describe("Publishing versions", () => {
     );
 
     result = await publishVersionWithPromise(
-      registryV1,
-      testDomain.packageId,
+      registry,
+      testPackage.packageId,
       "2.0.1-alpha",
       "some-location"
     );
@@ -566,15 +573,15 @@ describe("Publishing versions", () => {
       preleaseTags: string[]
     ): Promise<[BytesLike, BytesLike, BytesLike]> => {
       const { versionId: versionId1, patchNodeId } = await publishVersion(
-        registryV1,
-        testDomain.packageId,
+        registry,
+        testPackage.packageId,
         `1.0.${patch}-${preleaseTags[0]}`,
         "test-location"
       );
 
       const { versionId: versionId2 } = await publishVersion(
-        registryV1,
-        testDomain.packageId,
+        registry,
+        testPackage.packageId,
         `1.0.${patch}-${preleaseTags[1]}`,
         "test-location"
       );
@@ -605,14 +612,14 @@ describe("Publishing versions", () => {
 });
 
 const testReleaseResolution = async (
-  registryV1: PolywrapRegistryV1,
+  registry: PolywrapRegistryV1,
   resolver: VersionResolverV1,
   packageId: BytesLike,
   versions: string[],
   searchVersion: string,
   expectedVersion: string
 ): Promise<void> => {
-  await publishVersions(registryV1, packageId, versions, "some-location");
+  await publishVersions(registry, packageId, versions, "some-location");
 
   const versionNode = await resolver.latestReleaseNode(
     toVersionNodeId(packageId, searchVersion)
@@ -622,14 +629,14 @@ const testReleaseResolution = async (
 };
 
 const testPrereleaseResolution = async (
-  registryV1: PolywrapRegistryV1,
+  registry: PolywrapRegistryV1,
   resolver: VersionResolverV1,
   packageId: BytesLike,
   versions: string[],
   searchVersion: string,
   expectedVersion: string
 ): Promise<void> => {
-  await publishVersions(registryV1, packageId, versions, "some-location");
+  await publishVersions(registry, packageId, versions, "some-location");
 
   const versionNode = await resolver.latestPrereleaseNode(
     toVersionNodeId(packageId, searchVersion)
