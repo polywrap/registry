@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.10;
 import "hardhat/console.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "./interfaces/IVersionRegistry.sol";
 
+error OnlyTrustedVersionPublisher();
 //Version requires at least major, minor and patch identifiers specified
 error VersionNotFullLength();
 //Major, minor and patch are release identifiers and they must be numeric (not alphanumeric)
@@ -14,28 +16,16 @@ error TooManyIdentifiers();
 error InvalidIdentifier();
 //Build metadata must satisfy [0-9A-Za-z-]*
 error InvalidBuildMetadata();
+error OnlyPackageController();
 //When incrementing the major number, the minor and patch numbers must be reset to 0
 //When incrementing the minor number, the patch number must be reset to 0
 //Does not apply to development versions (0.x.x)
 error IdentifierNotReset();
 
-abstract contract RegistryV1 is OwnableUpgradeable {
-  event OwnershipUpdated(
-    bytes32 indexed domainRegistryNode,
-    bytes32 packageId,
-    bytes32 domainRegistry,
-    address indexed owner
-  );
-
-  event VersionPublished(
-    bytes32 indexed packageId,
-    bytes32 indexed versionId,
-    string location
-  );
-
+abstract contract VersionRegistryV1 is OwnableUpgradeable, IVersionRegistry {
   struct VersionNode {
     bool leaf;
-    bool created;
+    bool exists;
     uint8 level;
     uint256 latestPrereleaseVersion;
     uint256 latestReleaseVersion;
@@ -43,17 +33,13 @@ abstract contract RegistryV1 is OwnableUpgradeable {
     string location;
   }
 
-  struct PackageInfo {
-    address owner;
-    bytes32 domainRegistryNode;
-    bytes32 domainRegistry;
-  }
+	address public trustedVersionPublisher;
+  mapping(bytes32 => VersionNode) versionNodes;
+  mapping(bytes32 => bytes32[]) packageVersionLists;
 
-  mapping(bytes32 => PackageInfo) public packages;
-  mapping(bytes32 => VersionNode) public versionNodes;
-  address public ownershipUpdater;
-  address public versionPublisher;
-
+  /**
+   * @dev Constructs a new Registry.
+   */
   constructor() {
     initialize();
   }
@@ -62,56 +48,34 @@ abstract contract RegistryV1 is OwnableUpgradeable {
     __Ownable_init();
   }
 
-  function updateOwnershipUpdater(address _ownershipUpdater) public onlyOwner {
-    ownershipUpdater = _ownershipUpdater;
+  //Sets the address of the contract that is trusted to publish versions (it does it's own validation on who the owner/controller of a package is)
+	function setTrustedVersionPublisher(address trustedVersionPublisherAddress) public virtual override {
+    trustedVersionPublisher = trustedVersionPublisherAddress;
   }
 
-  function updateVersionPublisher(address _versionPublisher) public onlyOwner {
-    versionPublisher = _versionPublisher;
-  }
-
-  function updateOwnership(
-    bytes32 domainRegistry,
-    bytes32 domainRegistryNode,
-    address domainOwner
-  ) public {
-    assert(msg.sender == ownershipUpdater);
-
-    bytes32 packageId = keccak256(
-      abi.encodePacked(
-        keccak256(abi.encodePacked(domainRegistryNode)),
-        domainRegistry
-      )
-    );
-
-    packages[packageId] = PackageInfo(
-      domainOwner,
-      domainRegistryNode,
-      domainRegistry
-    );
-
-    emit OwnershipUpdated(
-      domainRegistryNode,
-      packageId,
-      domainRegistry,
-      domainOwner
-    );
-  }
-
+  /**
+   * @dev Publish a new version of a package.
+   * @param packageId The ID of a package.
+   * @param version The encoded bytes of a version string.
+   * @param buildMetadata Metadata for the build of the version.
+   * @param location The IPFS hash where the contents of the version are stored.
+   * @return nodeId ID of the published version.
+   */
   function publishVersion(
     bytes32 packageId,
-    //Array of byte32 identifiers
     bytes memory version,
     bytes32 buildMetadata,
     string memory location
-  ) public returns (bytes32) {
-    // assert(msg.sender == versionPublisher);
+  ) public returns (bytes32 nodeId) {
+    if(msg.sender != trustedVersionPublisher) {
+      revert OnlyTrustedVersionPublisher();
+    }
 
     VersionNode storage node = versionNodes[packageId];
 
     //Checking this saves gas    
-    if(!node.created) {
-      node.created = true;
+    if(!node.exists) {
+      node.exists = true;
     }
 
     //32 bytes per identifier, 3 * 32 = 96
@@ -127,7 +91,7 @@ abstract contract RegistryV1 is OwnableUpgradeable {
       revert TooManyIdentifiers();
     }
 
-    bytes32 nodeId = packageId;
+    nodeId = packageId;
     uint256 pointer;
     uint256 identifier;
     uint256 cnt;
@@ -184,8 +148,8 @@ abstract contract RegistryV1 is OwnableUpgradeable {
       node = versionNodes[nodeId];
 
       //If the node doesn't exist then create it
-      if(!node.created) {
-        node.created = true;
+      if(!node.exists) {
+        node.exists = true;
           
         //Check whether the identifier matches [0-9A-Za-z-]+
         if(!isSemverCompliantIdentifier(bytes32(identifier))) {
@@ -233,6 +197,8 @@ abstract contract RegistryV1 is OwnableUpgradeable {
     emit VersionPublished(
       packageId,
       nodeId,
+      version,
+      buildMetadata,
       location
     );
 
@@ -287,14 +253,21 @@ abstract contract RegistryV1 is OwnableUpgradeable {
 
     return true;
   }
-
-  function getPackageOwner(bytes32 packageId) public view returns (address) {
-    return packages[packageId].owner;
-  }
-   
-  function getVersionNode(bytes32 nodeId) public view returns (
+  
+  /**
+   * @dev Get the details of a version node.
+   * @param nodeId The ID of a version.
+   * @return leaf Boolean indicating whether the node is a leaf node (does not contain children).
+   * @return exists Boolean indicating whether or not the node exists.
+   * @return level The level of the identifier for the node.
+   * @return latestPrereleaseVersion The identifier of the latest prerelease version.
+   * @return latestReleaseVersion The identifier of the latest release version.
+   * @return buildMetadata Metadata for the build of the version.
+   * @return location The IPFS hash where the contents of the version are stored.
+   */
+  function version(bytes32 nodeId) public view returns (
     bool leaf,
-    bool created,
+    bool exists,
     uint8 level,
     uint256 latestPrereleaseVersion,
     uint256 latestReleaseVersion,
@@ -305,12 +278,27 @@ abstract contract RegistryV1 is OwnableUpgradeable {
 
     return (
       node.leaf,
-      node.created, 
+      node.exists, 
       node.level, 
       node.latestPrereleaseVersion, 
       node.latestReleaseVersion, 
       node.buildMetadata, 
       node.location
     );
+  }
+
+  function listVersions(bytes32 packageId, uint256 start, uint256 count) public virtual override view returns (bytes32[] memory) {
+		bytes32[] memory versionArray = new bytes32[](count);
+    bytes32[] memory versionList = packageVersionLists[packageId];
+
+		for(uint256 i = 0; i < count; i++) {
+			versionArray[i] = versionList[start + i];
+		}
+
+		return versionArray;
+	}
+
+	function versionCount(bytes32 packageId) external virtual override view returns (uint256) {
+    return packageVersionLists[packageId].length;
   }
 }

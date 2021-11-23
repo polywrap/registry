@@ -2,6 +2,8 @@ import hre from "hardhat";
 import { expect } from "chai";
 import {
   BaseContract,
+  BigNumber,
+  BytesLike,
   Contract,
   ContractTransaction,
   ethers,
@@ -9,6 +11,14 @@ import {
 } from "ethers";
 import { eventNames } from "process";
 import { DeploymentsExtension } from "hardhat-deploy/dist/types";
+import {
+  zeroPad,
+  arrayify,
+  formatBytes32String,
+  solidityKeccak256,
+  concat,
+} from "ethers/lib/utils";
+import { PolywrapRegistryV1 } from "../../typechain";
 
 export const getSubnodeHash = (
   parentHash: string,
@@ -95,4 +105,173 @@ export const getEventArgs = async (
   }
 
   return receivedArgs;
+};
+
+export const publishVersionWithPromise = async (
+  registryV1: PolywrapRegistryV1,
+  packageId: BytesLike,
+  version: string,
+  packageLocation: string
+): Promise<{
+  versionId: BytesLike;
+  patchNodeId: BytesLike;
+  packageLocation: string;
+  txPromise: Promise<ContractTransaction>;
+}> => {
+  const [versionIdentifiers, buildMetadata] = parseVersionString(version);
+
+  let nodeId = packageId;
+  const versionArray = [];
+  let patchNodeId: BytesLike = packageId;
+
+  for (let i = 0; i < versionIdentifiers.length; i++) {
+    const identifier = versionIdentifiers[i];
+
+    let hex: Uint8Array;
+
+    if (Number.isInteger(+identifier) && identifier !== "") {
+      hex = zeroPad(
+        Uint8Array.from([0, ...arrayify(BigNumber.from(+identifier))]),
+        32
+      );
+    } else {
+      const utf8Bytes = arrayify(formatBytes32String(identifier));
+
+      hex = zeroPadEnd(
+        Uint8Array.from([1, ...utf8Bytes.slice(0, utf8Bytes.length - 1)]),
+        32
+      );
+    }
+
+    nodeId = solidityKeccak256(["bytes32", "bytes32"], [nodeId, hex]);
+
+    if (i == 2) {
+      patchNodeId = nodeId;
+    }
+
+    versionArray.push(hex);
+  }
+
+  const versionBytes = concat(versionArray);
+
+  const txPromise = registryV1.publishVersion(
+    packageId,
+    versionBytes,
+    formatBytes32String(buildMetadata),
+    packageLocation
+  );
+
+  return {
+    versionId: nodeId,
+    patchNodeId,
+    packageLocation,
+    txPromise,
+  };
+};
+
+export const publishVersion = async (
+  registryV1: PolywrapRegistryV1,
+  packageId: BytesLike,
+  version: string,
+  packageLocation: string
+): Promise<{
+  versionId: BytesLike;
+  patchNodeId: BytesLike;
+  packageLocation: string;
+  tx: ContractTransaction;
+}> => {
+  const result = await publishVersionWithPromise(
+    registryV1,
+    packageId,
+    version,
+    packageLocation
+  );
+
+  const tx = await result.txPromise;
+
+  await tx.wait();
+
+  return {
+    ...result,
+    tx,
+  };
+};
+
+export const publishVersions = async (
+  registryV1: PolywrapRegistryV1,
+  packageId: BytesLike,
+  versions: string[],
+  packageLocation: string
+): Promise<void> => {
+  for (const version of versions) {
+    const result = await publishVersionWithPromise(
+      registryV1,
+      packageId,
+      version,
+      packageLocation
+    );
+
+    await result.txPromise;
+  }
+};
+
+export const toVersionNodeId = (
+  packageId: BytesLike,
+  version: string
+): BytesLike => {
+  const [versionIdentifiers] = parseVersionString(version);
+
+  let nodeId = packageId;
+
+  for (let i = 0; i < versionIdentifiers.length; i++) {
+    const identifier = versionIdentifiers[i];
+
+    let hex: Uint8Array;
+
+    if (Number.isInteger(+identifier)) {
+      hex = zeroPad(
+        Uint8Array.from([0, ...arrayify(BigNumber.from(+identifier))]),
+        32
+      );
+    } else {
+      const utf8Bytes = arrayify(formatBytes32String(identifier));
+
+      hex = zeroPadEnd(
+        Uint8Array.from([1, ...utf8Bytes.slice(0, utf8Bytes.length - 1)]),
+        32
+      );
+    }
+
+    nodeId = solidityKeccak256(["bytes32", "bytes32"], [nodeId, hex]);
+  }
+
+  return nodeId;
+};
+
+//Pads the end of the array with zeroes
+const zeroPadEnd = (value: BytesLike, length: number): Uint8Array => {
+  value = ethers.utils.arrayify(value);
+
+  if (value.length > length) {
+    throw Error("Value out of range");
+  }
+
+  const result = new Uint8Array(length);
+  result.set(value, 0);
+
+  return result;
+};
+
+const parseVersionString = (
+  version: string
+): [identifiers: string[], buildMetadata: string] => {
+  const metadataSplit = version.split("+");
+  const dashSplit = metadataSplit[0].split("-");
+  const releaseIdentifiers = dashSplit[0].split(".");
+
+  const identifiers = releaseIdentifiers.concat(
+    dashSplit.length > 1 ? dashSplit.slice(1).join("-").split(".") : []
+  );
+
+  return [identifiers, metadataSplit.length > 1 ? metadataSplit[1] : ""];
 };
