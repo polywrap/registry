@@ -2,7 +2,7 @@
   "name": "@polywrap/registry",
   "description": "registry",
   "license": "MIT",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "scripts": {
     "typechain": "hardhat typechain",
     "build": "yarn run clean && yarn run compile && tsc",
