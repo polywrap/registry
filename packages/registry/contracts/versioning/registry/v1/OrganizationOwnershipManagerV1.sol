@@ -2,7 +2,6 @@
 pragma solidity ^0.8.10;
 
 import "./interfaces/IOrganizationOwnershipManager.sol";
-import "./interfaces/IOrganizationRegistry.sol";
 import "../../domain-registries/interfaces/IDomainRegistryLinkV1.sol";
 import "./VersionResolverV1.sol";
 
