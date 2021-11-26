@@ -16,8 +16,8 @@
     "lint": "eslint . --ext .ts"
   },
   "dependencies": {
-    "@polywrap/registry-core-js": "^1.0.0",
-    "@polywrap/registry-test-utils": "^1.0.0",
+    "@polywrap/registry-core-js": "^0.1.0",
+    "@polywrap/registry-test-utils": "^0.1.0",
     "commander": "^8.2.0",
     "custom-env": "^2.0.1",
     "ethers": "^5.4.6",

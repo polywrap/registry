@@ -5,11 +5,11 @@ pragma solidity ^0.8.10;
 import "hardhat/console.sol";
 import "./interfaces/IVersionRegistry.sol";
 import "./interfaces/IVersionResolver.sol";
-import "./OrganizationRegistryV1.sol";
+import "./VersionRegistryV1.sol";
 
 error NodeNotFound();
 
-abstract contract VersionResolverV1 is OrganizationRegistryV1, IVersionResolver {
+abstract contract VersionResolverV1 is VersionRegistryV1, IVersionResolver {
 
   function latestReleaseNode(bytes32 versionNodeId) public virtual override view returns (bytes32 nodeId) {
     (bool leaf, bool exists, uint8 level, , uint256 latestReleaseVersion,,) = version(versionNodeId);
