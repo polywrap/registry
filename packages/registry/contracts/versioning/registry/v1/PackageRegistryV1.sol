@@ -6,11 +6,12 @@ import "./interfaces/IPackageRegistry.sol";
 
 error OnlyOrganizationOwnershipManager();
 error OnlyOrganizationOwner();
-error UnauthorizedOrganizationControl();
+error OnlyOrganizationOwnerOrController();
 error PackageAlreadyExists();
 error OnlyPackageOwner();
-error UnauthorizedPackageControl();
-error OnlyOwnershipUpdater();
+error OnlyOrganizationController();
+error OnlyPackageOwnerOrController();
+error OnlyPackageOwnerOrOrganizationController();
 
 abstract contract PackageRegistryV1 is OwnableUpgradeable, IPackageRegistry {
   
@@ -65,8 +66,8 @@ abstract contract PackageRegistryV1 is OwnableUpgradeable, IPackageRegistry {
 	}
 	
 	function setOrganizationController(bytes32 organizationId, address controller) public virtual override {
- 		if(msg.sender != organizationOwner(organizationId) && msg.sender != organizationController(organizationId)) {
-      revert UnauthorizedOrganizationControl();
+ 		if(msg.sender != organizations[organizationId].controller && msg.sender != organizations[organizationId].owner) {
+      revert OnlyOrganizationOwnerOrController();
     }
 
 		address previousController = organizations[organizationId].controller;
@@ -104,8 +105,8 @@ abstract contract PackageRegistryV1 is OwnableUpgradeable, IPackageRegistry {
 	}
 
 	function registerPackage(bytes32 organizationId, bytes32 packageName, address packageOwner) public virtual override {
-		if(msg.sender != organizationOwner(organizationId)) {
-      revert OnlyOrganizationOwner();
+		if(msg.sender != organizations[organizationId].controller) {
+      revert OnlyOrganizationController();
     }
 
 		bytes32 packageId = keccak256(abi.encodePacked(organizationId, packageName));
@@ -132,8 +133,8 @@ abstract contract PackageRegistryV1 is OwnableUpgradeable, IPackageRegistry {
     bytes32 packageId,
     address owner
   ) public virtual override {
-    if(msg.sender != packageOwner(packageId) && msg.sender != organizationOwner(packages[packageId].organizationId)) {
-      revert OnlyOrganizationOrPackageOwner();
+    if(msg.sender != packages[packageId].owner && msg.sender != organizations[packages[packageId].organizationId].controller) {
+      revert OnlyPackageOwnerOrOrganizationController();
     }
 
     _setPackageOwner(packageId, owner);
@@ -142,7 +143,7 @@ abstract contract PackageRegistryV1 is OwnableUpgradeable, IPackageRegistry {
   function _setPackageOwner(
     bytes32 packageId,
     address owner
-  ) internal {
+  ) private {
     address previousOwner = packages[packageId].owner;
     packages[packageId].owner = owner;
 
@@ -158,8 +159,8 @@ abstract contract PackageRegistryV1 is OwnableUpgradeable, IPackageRegistry {
     address owner,
     address controller
   ) public virtual override {
-    if(msg.sender != packageOwner(packageId)) {
-      revert OnlyPackageOwner();
+    if(msg.sender != packages[packageId].owner && msg.sender != organizations[packages[packageId].organizationId].controller) {
+      revert OnlyPackageOwnerOrOrganizationController();
     }
 
     address previousOwner = packages[packageId].owner;
@@ -185,7 +186,7 @@ abstract contract PackageRegistryV1 is OwnableUpgradeable, IPackageRegistry {
     bytes32 packageId,
     address controller
   ) public virtual override {
-    if(msg.sender != packageOwner(packageId) && msg.sender != packageController(packageId)) {
+    if(msg.sender != packages[packageId].controller && msg.sender != packages[packageId].owner) {
       revert OnlyPackageOwnerOrController();
     }
 
@@ -220,13 +221,6 @@ abstract contract PackageRegistryV1 is OwnableUpgradeable, IPackageRegistry {
       organization.controller
     );
 	}
-
-  function hasOrganizationControl(bytes32 organizationId) public virtual override view returns (bool) {
-    address controller = organizations[organizationId].controller;
-
-    return (controller != address(0) && msg.sender == controller)
-      || msg.sender == organizations[organizationId].owner;
-  }
 	
 	function listOrganizations(uint256 start, uint256 count) public virtual override view returns (bytes32[] memory) {
 		uint256 packageListLength = organizationList.length;
@@ -290,16 +284,23 @@ abstract contract PackageRegistryV1 is OwnableUpgradeable, IPackageRegistry {
     );
   }
 
-  function hasPackageControl(bytes32 packageId) public virtual override view returns (bool) {
-    address packageController = packages[packageId].controller;
+  // function hasOrganizationControl(bytes32 organizationId) public virtual override view returns (bool) {
+  //   address controller = organizations[organizationId].controller;
 
-    bool hasPackageControl = (packageController != address(0) && msg.sender == packageController)
-      || msg.sender == packages[packageId].owner;
+  //   return (controller != address(0) && msg.sender == controller)
+  //     || msg.sender == organizations[organizationId].owner;
+  // }
 
-    if(hasPackageControl) {
-      return true;
-    }
+  // function hasPackageControl(bytes32 packageId) public virtual override view returns (bool) {
+  //   address packageController = packages[packageId].controller;
+
+  //   bool hasPackageControl = (packageController != address(0) && msg.sender == packageController)
+  //     || msg.sender == packages[packageId].owner;
+
+  //   if(hasPackageControl) {
+  //     return true;
+  //   }
   
-    return hasOrganizationControl(organizations[packages[packageId].organizationId]);
-  }
+  //   return hasOrganizationControl(organizations[packages[packageId].organizationId]);
+  // }
 }

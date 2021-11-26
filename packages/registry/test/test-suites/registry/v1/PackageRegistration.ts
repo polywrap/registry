@@ -41,6 +41,7 @@ describe("Registering packages", () => {
   let packageOwner: Signer;
   let packageOwner2: Signer;
   let packageController: Signer;
+  let packageController2: Signer;
   let randomAcc: Signer;
 
   const testDomain = new EnsDomain("test-domain");
@@ -56,7 +57,8 @@ describe("Registering packages", () => {
     packageOwner = signers[6];
     packageOwner2 = signers[7];
     packageController = signers[8];
-    randomAcc = signers[9];
+    packageController2 = signers[9];
+    randomAcc = signers[10];
   });
 
   beforeEach(async () => {
@@ -82,7 +84,7 @@ describe("Registering packages", () => {
 
     registry = registry.connect(domainOwner);
 
-    const tx = await registry.claimOrganizationOwnership(
+    let tx = await registry.claimOrganizationOwnership(
       testDomain.registryBytes32,
       testDomain.node,
       await organizationOwner.getAddress()
@@ -91,11 +93,20 @@ describe("Registering packages", () => {
     await tx.wait();
 
     registry = registry.connect(organizationOwner);
+
+    tx = await registry.setOrganizationController(
+      testDomain.organizationId,
+      await organizationController.getAddress()
+    );
+
+    await tx.wait();
   });
 
   it("can register package", async () => {
     const testPackage = buildPolywrapPackage(testDomain, "test-package");
     const packageOwnerAddress = await packageOwner.getAddress();
+
+    registry = registry.connect(organizationController);
 
     const tx = await registry.registerPackage(
       testDomain.organizationId,
@@ -139,6 +150,8 @@ describe("Registering packages", () => {
     const testPackage2 = buildPolywrapPackage(testDomain, "test-package2");
     const packageOwnerAddress1 = await packageOwner.getAddress();
     const packageOwnerAddress2 = await packageOwner2.getAddress();
+
+    registry = registry.connect(organizationController);
 
     let tx = await registry.registerPackage(
       testDomain.organizationId,
@@ -208,7 +221,16 @@ describe("Registering packages", () => {
 
     await tx.wait();
 
-    registry = registry.connect(organizationOwner);
+    registry = registry.connect(organizationOwner2);
+
+    tx = await registry.setOrganizationController(
+      testDomain2.organizationId,
+      await organizationController2.getAddress()
+    );
+
+    await tx.wait();
+
+    registry = registry.connect(organizationController);
 
     tx = await registry.registerPackage(
       testDomain.organizationId,
@@ -231,7 +253,7 @@ describe("Registering packages", () => {
       packageOwnerAddress1
     );
 
-    registry = registry.connect(organizationOwner2);
+    registry = registry.connect(organizationController2);
 
     tx = await registry.registerPackage(
       testDomain2.organizationId,
@@ -272,6 +294,8 @@ describe("Registering packages", () => {
     const packageOwnerAddress1 = await packageOwner.getAddress();
     const packageOwnerAddress2 = await packageOwner2.getAddress();
 
+    registry = registry.connect(organizationController);
+
     const tx = await registry.registerPackage(
       testDomain.organizationId,
       formatBytes32String(testPackage1.packageName),
@@ -291,10 +315,12 @@ describe("Registering packages", () => {
     );
   });
 
-  it("allows organization owner to change package owner", async () => {
+  it("allows organization controller to change package owner", async () => {
     const testPackage = buildPolywrapPackage(testDomain, "test-package");
     const packageOwnerAddress1 = await packageOwner.getAddress();
     const packageOwnerAddress2 = await packageOwner2.getAddress();
+
+    registry = registry.connect(organizationController);
 
     let tx = await registry.registerPackage(
       testDomain.organizationId,
@@ -325,6 +351,8 @@ describe("Registering packages", () => {
     const packageOwnerAddress1 = await packageOwner.getAddress();
     const packageOwnerAddress2 = await packageOwner2.getAddress();
 
+    registry = registry.connect(organizationController);
+
     let tx = await registry.registerPackage(
       testDomain.organizationId,
       formatBytes32String(testPackage.packageName),
@@ -350,7 +378,7 @@ describe("Registering packages", () => {
       packageOwnerAddress2
     );
   });
-
+  /*
   it("forbids non package owner to change package owner", async () => {
     const testPackage = buildPolywrapPackage(testDomain, "test-package");
     const packageOwnerAddress1 = await packageOwner.getAddress();
@@ -499,6 +527,8 @@ describe("Registering packages", () => {
       "reverted with custom error 'OnlyOrganizationOwnerOrPackageOwnerOrPackageController()'"
     );
   });
+*/
+
   /*
   it("allows organization owner to set organization controller", async () => {
     const organizationOwnerAddress = await organizationOwner.getAddress();

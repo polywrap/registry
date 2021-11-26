@@ -38,17 +38,18 @@ describe("Publishing versions", () => {
   let owner: Signer;
   let domainOwner: Signer;
   let polywrapOwner: Signer;
-  let verifier1: Signer;
+  let organizationController: Signer;
+  let packageController: Signer;
   let randomAcc: Signer;
 
   before(async () => {
-    const [_owner, _domainOwner, _polywrapOwner, _verifier1, _randomAcc] =
-      await ethers.getSigners();
-    owner = _owner;
-    domainOwner = _domainOwner;
-    polywrapOwner = _polywrapOwner;
-    verifier1 = _verifier1;
-    randomAcc = _randomAcc;
+    const signers = await ethers.getSigners();
+    owner = signers[0];
+    domainOwner = signers[1];
+    polywrapOwner = signers[2];
+    organizationController = signers[3];
+    packageController = signers[4];
+    randomAcc = signers[5];
   });
 
   beforeEach(async () => {
@@ -73,9 +74,9 @@ describe("Publishing versions", () => {
     const testDomain = new EnsDomain("test-domain");
     testPackage = buildPolywrapPackage(testDomain, "test-package");
 
-    await ens.registerDomainName(owner, polywrapOwner, testDomain);
+    await ens.registerDomainName(owner, domainOwner, testDomain);
 
-    registry = registry.connect(polywrapOwner);
+    registry = registry.connect(domainOwner);
 
     resolver = registry;
 
@@ -87,6 +88,17 @@ describe("Publishing versions", () => {
 
     await tx.wait();
 
+    registry = registry.connect(polywrapOwner);
+
+    tx = await registry.setOrganizationController(
+      testDomain.organizationId,
+      await organizationController.getAddress()
+    );
+
+    await tx.wait();
+
+    registry = registry.connect(organizationController);
+
     tx = await registry.registerPackage(
       testPackage.organizationId,
       formatBytes32String(testPackage.packageName),
@@ -94,6 +106,17 @@ describe("Publishing versions", () => {
     );
 
     await tx.wait();
+
+    registry = registry.connect(polywrapOwner);
+
+    tx = await registry.setPackageController(
+      testPackage.packageId,
+      await packageController.getAddress()
+    );
+
+    await tx.wait();
+
+    registry = registry.connect(packageController);
   });
 
   it("can publish a development version", async () => {

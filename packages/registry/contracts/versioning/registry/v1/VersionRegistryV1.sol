@@ -20,6 +20,7 @@ error InvalidBuildMetadata();
 //When incrementing the minor number, the patch number must be reset to 0
 //Does not apply to development versions (0.x.x)
 error IdentifierNotReset();
+error OnlyPackageController();
 
 abstract contract VersionRegistryV1 is PackageRegistryV1, IVersionRegistry {
   struct VersionNode {
@@ -60,8 +61,8 @@ abstract contract VersionRegistryV1 is PackageRegistryV1, IVersionRegistry {
     bytes32 buildMetadata,
     string memory location
   ) public returns (bytes32 nodeId) {
-    if(msg.sender != packageController(packageId) && msg.sender != packageOwner(packageId)) {
-			revert OnlyPackageOwnerOrController();
+    if(msg.sender != packages[packageId].controller) {
+			revert OnlyPackageController();
 		}
 
     VersionNode storage node = versionNodes[packageId];
