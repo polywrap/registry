@@ -62,7 +62,7 @@ abstract contract VersionResolverV1 is VersionRegistryV1, IVersionResolver {
     returns (string memory location)
   {
     bytes32 concreteVersionId = latestReleaseNode(versionNodeId);
-    (,,,,,, string memory location) = version(concreteVersionId);
+    (,,,,,, location) = version(concreteVersionId);
 
     return location;
   }
@@ -73,7 +73,7 @@ abstract contract VersionResolverV1 is VersionRegistryV1, IVersionResolver {
     returns (string memory location)
   {
     bytes32 concreteVersionId = latestPrereleaseNode(versionNodeId);
-    (,,,,,, string memory location) = version(concreteVersionId);
+    (,,,,,, location) = version(concreteVersionId);
 
     return location;
   }

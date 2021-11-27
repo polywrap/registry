@@ -180,20 +180,20 @@ abstract contract PackageRegistryV1 is OwnableUpgradeable, IPackageRegistry {
 	}
 
 	function organization(bytes32 organizationId) public virtual override view returns (bool exists, address owner, address controller) {
-    Organization memory organization = organizations[organizationId];
+    Organization memory organizationInfo = organizations[organizationId];
 
 		return (
-      organization.exists,
-			organization.owner,
-      organization.controller
+      organizationInfo.exists,
+			organizationInfo.owner,
+      organizationInfo.controller
     );
 	}
 	
 	function organizationIds(uint256 start, uint256 count) public virtual override view returns (bytes32[] memory) {
-		uint256 packageListLength = organizationList.length;
+		uint256 organizationListLength = organizationList.length;
 		
-		uint256 len = start + count > organizationList.length 
-			? organizationList.length - start 
+		uint256 len = start + count > organizationListLength 
+			? organizationListLength - start 
 			: count;
 
 		bytes32[] memory organizationArray = new bytes32[](len);
@@ -210,18 +210,16 @@ abstract contract PackageRegistryV1 is OwnableUpgradeable, IPackageRegistry {
 	}
 	
 	function packageIds(bytes32 organizationId, uint256 start, uint256 count) public virtual override view returns (bytes32[] memory) {
-		Organization memory organization = organizations[organizationId];
+		bytes32[] memory packageList = organizations[organizationId].packageList;
 
-		uint256 packageListLength = organization.packageList.length;
-
-		uint256 len = start + count > packageListLength 
-			? packageListLength - start 
+		uint256 len = start + count > packageList.length 
+			? packageList.length - start 
 			: count;
 
 		bytes32[] memory packageArray = new bytes32[](len);
 
 		for(uint256 i = 0; i < len; i++) {
-			packageArray[i] = organization.packageList[start + i];
+			packageArray[i] = packageList[start + i];
 		}
 
 		return packageArray;

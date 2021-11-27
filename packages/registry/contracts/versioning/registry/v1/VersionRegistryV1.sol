@@ -61,7 +61,7 @@ abstract contract VersionRegistryV1 is PackageRegistryV1, IVersionRegistry {
   /**
    * @dev Publish a new version of a package.
    * @param packageId The ID of a package.
-   * @param version The encoded bytes of a version string.
+   * @param versionBytes The encoded bytes of a version string.
    * The first byte is the number of identifiers (3-15). The rest of the bytes are base64 encoded identifiers.
    * Identifiers are grouped two by two. Two identifiers per 32 bytes.
    * 14 bits = empty
@@ -75,7 +75,7 @@ abstract contract VersionRegistryV1 is PackageRegistryV1, IVersionRegistry {
    */
   function publishVersion(
     bytes32 packageId,
-    bytes memory version,
+    bytes memory versionBytes,
     bytes32 buildMetadata,
     string memory location
   ) public returns (bytes32 nodeId) {
@@ -97,7 +97,7 @@ abstract contract VersionRegistryV1 is PackageRegistryV1, IVersionRegistry {
     //level is used for numbering nodes/identifiers from (0 - packageNode, 1 - major node/identifier, etc)
     //level is an 6 bit number (although stored in uint8) which has a max value of 65
     //0x0f = 65
-    uint8 identifierCnt = uint8(version[0]);
+    uint8 identifierCnt = uint8(versionBytes[0]);
 
     if(identifierCnt > 65) {
       revert TooManyIdentifiers();
@@ -120,7 +120,7 @@ abstract contract VersionRegistryV1 is PackageRegistryV1, IVersionRegistry {
       uint256 pointer;
       assembly {
         //First 32 bytes stores the length of the array, the next byte is the number of identifiers
-        pointer := add(version, 33)
+        pointer := add(versionBytes, 33)
       }
 
       while(levelCnt < identifierCnt) {
@@ -134,7 +134,7 @@ abstract contract VersionRegistryV1 is PackageRegistryV1, IVersionRegistry {
           }
 
           //Identifiers are 121 bits long 
-          //They are store two by two in the version array (32 bytes for two identifiers)
+          //They are store two by two in the versionBytes array (32 bytes for two identifiers)
           //The first 14 bits are empty
           //The next 242 bits are the two identifiers (121 bits per identifier)
           //The first bit of the 121 bits used for the identifier is a flag indicating if the identifier is alphanumeric
@@ -237,7 +237,7 @@ abstract contract VersionRegistryV1 is PackageRegistryV1, IVersionRegistry {
     emit VersionPublished(
       packageId,
       nodeId,
-      version,
+      versionBytes,
       buildMetadata,
       location
     );
