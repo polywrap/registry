@@ -37,7 +37,7 @@
     "@openzeppelin/contracts-upgradeable": "4.3.3",
     "@openzeppelin/hardhat-upgrades": "^1.6.0",
     "@openzeppelin/upgrades-core": "^1.5.1",
-    "@polywrap/registry-test-utils": "^1.0.0",
+    "@polywrap/registry-test-utils": "^0.1.0",
     "@typechain/ethers-v5": "^7.0.0",
     "@typechain/hardhat": "^2.0.0",
     "@types/chai": "^4.2.18",
