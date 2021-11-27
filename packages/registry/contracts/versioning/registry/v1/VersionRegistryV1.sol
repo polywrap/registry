@@ -21,23 +21,21 @@ error InvalidBuildMetadata();
 //Does not apply to development versions (0.x.x)
 error IdentifierNotReset();
 error OnlyPackageController();
-error NoChangeMade();
 
 abstract contract VersionRegistryV1 is PackageRegistryV1, IVersionRegistry {
   struct VersionNode {
     /*
     Contains:
-      2 bits = empty;
       1 bit = exists;
       1 bit = leaf;
-      4 bits = level;
+      6 bits = level;
       6 bits = empty
       1 bit = isLatestPrereleaseAlphanumeric
       120 bits = latestPrereleaseVersion;
       1 bit = isLatestReleaseAlphanumeric
       120 bits = latestReleaseVersion;
     */
-    bytes32 versionMetadata;
+    uint256 versionMetadata;
     bytes32 buildMetadata;
     string location;
   }
@@ -53,9 +51,6 @@ abstract contract VersionRegistryV1 is PackageRegistryV1, IVersionRegistry {
   mapping(bytes32 => VersionNode) versionNodes;
   mapping(bytes32 => bytes32[]) packageVersionLists;
 
-  /**
-   * @dev Constructs a new Registry.
-   */
   constructor() {
     initialize();
   }
@@ -68,6 +63,13 @@ abstract contract VersionRegistryV1 is PackageRegistryV1, IVersionRegistry {
    * @dev Publish a new version of a package.
    * @param packageId The ID of a package.
    * @param version The encoded bytes of a version string.
+   * The first byte is the number of identifiers (3-15). The rest of the bytes are base64 encoded identifiers.
+   * Identifiers are grouped two by two. Two identifiers per 32 bytes.
+   * 14 bits = empty
+   * 1 bit = isLatestPrereleaseAlphanumeric
+   * 120 bits = latestPrereleaseVersion;
+   * 1 bit = isLatestReleaseAlphanumeric
+   * 120 bits = latestReleaseVersion;
    * @param buildMetadata Metadata for the build of the version.
    * @param location The IPFS hash where the contents of the version are stored.
    * @return nodeId ID of the published version.
@@ -83,6 +85,7 @@ abstract contract VersionRegistryV1 is PackageRegistryV1, IVersionRegistry {
 		}
 
     VersionNode storage node = versionNodes[packageId];
+    //Tracking whether changes were made to the node, so that we can batch them
     bool hasMadeChange = false;
 
     NodeInfo memory nodeInfo = versionMetadata(packageId);
@@ -94,17 +97,14 @@ abstract contract VersionRegistryV1 is PackageRegistryV1, IVersionRegistry {
 
     //First byte of the version array is the number of identifiers
     //level is used for numbering nodes/identifiers from (0 - packageNode, 1 - major node/identifier, etc)
-    //level is an 4 bit number (altough stored in uint8) which has a max value of 15
-    //0x0f = 15
-    if(version[0] > 0x0f) {
+    //level is an 6 bit number (although stored in uint8) which has a max value of 65
+    //0x0f = 65
+    uint8 identifierCnt = uint8(version[0]);
+
+    if(identifierCnt > 65) {
       revert TooManyIdentifiers();
     }
 
-    //0x0F is 00001111 in binary
-    //We sanitize the byte before we get the identifier count
-    uint8 identifierCnt = uint8(version[0] & 0x0F);
-
-    //32 bytes per identifier, 3 * 32 = 96
     //A proper version requires at least 3 identifiers (major, minor, patch)
     if(identifierCnt < 3) {
       revert VersionNotFullLength();
@@ -126,7 +126,7 @@ abstract contract VersionRegistryV1 is PackageRegistryV1, IVersionRegistry {
       }
 
       while(levelCnt < identifierCnt) {
-      
+
         levelCnt += 1;
 
         if(levelCnt % 2 == 1) {
@@ -137,14 +137,17 @@ abstract contract VersionRegistryV1 is PackageRegistryV1, IVersionRegistry {
 
           //Identifiers are 121 bits long 
           //They are store two by two in the version array (32 bytes for two identifiers)
-          //The first bit of the identifier is a flag indicating if the version is alphanumeric
-          secondIdentifier = identifier & 0x0000000000000000000000000000000001ffffffffffffffffffffffffffffff;
-          identifier = identifier >> 121 & 0x0000000000000000000000000000000001ffffffffffffffffffffffffffffff;
+          //The first 14 bits are empty
+          //The next 242 bits are the two identifiers (121 bits per identifier)
+          //The first bit of the 121 bits used for the identifier is a flag indicating if the identifier is alphanumeric
+          //The next 120 bits is the numeric or alphanumeric value of the identifier
+          secondIdentifier = identifier & 0x01ffffffffffffffffffffffffffffff;
+          identifier = identifier >> 121 & 0x01ffffffffffffffffffffffffffffff;
         } else {
           identifier = secondIdentifier;
           secondIdentifier = 0x0;
         }
-        //The next 120 bits is the numberic or alphanumeric value of the identifier
+
         //The byte at the 16th position (0 indexed) is the alphanumeric flag
         if(levelCnt <= 3 && bytes32(identifier)[16] != 0) {
           revert ReleaseIdentifierMustBeNumeric();
@@ -187,7 +190,7 @@ abstract contract VersionRegistryV1 is PackageRegistryV1, IVersionRegistry {
           hasMadeChange = true;
             
           //Check whether the identifier matches [0-9A-Za-z-]+
-          if(!isSemverCompliantIdentifier(bytes32(identifier))) {
+          if(!isSemverCompliantIdentifier(identifier)) {
             revert InvalidIdentifier();
           }
 
@@ -249,33 +252,38 @@ abstract contract VersionRegistryV1 is PackageRegistryV1, IVersionRegistry {
   ) {
     /*
     Contains:
-      2 bits = empty;
       1 bit = exists;
       1 bit = leaf;
-      4 bits = level;
+      6 bits = level;
       6 bits = empty
       1 bit = isLatestPrereleaseAlphanumeric
       120 bits = latestPrereleaseVersion;
       1 bit = isLatestReleaseAlphanumeric
       120 bits = latestReleaseVersion;
     */
-    uint256 metadata = uint256(versionNodes[versionNodeId].versionMetadata);
+    uint256 metadata = versionNodes[versionNodeId].versionMetadata;
 
-    //First byte of metadata stores the exists flag, leaf flag and level number
-    //00|1|1|1111|
+    //First byte of metadata stores the exists flag (1 bit), leaf flag (1 bit) and level number (6 bits)
     uint8 firstByte =  uint8(metadata >> 248);
 
-    //0x0f = 00001111 in binary
-    nodeInfo.level = firstByte & 0x0f; 
-    nodeInfo.leaf = (firstByte >> 4) & 0x01  == 1
-      ? true
-      : false;
-    nodeInfo.exists = (firstByte >> 5) & 0x01 == 1
+    //0x80 = 10000000 in binary
+    nodeInfo.exists = firstByte & 0x80 == 0x80
       ? true
       : false; 
 
-    nodeInfo.latestPrereleaseVersion = (metadata >> 121) & 0x0000000000000000000000000000000001ffffffffffffffffffffffffffffff; 
-    nodeInfo.latestReleaseVersion = metadata & 0x0000000000000000000000000000000001ffffffffffffffffffffffffffffff; 
+    if(!nodeInfo.exists) {
+      return nodeInfo;
+    }
+
+    //0x3f = 00111111 in binary
+    nodeInfo.level = firstByte & 0x3f;
+    //0x10 = 01000000 in binary
+    nodeInfo.leaf = firstByte & 0x40 == 0x40
+      ? true
+      : false;
+
+    nodeInfo.latestPrereleaseVersion = (metadata >> 121) & 0x01ffffffffffffffffffffffffffffff; 
+    nodeInfo.latestReleaseVersion = metadata & 0x01ffffffffffffffffffffffffffffff; 
   }
 
   function setVersionMetadata(
@@ -284,63 +292,54 @@ abstract contract VersionRegistryV1 is PackageRegistryV1, IVersionRegistry {
   ) private {
 
     uint8 firstByte = nodeInfo.level
-      | ((nodeInfo.leaf ? 1 : 0) << 4) 
-      | ((nodeInfo.exists ? 1 : 0) << 5);
+      | ((nodeInfo.leaf ? 1 : 0) << 6) 
+      | ((nodeInfo.exists ? 1 : 0) << 7);
     
     uint256 metadata = uint256(firstByte) << 248
-      | uint256(nodeInfo.latestReleaseVersion)
-      | uint256(nodeInfo.latestPrereleaseVersion) << 121; 
+      | nodeInfo.latestReleaseVersion
+      | (nodeInfo.latestPrereleaseVersion << 121); 
 
-    versionNodes[nodeId].versionMetadata = bytes32(metadata);
+    versionNodes[nodeId].versionMetadata = metadata;
   }
 
-  function isSemverCompliantIdentifier(bytes32 identifier) private view returns (bool) {
+  function isSemverCompliantIdentifier(uint256 identifier) private view returns (bool) {
     //The identifier is numeric
-    if(identifier[16] == 0) {
+    if(bytes32(identifier)[16] == 0) {
       return true;
     }
     
-    //If the identifier is alphanumeric, then it can not start with a 0
-    //This is used to cover the case when the whole identifier is 0 (apart from the first byte that indicates it being alphanumeric) 
-    //since it's not caught by the isSemverCompliantIdentifierString function
-    //The 16th byte position (0 indexed) is the alphanumeric flag
-    //From the 17th to 31st byte position is the identifier
-    if(identifier == 0x0000000000000000000000000000000001000000000000000000000000000000) {
-      return false;
-    }
-
     //The identifier is alphanumeric from index 1 to end
-    return isSemverCompliantIdentifierString(uint256(identifier));
+    return isSemverCompliantIdentifierString(identifier);
   }
 
   function isSemverCompliantIdentifierString(uint256 identifier) private view returns (bool) {
-    bool foundZero = false;
-    //20 characters
-    uint256 charOffset = 0;
+    //Track whether a character is found or is empty (null)
+    //If it's empty then the rest of the string should be empty too
+    bool foundCharacter = false;
+    //20 characters, 6 bits per character
     uint256 bitOffset = 0;
 
     //Take only the last 120 bits which represent 20 characters with 6 bytes each
-    identifier = identifier & 0x0000000000000000000000000000000000ffffffffffffffffffffffffffffff;
+    identifier = identifier & 0xffffffffffffffffffffffffffffff;
 
-    while(charOffset < 20) {
-      //6 bits per character
-      bitOffset = charOffset * 6;
+    //20 characters, 6 bits per character
+    while(bitOffset < 120) {
       //0x3f = 111111
-      uint8 character = uint8(identifier >> bitOffset) & 0x3f;
-      charOffset += 1;
+      uint256 character = (identifier >> bitOffset) & 0x3f;
+      bitOffset += 6;
 
-      //If a character is 0x0 then the rest of the identifier should be 0x0
+      //If a character is 0 then the rest of the identifier should be 0
       if(character != 0) {
-        foundZero = true;
+        foundCharacter = true;
         continue;
       }
 
-      if(foundZero && character == 0) {
+      if(foundCharacter && character == 0) {
         return false;
       }
     }
 
-    return true;
+    return foundCharacter;
   }
 
   //A SemVer compliant string is an ASCII encoded string that satisfies the regex [0-9A-Za-z-]+
