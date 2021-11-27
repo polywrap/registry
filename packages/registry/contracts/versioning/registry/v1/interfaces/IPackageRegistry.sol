@@ -21,9 +21,9 @@ interface IPackageRegistry {
 	function organizationController(bytes32 organizationId) external virtual view returns (address);
 	function organizationExists(bytes32 organizationId) external virtual view returns (bool);
 	function organization(bytes32 organizationId) external virtual view returns (bool exists, address owner, address controller);
-	function listOrganizations(uint256 start, uint256 count) external virtual view returns (bytes32[] memory);
+	function organizationIds(uint256 start, uint256 count) external virtual view returns (bytes32[] memory);
 	function organizationCount() external virtual view returns (uint256);
-	function listPackages(bytes32 organizationId, uint256 start, uint256 count) external virtual view returns (bytes32[] memory);
+	function packageIds(bytes32 organizationId, uint256 start, uint256 count) external virtual view returns (bytes32[] memory);
 	function packageCount(bytes32 organizationId) external virtual view returns (uint256);
 	function packageOwner(bytes32 packageId) external virtual view returns (address);
 	function packageController(bytes32 packageId) external virtual view returns (address);

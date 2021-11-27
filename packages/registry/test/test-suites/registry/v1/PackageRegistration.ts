@@ -142,7 +142,7 @@ describe("Registering packages", () => {
     );
 
     expect(
-      await registry.listPackages(testDomain.organizationId, 0, 10)
+      await registry.packageIds(testDomain.organizationId, 0, 10)
     ).to.deep.equal([testPackage.packageId]);
 
     expect(await registry.packageCount(testDomain.organizationId)).to.equal(1);
@@ -205,7 +205,7 @@ describe("Registering packages", () => {
     );
 
     expect(
-      await registry.listPackages(testDomain.organizationId, 0, 10)
+      await registry.packageIds(testDomain.organizationId, 0, 10)
     ).to.deep.equal([testPackage1.packageId, testPackage2.packageId]);
 
     expect(await registry.packageCount(testDomain.organizationId)).to.equal(2);
@@ -292,11 +292,11 @@ describe("Registering packages", () => {
     );
 
     expect(
-      await registry.listPackages(testDomain.organizationId, 0, 10)
+      await registry.packageIds(testDomain.organizationId, 0, 10)
     ).to.deep.equal([testPackage1.packageId]);
 
     expect(
-      await registry.listPackages(testDomain2.organizationId, 0, 10)
+      await registry.packageIds(testDomain2.organizationId, 0, 10)
     ).to.deep.equal([testPackage2.packageId]);
 
     expect(await registry.packageCount(testDomain.organizationId)).to.equal(1);

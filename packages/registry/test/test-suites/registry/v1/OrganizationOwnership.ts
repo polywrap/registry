@@ -99,7 +99,7 @@ describe("Organization ownership", () => {
       await registry.organizationController(testDomain.organizationId)
     ).to.equal(ethers.constants.AddressZero);
 
-    expect(await registry.listOrganizations(0, 10)).to.deep.equal([
+    expect(await registry.organizationIds(0, 10)).to.deep.equal([
       testDomain.organizationId,
     ]);
 

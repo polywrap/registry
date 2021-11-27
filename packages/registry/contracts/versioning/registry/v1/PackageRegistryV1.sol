@@ -189,7 +189,7 @@ abstract contract PackageRegistryV1 is OwnableUpgradeable, IPackageRegistry {
     );
 	}
 	
-	function listOrganizations(uint256 start, uint256 count) public virtual override view returns (bytes32[] memory) {
+	function organizationIds(uint256 start, uint256 count) public virtual override view returns (bytes32[] memory) {
 		uint256 packageListLength = organizationList.length;
 		
 		uint256 len = start + count > organizationList.length 
@@ -209,7 +209,7 @@ abstract contract PackageRegistryV1 is OwnableUpgradeable, IPackageRegistry {
     return organizationList.length;
 	}
 	
-	function listPackages(bytes32 organizationId, uint256 start, uint256 count) public virtual override view returns (bytes32[] memory) {
+	function packageIds(bytes32 organizationId, uint256 start, uint256 count) public virtual override view returns (bytes32[] memory) {
 		Organization memory organization = organizations[organizationId];
 
 		uint256 packageListLength = organization.packageList.length;
