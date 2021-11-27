@@ -1,19 +1,11 @@
-import hre, { ethers, deployments, getNamedAccounts } from "hardhat";
+import hre, { ethers, deployments } from "hardhat";
 import chai, { expect } from "chai";
 import {
   PolywrapRegistryV1,
   PolywrapRegistryV1__factory,
   VersionResolverV1,
-  VersionResolverV1__factory,
 } from "../../../../typechain";
-import {
-  arrayify,
-  BytesLike,
-  concat,
-  formatBytes32String,
-  solidityKeccak256,
-  zeroPad,
-} from "ethers/lib/utils";
+import { BytesLike, formatBytes32String } from "ethers/lib/utils";
 import {
   expectEvent,
   publishVersion,
@@ -21,7 +13,7 @@ import {
   publishVersionWithPromise,
   toVersionNodeId,
 } from "../../../helpers";
-import { BigNumber, ContractTransaction, Signer } from "ethers";
+import { Signer } from "ethers";
 import { EnsApi } from "../../../helpers/ens/EnsApi";
 import { buildPolywrapPackage } from "../../../helpers/buildPolywrapPackage";
 import { PolywrapPackage } from "../../../helpers/PolywrapPackage";
@@ -132,8 +124,8 @@ describe("Publishing versions", () => {
       location: packageLocation,
     });
     const versionNodeL1 = await registry.version(versionId);
-    expect(versionNodeL1.leaf).to.be.true;
     expect(versionNodeL1.exists).to.be.true;
+    expect(versionNodeL1.leaf).to.be.true;
     expect(versionNodeL1.location).to.equal(packageLocation);
   });
 
@@ -254,27 +246,27 @@ describe("Publishing versions", () => {
       "reverted with custom error 'InvalidIdentifier()'"
     );
 
-    result = await publishVersionWithPromise(
-      registry,
-      testPackage.packageId,
-      `1.0.0-test.`,
-      "some-location"
-    );
+    // result = await publishVersionWithPromise(
+    //   registry,
+    //   testPackage.packageId,
+    //   `1.0.0-test.`,
+    //   "some-location"
+    // );
 
-    await expect(result.txPromise).to.revertedWith(
-      "reverted with custom error 'InvalidIdentifier()'"
-    );
+    // await expect(result.txPromise).to.revertedWith(
+    //   "reverted with custom error 'InvalidIdentifier()'"
+    // );
 
-    result = await publishVersionWithPromise(
-      registry,
-      testPackage.packageId,
-      `1.0.0-test prerelease`,
-      "some-location"
-    );
+    // result = await publishVersionWithPromise(
+    //   registry,
+    //   testPackage.packageId,
+    //   `1.0.0-test prerelease`,
+    //   "some-location"
+    // );
 
-    await expect(result.txPromise).to.revertedWith(
-      "reverted with custom error 'InvalidIdentifier()'"
-    );
+    // await expect(result.txPromise).to.revertedWith(
+    //   "reverted with custom error 'InvalidIdentifier()'"
+    // );
   });
 
   it("forbids publishing non [0-9A-Za-z-] strings for build metadata", async () => {

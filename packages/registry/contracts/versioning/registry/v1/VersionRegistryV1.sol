@@ -10,7 +10,7 @@ error VersionNotFullLength();
 //Major, minor and patch are release identifiers and they must be numeric (not alphanumeric)
 error ReleaseIdentifierMustBeNumeric();
 error VersionAlreadyPublished();
-//Max count of identifiers is 255
+//Max count of identifiers is 16
 error TooManyIdentifiers();
 //Identifiers must satisfy [0-9A-Za-z-]+
 error InvalidIdentifier();
@@ -21,16 +21,33 @@ error InvalidBuildMetadata();
 //Does not apply to development versions (0.x.x)
 error IdentifierNotReset();
 error OnlyPackageController();
+error NoChangeMade();
 
 abstract contract VersionRegistryV1 is PackageRegistryV1, IVersionRegistry {
   struct VersionNode {
-    bool leaf;
-    bool exists;
-    uint8 level;
-    uint256 latestPrereleaseVersion;
-    uint256 latestReleaseVersion;
+    /*
+    Contains:
+      2 bits = empty;
+      1 bit = exists;
+      1 bit = leaf;
+      4 bits = level;
+      6 bits = empty
+      1 bit = isLatestPrereleaseAlphanumeric
+      120 bits = latestPrereleaseVersion;
+      1 bit = isLatestReleaseAlphanumeric
+      120 bits = latestReleaseVersion;
+    */
+    bytes32 versionMetadata;
     bytes32 buildMetadata;
     string location;
+  }
+
+  struct NodeInfo {
+    bool exists;
+    bool leaf;
+    uint8 level;
+    uint256 latestPrereleaseVersion; 
+    uint256 latestReleaseVersion;
   }
 
   mapping(bytes32 => VersionNode) versionNodes;
@@ -66,127 +83,155 @@ abstract contract VersionRegistryV1 is PackageRegistryV1, IVersionRegistry {
 		}
 
     VersionNode storage node = versionNodes[packageId];
+    bool hasMadeChange = false;
 
-    //Checking this saves gas    
-    if(!node.exists) {
-      node.exists = true;
+    NodeInfo memory nodeInfo = versionMetadata(packageId);
+    
+    if(!nodeInfo.exists) {
+      hasMadeChange = true;
+      nodeInfo.exists = true;
     }
 
-    //32 bytes per identifier, 3 * 32 = 96
-    //A proper version requires at least 3 identifiers (major, minor, patch)
-    if(version.length < 96) {
-      revert VersionNotFullLength();
-    }
-
+    //First byte of the version array is the number of identifiers
     //level is used for numbering nodes/identifiers from (0 - packageNode, 1 - major node/identifier, etc)
-    //level is an uint8 which has a max value of 255
-    //8160 = 32 * 255
-    if(version.length > 8160) {
+    //level is an 4 bit number (altough stored in uint8) which has a max value of 15
+    //0x0f = 15
+    if(version[0] > 0x0f) {
       revert TooManyIdentifiers();
     }
 
-    nodeId = packageId;
-    uint256 pointer;
-    uint256 identifier;
-    uint256 cnt;
-    uint8 level;
-    //If a version has more than 3 identifiers then it's a prerelease
-    bool isPrerelease = version.length > 96;
-    bool lastNodeCreated = false;
-    bool isDevelopmentVersion = false;
+    //0x0F is 00001111 in binary
+    //We sanitize the byte before we get the identifier count
+    uint8 identifierCnt = uint8(version[0] & 0x0F);
 
-    assembly {
-      pointer := version
+    //32 bytes per identifier, 3 * 32 = 96
+    //A proper version requires at least 3 identifiers (major, minor, patch)
+    if(identifierCnt < 3) {
+      revert VersionNotFullLength();
     }
 
-    while(cnt < version.length) {
+    nodeId = packageId;
+    bool lastNodeCreated = false;
+    {
+      uint256 identifier;
+      uint256 secondIdentifier;
+      uint8 levelCnt;
+      //If a version has more than 3 identifiers then it's a prerelease
+      bool isPrerelease = identifierCnt > 3;
+      bool isDevelopmentVersion = false;
+      uint256 pointer;
       assembly {
-        pointer := add(pointer, 32)
-        identifier := mload(pointer)
-      }
-      cnt += 32;
-      level += 1;
-
-      //The first byte of the identifier is a boolean indicating if the version is alphanumeric
-      //Use a mask = 0x0100..00 to sanitize the first byte to 0 or 1
-      //Discard the first 8 bits to get the value of the identifier
-      //Then concat the two numbers(1. byte and last 31 bytes) with bitwise OR
-      identifier = (identifier & 0x0100000000000000000000000000000000000000000000000000000000000000) 
-        | (uint256(uint248(identifier)));
-
-      if(cnt <= 96 && bytes32(identifier)[0] != 0) {
-        revert ReleaseIdentifierMustBeNumeric();
+        //First 32 bytes stores the length of the array, the next byte is the number of identifiers
+        pointer := add(version, 33)
       }
 
-      //If a version starts with 0 (0.x.x) then it's a development version
-      if(level == 1 && identifier == 0) {
-        isDevelopmentVersion = true;
-      }
+      while(levelCnt < identifierCnt) {
+      
+        levelCnt += 1;
 
-      //Numeric identifier are always lower than alphanumeric ones
-      //Alphanumeric identifiers are ordered lexically in utf-8 order
-      if (node.latestPrereleaseVersion < identifier) {
-        node.latestPrereleaseVersion = identifier;
-      }
+        if(levelCnt % 2 == 1) {
+          assembly {
+            identifier := mload(pointer)
+            pointer := add(pointer, 32)
+          }
 
-      if (!isPrerelease && node.latestReleaseVersion < identifier) {
-        node.latestReleaseVersion = identifier;
-      }
-
-      nodeId = keccak256(abi.encodePacked(nodeId, identifier));
-
-      //Checking this saves gas    
-      if(node.leaf) {
-        node.leaf = false;
-      }
-      node = versionNodes[nodeId];
-
-      //If the node doesn't exist then create it
-      if(!node.exists) {
-        node.exists = true;
-          
-        //Check whether the identifier matches [0-9A-Za-z-]+
-        if(!isSemverCompliantIdentifier(bytes32(identifier))) {
-          revert InvalidIdentifier();
+          //Identifiers are 121 bits long 
+          //They are store two by two in the version array (32 bytes for two identifiers)
+          //The first bit of the identifier is a flag indicating if the version is alphanumeric
+          secondIdentifier = identifier & 0x0000000000000000000000000000000001ffffffffffffffffffffffffffffff;
+          identifier = identifier >> 121 & 0x0000000000000000000000000000000001ffffffffffffffffffffffffffffff;
+        } else {
+          identifier = secondIdentifier;
+          secondIdentifier = 0x0;
+        }
+        //The next 120 bits is the numberic or alphanumeric value of the identifier
+        //The byte at the 16th position (0 indexed) is the alphanumeric flag
+        if(levelCnt <= 3 && bytes32(identifier)[16] != 0) {
+          revert ReleaseIdentifierMustBeNumeric();
         }
 
-        node.level = level;
-
-        //Check whether the identifier needs to be reset to 0 (when incrementing major or minor numbers)
-        if(
-          !isDevelopmentVersion &&
-          (level == 2 || level == 3) && 
-          lastNodeCreated && 
-          identifier != 0
-        ) {
-          revert IdentifierNotReset();
+        //If a version starts with 0 (0.x.x) then it's a development version
+        if(levelCnt == 1 && identifier == 0) {
+          isDevelopmentVersion = true;
         }
 
-        lastNodeCreated = true;
-      } else {
-        lastNodeCreated = false;
+        //Numeric identifier are always lower (lower precedence) than alphanumeric ones
+        //Alphanumeric identifiers are ordered lexically in ASCII order
+        if (nodeInfo.latestPrereleaseVersion < identifier) {
+          nodeInfo.latestPrereleaseVersion = identifier;
+          hasMadeChange = true;
+        }
+
+        if (!isPrerelease && nodeInfo.latestReleaseVersion < identifier) {
+          nodeInfo.latestReleaseVersion = identifier;
+          hasMadeChange = true;
+        }
+
+        if(nodeInfo.leaf) {
+          nodeInfo.leaf = false;
+          hasMadeChange = true;
+        }
+
+        if(hasMadeChange) {
+          setVersionMetadata(nodeId, nodeInfo);
+
+          hasMadeChange = false;
+        }
+
+        nodeId = keccak256(abi.encodePacked(nodeId, identifier));
+        nodeInfo = versionMetadata(nodeId);
+
+        //If the node doesn't exist then create it
+        if(!nodeInfo.exists) {
+          nodeInfo.exists = true;
+          hasMadeChange = true;
+            
+          //Check whether the identifier matches [0-9A-Za-z-]+
+          if(!isSemverCompliantIdentifier(bytes32(identifier))) {
+            revert InvalidIdentifier();
+          }
+
+          nodeInfo.level = levelCnt;
+
+          //Check whether the identifier needs to be reset to 0 (when incrementing major or minor numbers)
+          if(
+            !isDevelopmentVersion &&
+            (levelCnt == 2 || levelCnt == 3) && 
+            lastNodeCreated && 
+            identifier != 0
+          ) {
+            revert IdentifierNotReset();
+          }
+
+          lastNodeCreated = true;
+        } else {
+          lastNodeCreated = false;
+        }
       }
     }
 
     //If there's already a location specified, it means that the version is already published
-    if(bytes(node.location).length != 0) {
+    if(bytes(versionNodes[nodeId].location).length != 0) {
       revert VersionAlreadyPublished();
     }
 
-    node.location = location;
+    versionNodes[nodeId].location = location;
+    packageVersionLists[packageId].push(nodeId);
 
     if(buildMetadata != 0x0) {
-      //Unlike identifiers, build metadata is alphanumeric, so it doesn't have the first byte to specify if it's numeric or alphanumeric
-      if(!isSemverCompliantString(buildMetadata, 0)) {
+      //Unlike identifiers, build metadata is always alphanumeric, so it doesn't have the first byte to specify if it's numeric or alphanumeric
+      if(!isSemverCompliantMetadataString(buildMetadata)) {
         revert InvalidBuildMetadata();
       }
-      node.buildMetadata = buildMetadata;
+      versionNodes[nodeId].buildMetadata = buildMetadata;
     }
 
     //If a new node was created, then it doesn't have children and is a leaf node
     if(lastNodeCreated) {
-      node.leaf = true;
+      nodeInfo.leaf = true;
     }
+
+    setVersionMetadata(nodeId, nodeInfo);
 
     emit VersionPublished(
       packageId,
@@ -199,28 +244,110 @@ abstract contract VersionRegistryV1 is PackageRegistryV1, IVersionRegistry {
     return nodeId;
   }
 
-  function isSemverCompliantIdentifier(bytes32 identifier) private pure returns (bool) {
+  function versionMetadata(bytes32 versionNodeId) public view returns (
+    NodeInfo memory nodeInfo
+  ) {
+    /*
+    Contains:
+      2 bits = empty;
+      1 bit = exists;
+      1 bit = leaf;
+      4 bits = level;
+      6 bits = empty
+      1 bit = isLatestPrereleaseAlphanumeric
+      120 bits = latestPrereleaseVersion;
+      1 bit = isLatestReleaseAlphanumeric
+      120 bits = latestReleaseVersion;
+    */
+    uint256 metadata = uint256(versionNodes[versionNodeId].versionMetadata);
+
+    //First byte of metadata stores the exists flag, leaf flag and level number
+    //00|1|1|1111|
+    uint8 firstByte =  uint8(metadata >> 248);
+
+    //0x0f = 00001111 in binary
+    nodeInfo.level = firstByte & 0x0f; 
+    nodeInfo.leaf = (firstByte >> 4) & 0x01  == 1
+      ? true
+      : false;
+    nodeInfo.exists = (firstByte >> 5) & 0x01 == 1
+      ? true
+      : false; 
+
+    nodeInfo.latestPrereleaseVersion = (metadata >> 121) & 0x0000000000000000000000000000000001ffffffffffffffffffffffffffffff; 
+    nodeInfo.latestReleaseVersion = metadata & 0x0000000000000000000000000000000001ffffffffffffffffffffffffffffff; 
+  }
+
+  function setVersionMetadata(
+    bytes32 nodeId,
+    NodeInfo memory nodeInfo
+  ) private {
+
+    uint8 firstByte = nodeInfo.level
+      | ((nodeInfo.leaf ? 1 : 0) << 4) 
+      | ((nodeInfo.exists ? 1 : 0) << 5);
+    
+    uint256 metadata = uint256(firstByte) << 248
+      | uint256(nodeInfo.latestReleaseVersion)
+      | uint256(nodeInfo.latestPrereleaseVersion) << 121; 
+
+    versionNodes[nodeId].versionMetadata = bytes32(metadata);
+  }
+
+  function isSemverCompliantIdentifier(bytes32 identifier) private view returns (bool) {
     //The identifier is numeric
-    if(identifier[0] == 0) {
+    if(identifier[16] == 0) {
       return true;
     }
-
+    
     //If the identifier is alphanumeric, then it can not start with a 0
     //This is used to cover the case when the whole identifier is 0 (apart from the first byte that indicates it being alphanumeric) 
-    //since it's not caught by the isSemverCompliantString function
-    if(identifier == 0x0100000000000000000000000000000000000000000000000000000000000000) {
+    //since it's not caught by the isSemverCompliantIdentifierString function
+    //The 16th byte position (0 indexed) is the alphanumeric flag
+    //From the 17th to 31st byte position is the identifier
+    if(identifier == 0x0000000000000000000000000000000001000000000000000000000000000000) {
       return false;
     }
 
     //The identifier is alphanumeric from index 1 to end
-    return isSemverCompliantString(identifier, 1);
+    return isSemverCompliantIdentifierString(uint256(identifier));
+  }
+
+  function isSemverCompliantIdentifierString(uint256 identifier) private view returns (bool) {
+    bool foundZero = false;
+    //20 characters
+    uint256 charOffset = 0;
+    uint256 bitOffset = 0;
+
+    //Take only the last 120 bits which represent 20 characters with 6 bytes each
+    identifier = identifier & 0x0000000000000000000000000000000000ffffffffffffffffffffffffffffff;
+
+    while(charOffset < 20) {
+      //6 bits per character
+      bitOffset = charOffset * 6;
+      //0x3f = 111111
+      uint8 character = uint8(identifier >> bitOffset) & 0x3f;
+      charOffset += 1;
+
+      //If a character is 0x0 then the rest of the identifier should be 0x0
+      if(character != 0) {
+        foundZero = true;
+        continue;
+      }
+
+      if(foundZero && character == 0) {
+        return false;
+      }
+    }
+
+    return true;
   }
 
   //A SemVer compliant string is an ASCII encoded string that satisfies the regex [0-9A-Za-z-]+
   //Returns true if the string is 0x0 which means empty
-  function isSemverCompliantString(bytes32 identifier, uint256 startIndex) private pure returns (bool) {
+  function isSemverCompliantMetadataString(bytes32 identifier) private pure returns (bool) {
     bool foundZero = false;
-    for(uint256 i = startIndex; i < 32; i++) {
+    for(uint256 i = 0; i < 32; i++) {
       //If a character is 0x0 then the rest of the identifier should be 0x0
       if(identifier[i] == 0) {
         foundZero = true;
@@ -248,11 +375,19 @@ abstract contract VersionRegistryV1 is PackageRegistryV1, IVersionRegistry {
     return true;
   }
   
+  function versionLocation(bytes32 nodeId) public virtual override view returns (string memory) {
+    return versionNodes[nodeId].location;
+  }
+
+  function versionBuildMetadata(bytes32 nodeId) public virtual override view returns (bytes32) {
+    return versionNodes[nodeId].buildMetadata;
+  }
+
   /**
    * @dev Get the details of a version node.
    * @param nodeId The ID of a version.
-   * @return leaf Boolean indicating whether the node is a leaf node (does not contain children).
    * @return exists Boolean indicating whether or not the node exists.
+   * @return leaf Boolean indicating whether the node is a leaf node (does not contain children).
    * @return level The level of the identifier for the node.
    * @return latestPrereleaseVersion The identifier of the latest prerelease version.
    * @return latestReleaseVersion The identifier of the latest release version.
@@ -260,28 +395,30 @@ abstract contract VersionRegistryV1 is PackageRegistryV1, IVersionRegistry {
    * @return location The IPFS hash where the contents of the version are stored.
    */
   function version(bytes32 nodeId) public view returns (
-    bool leaf,
     bool exists,
+    bool leaf,
     uint8 level,
     uint256 latestPrereleaseVersion,
     uint256 latestReleaseVersion,
     bytes32 buildMetadata,
     string memory location
   ) {
-    VersionNode memory node = versionNodes[nodeId];
+    NodeInfo memory nodeInfo = versionMetadata(nodeId);
 
+    bytes32 a = versionBuildMetadata(nodeId);
+    string memory b = versionLocation(nodeId);
     return (
-      node.leaf,
-      node.exists, 
-      node.level, 
-      node.latestPrereleaseVersion, 
-      node.latestReleaseVersion, 
-      node.buildMetadata, 
-      node.location
+      nodeInfo.exists, 
+      nodeInfo.leaf,
+      nodeInfo.level, 
+      nodeInfo.latestPrereleaseVersion, 
+      nodeInfo.latestReleaseVersion, 
+      a,
+      b
     );
   }
 
-  function listVersions(bytes32 packageId, uint256 start, uint256 count) public virtual override view returns (bytes32[] memory) {
+  function versionIds(bytes32 packageId, uint256 start, uint256 count) public virtual override view returns (bytes32[] memory) {
     bytes32[] memory versionList = packageVersionLists[packageId];
 
 		uint256 versionListLength = versionList.length;
@@ -299,7 +436,7 @@ abstract contract VersionRegistryV1 is PackageRegistryV1, IVersionRegistry {
 		return versionArray;
 	}
 
-	function versionCount(bytes32 packageId) external virtual override view returns (uint256) {
+	function versionCount(bytes32 packageId) public virtual override view returns (uint256) {
     return packageVersionLists[packageId].length;
   }
 }

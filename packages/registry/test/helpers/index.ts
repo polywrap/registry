@@ -107,6 +107,40 @@ export const getEventArgs = async (
   return receivedArgs;
 };
 
+export const encodeAlphanumericIdentifier = (identifier: string): BigNumber => {
+  if (identifier.length > 20) {
+    throw Error("Identifier too long: " + identifier);
+  }
+
+  //First bit is 0 to indicate alphanumeric identifier
+  let hex = BigNumber.from(1);
+
+  for (let i = 0; i < identifier.length; i++) {
+    const char = identifier[i];
+    const asciiNumber = char.charCodeAt(0);
+    let encodedHex = BigNumber.from(0);
+
+    if (asciiNumber === 45) {
+      encodedHex = BigNumber.from(1);
+    } else if (asciiNumber >= 48 && asciiNumber <= 57) {
+      encodedHex = BigNumber.from(asciiNumber - 48 + 2);
+    } else if (asciiNumber >= 65 && asciiNumber <= 90) {
+      encodedHex = BigNumber.from(asciiNumber - 65 + 2 + 10);
+    } else if (asciiNumber >= 97 && asciiNumber <= 122) {
+      encodedHex = BigNumber.from(asciiNumber - 97 + 2 + 10 + 26);
+    }
+
+    hex = hex.shl(6).or(encodedHex);
+  }
+
+  //Fill the rest with 0s
+  for (let i = 0; i < 20 - identifier.length; i++) {
+    hex = hex.shl(6).or(BigNumber.from(0));
+  }
+
+  return hex;
+};
+
 export const publishVersionWithPromise = async (
   registryV1: PolywrapRegistryV1,
   packageId: BytesLike,
@@ -121,35 +155,44 @@ export const publishVersionWithPromise = async (
   const [versionIdentifiers, buildMetadata] = parseVersionString(version);
 
   let nodeId = packageId;
-  const versionArray = [];
+  const versionArray: BytesLike[] = [
+    BigNumber.from(versionIdentifiers.length).toHexString(),
+  ];
   let patchNodeId: BytesLike = packageId;
 
-  for (let i = 0; i < versionIdentifiers.length; i++) {
-    const identifier = versionIdentifiers[i];
+  let hex = BigNumber.from(0);
 
-    let hex: Uint8Array;
+  for (let i = 1; i < versionIdentifiers.length + 1; i++) {
+    const identifier = versionIdentifiers[i - 1];
+
+    let encodedIdentifier = BigNumber.from(0);
 
     if (Number.isInteger(+identifier) && identifier !== "") {
-      hex = zeroPad(
-        Uint8Array.from([0, ...arrayify(BigNumber.from(+identifier))]),
-        32
-      );
+      encodedIdentifier = BigNumber.from(+identifier);
     } else {
-      const utf8Bytes = arrayify(formatBytes32String(identifier));
-
-      hex = zeroPadEnd(
-        Uint8Array.from([1, ...utf8Bytes.slice(0, utf8Bytes.length - 1)]),
-        32
-      );
+      encodedIdentifier = encodeAlphanumericIdentifier(identifier);
     }
 
-    nodeId = solidityKeccak256(["bytes32", "bytes32"], [nodeId, hex]);
+    if (i % 2 == 1) {
+      hex = encodedIdentifier.shl(121);
+    } else {
+      hex = hex.or(encodedIdentifier);
+
+      versionArray.push(zeroPad(hex.toHexString(), 32));
+    }
+
+    nodeId = solidityKeccak256(
+      ["bytes32", "bytes32"],
+      [nodeId, zeroPad(encodedIdentifier.toHexString(), 32)]
+    );
 
     if (i == 2) {
       patchNodeId = nodeId;
     }
+  }
 
-    versionArray.push(hex);
+  if (versionIdentifiers.length % 2 == 1) {
+    versionArray.push(zeroPad(hex.toHexString(), 32));
   }
 
   const versionBytes = concat(versionArray);
@@ -226,23 +269,18 @@ export const toVersionNodeId = (
   for (let i = 0; i < versionIdentifiers.length; i++) {
     const identifier = versionIdentifiers[i];
 
-    let hex: Uint8Array;
+    let encodedIdentifier = BigNumber.from(0);
 
-    if (Number.isInteger(+identifier)) {
-      hex = zeroPad(
-        Uint8Array.from([0, ...arrayify(BigNumber.from(+identifier))]),
-        32
-      );
+    if (Number.isInteger(+identifier) && identifier !== "") {
+      encodedIdentifier = BigNumber.from(+identifier);
     } else {
-      const utf8Bytes = arrayify(formatBytes32String(identifier));
-
-      hex = zeroPadEnd(
-        Uint8Array.from([1, ...utf8Bytes.slice(0, utf8Bytes.length - 1)]),
-        32
-      );
+      encodedIdentifier = encodeAlphanumericIdentifier(identifier);
     }
 
-    nodeId = solidityKeccak256(["bytes32", "bytes32"], [nodeId, hex]);
+    nodeId = solidityKeccak256(
+      ["bytes32", "bytes32"],
+      [nodeId, zeroPad(encodedIdentifier.toHexString(), 32)]
+    );
   }
 
   return nodeId;
