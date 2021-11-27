@@ -105,13 +105,15 @@ describe("Registering packages", () => {
   it("can register package", async () => {
     const testPackage = buildPolywrapPackage(testDomain, "test-package");
     const packageOwnerAddress = await packageOwner.getAddress();
+    const packageControllerAddress = await packageController.getAddress();
 
     registry = registry.connect(organizationController);
 
     const tx = await registry.registerPackage(
       testDomain.organizationId,
       formatBytes32String(testPackage.packageName),
-      packageOwnerAddress
+      packageOwnerAddress,
+      packageControllerAddress
     );
 
     await tx.wait();
@@ -121,12 +123,13 @@ describe("Registering packages", () => {
       packageId: testPackage.packageId,
       packageName: ethers.utils.formatBytes32String(testPackage.packageName),
       packageOwner: packageOwnerAddress,
+      packageController: packageControllerAddress,
     });
 
     const packageInfo = await registry.package(testPackage.packageId);
     expect(packageInfo.exists).to.be.true;
     expect(packageInfo.owner).to.equal(packageOwnerAddress);
-    expect(packageInfo.controller).to.equal(ethers.constants.AddressZero);
+    expect(packageInfo.controller).to.equal(packageControllerAddress);
 
     expect(await registry.packageExists(testPackage.packageId)).to.equal(true);
 
@@ -135,7 +138,7 @@ describe("Registering packages", () => {
     );
 
     expect(await registry.packageController(testPackage.packageId)).to.equal(
-      ethers.constants.AddressZero
+      packageControllerAddress
     );
 
     expect(
@@ -150,13 +153,16 @@ describe("Registering packages", () => {
     const testPackage2 = buildPolywrapPackage(testDomain, "test-package2");
     const packageOwnerAddress1 = await packageOwner.getAddress();
     const packageOwnerAddress2 = await packageOwner2.getAddress();
+    const packageControllerAddress1 = await packageController.getAddress();
+    const packageControllerAddress2 = await packageController2.getAddress();
 
     registry = registry.connect(organizationController);
 
     let tx = await registry.registerPackage(
       testDomain.organizationId,
       formatBytes32String(testPackage1.packageName),
-      packageOwnerAddress1
+      packageOwnerAddress1,
+      packageControllerAddress1
     );
 
     await tx.wait();
@@ -166,6 +172,7 @@ describe("Registering packages", () => {
       packageId: testPackage1.packageId,
       packageName: ethers.utils.formatBytes32String(testPackage1.packageName),
       packageOwner: packageOwnerAddress1,
+      packageController: packageControllerAddress1,
     });
 
     expect(await registry.packageExists(testPackage1.packageId)).to.equal(true);
@@ -177,7 +184,8 @@ describe("Registering packages", () => {
     tx = await registry.registerPackage(
       testDomain.organizationId,
       formatBytes32String(testPackage2.packageName),
-      packageOwnerAddress2
+      packageOwnerAddress2,
+      packageControllerAddress2
     );
 
     await tx.wait();
@@ -187,6 +195,7 @@ describe("Registering packages", () => {
       packageId: testPackage2.packageId,
       packageName: ethers.utils.formatBytes32String(testPackage2.packageName),
       packageOwner: packageOwnerAddress2,
+      packageController: packageControllerAddress2,
     });
 
     expect(await registry.packageExists(testPackage2.packageId)).to.equal(true);
@@ -208,6 +217,8 @@ describe("Registering packages", () => {
     const testPackage2 = buildPolywrapPackage(testDomain2, "test-package");
     const packageOwnerAddress1 = await packageOwner.getAddress();
     const packageOwnerAddress2 = await packageOwner2.getAddress();
+    const packageControllerAddress1 = await packageController.getAddress();
+    const packageControllerAddress2 = await packageController2.getAddress();
 
     await ens.registerDomainName(owner, domainOwner, testDomain2);
 
@@ -235,7 +246,8 @@ describe("Registering packages", () => {
     tx = await registry.registerPackage(
       testDomain.organizationId,
       formatBytes32String(testPackage1.packageName),
-      packageOwnerAddress1
+      packageOwnerAddress1,
+      packageControllerAddress1
     );
 
     await tx.wait();
@@ -245,6 +257,7 @@ describe("Registering packages", () => {
       packageId: testPackage1.packageId,
       packageName: ethers.utils.formatBytes32String(testPackage1.packageName),
       packageOwner: packageOwnerAddress1,
+      packageController: packageControllerAddress1,
     });
 
     expect(await registry.packageExists(testPackage1.packageId)).to.equal(true);
@@ -258,7 +271,8 @@ describe("Registering packages", () => {
     tx = await registry.registerPackage(
       testDomain2.organizationId,
       formatBytes32String(testPackage2.packageName),
-      packageOwnerAddress2
+      packageOwnerAddress2,
+      packageControllerAddress2
     );
 
     await tx.wait();
@@ -268,6 +282,7 @@ describe("Registering packages", () => {
       packageId: testPackage2.packageId,
       packageName: ethers.utils.formatBytes32String(testPackage2.packageName),
       packageOwner: packageOwnerAddress2,
+      packageController: packageControllerAddress2,
     });
 
     expect(await registry.packageExists(testPackage2.packageId)).to.equal(true);
@@ -293,13 +308,16 @@ describe("Registering packages", () => {
     const testPackage2 = buildPolywrapPackage(testDomain, "test-package");
     const packageOwnerAddress1 = await packageOwner.getAddress();
     const packageOwnerAddress2 = await packageOwner2.getAddress();
+    const packageControllerAddress1 = await packageController.getAddress();
+    const packageControllerAddress2 = await packageController2.getAddress();
 
     registry = registry.connect(organizationController);
 
     const tx = await registry.registerPackage(
       testDomain.organizationId,
       formatBytes32String(testPackage1.packageName),
-      packageOwnerAddress1
+      packageOwnerAddress1,
+      packageControllerAddress1
     );
 
     await tx.wait();
@@ -307,7 +325,8 @@ describe("Registering packages", () => {
     const txPromise = registry.registerPackage(
       testDomain.organizationId,
       formatBytes32String(testPackage2.packageName),
-      packageOwnerAddress2
+      packageOwnerAddress2,
+      packageControllerAddress2
     );
 
     await expect(txPromise).to.revertedWith(
@@ -319,13 +338,15 @@ describe("Registering packages", () => {
     const testPackage = buildPolywrapPackage(testDomain, "test-package");
     const packageOwnerAddress1 = await packageOwner.getAddress();
     const packageOwnerAddress2 = await packageOwner2.getAddress();
+    const packageControllerAddress = await packageController.getAddress();
 
     registry = registry.connect(organizationController);
 
     let tx = await registry.registerPackage(
       testDomain.organizationId,
       formatBytes32String(testPackage.packageName),
-      packageOwnerAddress1
+      packageOwnerAddress1,
+      packageControllerAddress
     );
 
     await tx.wait();
@@ -350,13 +371,15 @@ describe("Registering packages", () => {
     const testPackage = buildPolywrapPackage(testDomain, "test-package");
     const packageOwnerAddress1 = await packageOwner.getAddress();
     const packageOwnerAddress2 = await packageOwner2.getAddress();
+    const packageControllerAddress = await packageController.getAddress();
 
     registry = registry.connect(organizationController);
 
     let tx = await registry.registerPackage(
       testDomain.organizationId,
       formatBytes32String(testPackage.packageName),
-      packageOwnerAddress1
+      packageOwnerAddress1,
+      packageControllerAddress
     );
 
     await tx.wait();
@@ -367,7 +390,7 @@ describe("Registering packages", () => {
 
     registry = registry.connect(packageOwner);
 
-    tx = await registry.setPackageOwner(
+    tx = await registry.transferPackageOwnership(
       testPackage.packageId,
       packageOwnerAddress2
     );

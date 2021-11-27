@@ -12,7 +12,7 @@ error NodeNotFound();
 abstract contract VersionResolverV1 is VersionRegistryV1, IVersionResolver {
 
   function latestReleaseNode(bytes32 versionNodeId) public virtual override view returns (bytes32 nodeId) {
-    (bool exists, bool leaf, uint8 level, , uint256 latestReleaseVersion,, string memory location) = version(versionNodeId);
+    (bool exists,, uint8 level,, uint256 latestReleaseVersion,, string memory location) = version(versionNodeId);
 
     if(!exists) {
       revert NodeNotFound();

@@ -1,33 +1,17 @@
-import hre, { ethers, deployments, getNamedAccounts } from "hardhat";
+import hre, { ethers, deployments } from "hardhat";
 import chai, { expect } from "chai";
 import {
   PolywrapRegistryV1,
   PolywrapRegistryV1__factory,
-  VersionResolverV1,
-  VersionResolverV1__factory,
 } from "../../../../typechain";
 import {
-  arrayify,
-  BytesLike,
-  concat,
-  formatBytes32String,
-  solidityKeccak256,
-  zeroPad,
-} from "ethers/lib/utils";
-import {
   expectEvent,
-  publishVersion,
-  publishVersions,
-  publishVersionWithPromise,
-  toVersionNodeId,
 } from "../../../helpers";
-import { BigNumber, ContractTransaction, Signer } from "ethers";
+import { Signer } from "ethers";
 import { EnsApi } from "../../../helpers/ens/EnsApi";
-import { buildPolywrapPackage } from "../../../helpers/buildPolywrapPackage";
-import { PolywrapPackage } from "../../../helpers/PolywrapPackage";
 import { EnsDomain } from "../../../helpers/EnsDomain";
 
-describe("Managing organization ownership", () => {
+describe("Organization ownership", () => {
   let registry: PolywrapRegistryV1;
 
   let ens: EnsApi;
@@ -210,7 +194,7 @@ describe("Managing organization ownership", () => {
 
     registry = registry.connect(organizationOwner);
 
-    tx = await registry.setOrganizationOwner(
+    tx = await registry.transferOrganizationOwnership(
       testDomain.organizationId,
       organizationOwnerAddress2
     );
@@ -250,7 +234,7 @@ describe("Managing organization ownership", () => {
 
     registry = registry.connect(randomAcc);
 
-    const promise = registry.setOrganizationOwner(
+    const promise = registry.transferOrganizationOwnership(
       testDomain.organizationId,
       organizationOwnerAddress2
     );
@@ -330,7 +314,7 @@ describe("Managing organization ownership", () => {
 
     registry = registry.connect(organizationController);
 
-    tx = await registry.setOrganizationController(
+    tx = await registry.transferOrganizationControl(
       testDomain.organizationId,
       organizationControllerAddress2
     );
@@ -351,63 +335,9 @@ describe("Managing organization ownership", () => {
     ).to.equal(organizationControllerAddress2);
   });
 
-  it("allows organization owner to set organization owner and controller in a single transaction", async () => {
-    const organizationOwnerAddress = await organizationOwner.getAddress();
-    const organizationOwnerAddress2 = await organizationOwner2.getAddress();
-    const organizationControllerAddress =
-      await organizationController.getAddress();
-
-    const testDomain = new EnsDomain("test-domain");
-
-    await ens.registerDomainName(owner, domainOwner, testDomain);
-
-    registry = registry.connect(domainOwner);
-
-    let tx = await registry.claimOrganizationOwnership(
-      testDomain.registryBytes32,
-      testDomain.node,
-      organizationOwnerAddress
-    );
-
-    registry = registry.connect(organizationOwner);
-
-    tx = await registry.setOrganizationOwnerAndController(
-      testDomain.organizationId,
-      organizationOwnerAddress2,
-      organizationControllerAddress
-    );
-
-    await expectEvent(tx, "OrganizationOwnerChanged", {
-      organizationId: testDomain.organizationId,
-      previousOwner: organizationOwnerAddress,
-      newOwner: organizationOwnerAddress2,
-    });
-
-    await expectEvent(tx, "OrganizationControllerChanged", {
-      organizationId: testDomain.organizationId,
-      previousController: ethers.constants.AddressZero,
-      newController: organizationControllerAddress,
-    });
-
-    const organization = await registry.organization(testDomain.organizationId);
-    expect(organization.exists).to.be.true;
-    expect(organization.owner).to.equal(organizationOwnerAddress2);
-    expect(organization.controller).to.equal(organizationControllerAddress);
-
-    expect(
-      await registry.organizationOwner(testDomain.organizationId)
-    ).to.equal(organizationOwnerAddress2);
-
-    expect(
-      await registry.organizationController(testDomain.organizationId)
-    ).to.equal(organizationControllerAddress);
-  });
-
   it("forbids organization controller transfer organization ownership", async () => {
     const organizationOwnerAddress1 = await organizationOwner.getAddress();
     const organizationOwnerAddress2 = await organizationOwner2.getAddress();
-    const organizationControllerAddress =
-      await organizationController.getAddress();
 
     const testDomain = new EnsDomain("test-domain");
 
@@ -429,7 +359,7 @@ describe("Managing organization ownership", () => {
 
     registry = registry.connect(organizationController);
 
-    const promise = registry.setOrganizationOwner(
+    const promise = registry.transferOrganizationOwnership(
       testDomain.organizationId,
       organizationOwnerAddress2
     );

@@ -94,15 +94,7 @@ describe("Publishing versions", () => {
     tx = await registry.registerPackage(
       testPackage.organizationId,
       formatBytes32String(testPackage.packageName),
-      await polywrapOwner.getAddress()
-    );
-
-    await tx.wait();
-
-    registry = registry.connect(polywrapOwner);
-
-    tx = await registry.setPackageController(
-      testPackage.packageId,
+      await polywrapOwner.getAddress(),
       await packageController.getAddress()
     );
 

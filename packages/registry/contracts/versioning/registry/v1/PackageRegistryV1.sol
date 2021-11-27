@@ -4,14 +4,11 @@ import "hardhat/console.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "./interfaces/IPackageRegistry.sol";
 
-error OnlyOrganizationOwnershipManager();
 error OnlyOrganizationOwner();
-error OnlyOrganizationOwnerOrController();
+error OnlyOrganizationController();
 error PackageAlreadyExists();
 error OnlyPackageOwner();
-error OnlyOrganizationController();
-error OnlyPackageOwnerOrController();
-error OnlyPackageOwnerOrOrganizationController();
+error OnlyPackageController();
 
 abstract contract PackageRegistryV1 is OwnableUpgradeable, IPackageRegistry {
   
@@ -50,64 +47,47 @@ abstract contract PackageRegistryV1 is OwnableUpgradeable, IPackageRegistry {
     );
 	}
 
-	function setOrganizationOwner(bytes32 organizationId, address owner) public virtual override {
-		if(msg.sender != organizationOwner(organizationId)) {
-      revert OnlyOrganizationOwner();
-    }
+  function transferOrganizationOwnership(bytes32 organizationId, address newOwner) 
+    public virtual override onlyOrganizationOwner(organizationId) {
 
 		address previousOwner = organizations[organizationId].owner;
-    organizations[organizationId].owner = owner;
+    organizations[organizationId].owner = newOwner;
 
     emit OrganizationOwnerChanged(
       organizationId,
 			previousOwner, 
-      owner
+      newOwner
     );
 	}
 	
-	function setOrganizationController(bytes32 organizationId, address controller) public virtual override {
- 		if(msg.sender != organizations[organizationId].controller && msg.sender != organizations[organizationId].owner) {
-      revert OnlyOrganizationOwnerOrController();
-    }
+	function setOrganizationController(bytes32 organizationId, address newController) 
+    public virtual override onlyOrganizationOwner(organizationId) {
 
 		address previousController = organizations[organizationId].controller;
-    organizations[organizationId].controller = controller;
+    organizations[organizationId].controller = newController;
 
     emit OrganizationControllerChanged(
       organizationId, 
 			previousController,
-      controller
+      newController
     );
 	}
 	
-	function setOrganizationOwnerAndController(bytes32 organizationId, address owner, address controller) public virtual override {
-		if(msg.sender != organizationOwner(organizationId)) {
-      revert OnlyOrganizationOwner();
-    }
-
-		address previousOwner = organizations[organizationId].owner;
-    organizations[organizationId].owner = owner;
-
-    emit OrganizationOwnerChanged(
-      organizationId, 
-			previousOwner,
-      owner
-    );
+	function transferOrganizationControl(bytes32 organizationId, address newController) 
+    public virtual override onlyOrganizationController(organizationId) {
 
 		address previousController = organizations[organizationId].controller;
-    organizations[organizationId].controller = controller;
-  
+    organizations[organizationId].controller = newController;
+
     emit OrganizationControllerChanged(
       organizationId, 
 			previousController,
-      controller
+      newController
     );
 	}
 
-	function registerPackage(bytes32 organizationId, bytes32 packageName, address packageOwner) public virtual override {
-		if(msg.sender != organizations[organizationId].controller) {
-      revert OnlyOrganizationController();
-    }
+	function registerPackage(bytes32 organizationId, bytes32 packageName, address packageOwner, address packageController) 
+    public virtual override onlyOrganizationController(organizationId) {
 
 		bytes32 packageId = keccak256(abi.encodePacked(organizationId, packageName));
 		
@@ -118,86 +98,73 @@ abstract contract PackageRegistryV1 is OwnableUpgradeable, IPackageRegistry {
 		packages[packageId].exists = true;
 		packages[packageId].organizationId = organizationId;
 		organizations[organizationId].packageList.push(packageId);
-		
+
 		emit PackageRegistered(
 			organizationId, 
 			packageId, 
 			packageName, 
-			packageOwner
+			packageOwner,
+      packageController
 		);
 
 		_setPackageOwner(packageId, packageOwner);
+    _setPackageController(packageId, packageController);
 	}
 
 	function setPackageOwner(
     bytes32 packageId,
-    address owner
-  ) public virtual override {
-    if(msg.sender != packages[packageId].owner && msg.sender != organizations[packages[packageId].organizationId].controller) {
-      revert OnlyPackageOwnerOrOrganizationController();
-    }
+    address newOwner
+  ) public virtual override onlyOrganizationController(packages[packageId].organizationId) {
+    _setPackageOwner(packageId, newOwner);
+  }
 
-    _setPackageOwner(packageId, owner);
+  function transferPackageOwnership(
+    bytes32 packageId,
+    address newOwner
+  ) public virtual override onlyPackageOwner(packageId) {
+    _setPackageOwner(packageId, newOwner);
   }
 
   function _setPackageOwner(
     bytes32 packageId,
-    address owner
+    address newOwner
   ) private {
     address previousOwner = packages[packageId].owner;
-    packages[packageId].owner = owner;
+    packages[packageId].owner = newOwner;
 
     emit PackageOwnerChanged(
       packageId, 
       previousOwner,
-      owner
-    );
-  }
-
-  function setPackageOwnerAndController(
-    bytes32 packageId,
-    address owner,
-    address controller
-  ) public virtual override {
-    if(msg.sender != packages[packageId].owner && msg.sender != organizations[packages[packageId].organizationId].controller) {
-      revert OnlyPackageOwnerOrOrganizationController();
-    }
-
-    address previousOwner = packages[packageId].owner;
-    packages[packageId].owner = owner;
-
-    emit PackageOwnerChanged(
-      packageId, 
-      previousOwner,
-      owner
-    );
-
-    address previousController = packages[packageId].controller;
-    packages[packageId].controller = controller;
-  
-    emit PackageControllerChanged(
-      packageId, 
-      previousController,
-      controller
+      newOwner
     );
   }
 
   function setPackageController(
     bytes32 packageId,
-    address controller
-  ) public virtual override {
-    if(msg.sender != packages[packageId].controller && msg.sender != packages[packageId].owner) {
-      revert OnlyPackageOwnerOrController();
-    }
+    address newController
+  ) public virtual override onlyPackageOwner(packageId) {
+    _setPackageController(packageId, newController);
+  }
 
+  function _setPackageController(
+    bytes32 packageId,
+    address newController
+  ) private {
     address previousController = packages[packageId].controller;
-    packages[packageId].controller = controller;
+    packages[packageId].controller = newController;
 
     emit PackageControllerChanged(
       packageId,
       previousController, 
-      controller
+      newController
     );
+  }
+
+  function transferPackageControl(
+    bytes32 packageId,
+    address newController
+  ) public virtual override onlyPackageController(packageId) {
+    _setPackageController(packageId, newController);
   }
 
 	function organizationOwner(bytes32 organizationId) public virtual override view returns (address) {
@@ -284,23 +251,31 @@ abstract contract PackageRegistryV1 is OwnableUpgradeable, IPackageRegistry {
     );
   }
 
-  // function hasOrganizationControl(bytes32 organizationId) public virtual override view returns (bool) {
-  //   address controller = organizations[organizationId].controller;
+  modifier onlyOrganizationOwner(bytes32 organizationId) {
+    if (msg.sender != organizations[organizationId].owner) {
+      revert OnlyOrganizationOwner();
+    }
+    _;
+  }
 
-  //   return (controller != address(0) && msg.sender == controller)
-  //     || msg.sender == organizations[organizationId].owner;
-  // }
+  modifier onlyOrganizationController(bytes32 organizationId) {
+    if (msg.sender != organizations[organizationId].controller) {
+      revert OnlyOrganizationController();
+    }
+    _;
+  }
 
-  // function hasPackageControl(bytes32 packageId) public virtual override view returns (bool) {
-  //   address packageController = packages[packageId].controller;
+  modifier onlyPackageOwner(bytes32 packageId) {
+    if (msg.sender != packages[packageId].owner) {
+      revert OnlyPackageOwner();
+    }
+    _;
+  }
 
-  //   bool hasPackageControl = (packageController != address(0) && msg.sender == packageController)
-  //     || msg.sender == packages[packageId].owner;
-
-  //   if(hasPackageControl) {
-  //     return true;
-  //   }
-  
-  //   return hasOrganizationControl(organizations[packages[packageId].organizationId]);
-  // }
+  modifier onlyPackageController(bytes32 packageId) {
+    if (msg.sender != packages[packageId].controller) {
+      revert OnlyPackageController();
+    }
+    _;
+  }
 }

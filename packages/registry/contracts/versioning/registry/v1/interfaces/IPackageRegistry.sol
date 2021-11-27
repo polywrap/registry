@@ -5,17 +5,18 @@ interface IPackageRegistry {
 	event OrganizationClaimed(bytes32 indexed organizationId, address indexed owner);
 	event OrganizationOwnerChanged(bytes32 indexed organizationId, address indexed previousOwner, address indexed newOwner);
 	event OrganizationControllerChanged(bytes32 indexed organizationId, address indexed previousController, address indexed newController);
-	event PackageRegistered(bytes32 indexed organizationId, bytes32 indexed	packageId, bytes32 indexed packageName,	address packageOwner);
+	event PackageRegistered(bytes32 indexed organizationId, bytes32 indexed	packageId, bytes32 indexed packageName,	address packageOwner, address packageController);
 	event PackageOwnerChanged(bytes32 packageId, address indexed previousOwner, address indexed newOwner);
 	event PackageControllerChanged(bytes32 packageId, address indexed previousController, address indexed newController);
 
-	function setOrganizationOwner(bytes32 organizationId, address owner) external virtual;
-	function setOrganizationController(bytes32 organizationId, address controller) external virtual;
-	function setOrganizationOwnerAndController(bytes32 organizationId, address owner, address controller) external virtual;
-	function registerPackage(bytes32 organizationId, bytes32 packageName, address packageOwner) external virtual;
-	function setPackageOwner(bytes32 packageId, address owner) external virtual;
-	function setPackageController(bytes32 packageId, address controller) external virtual;
-	function setPackageOwnerAndController(bytes32 packageId, address owner, address controller) external virtual;
+	function transferOrganizationOwnership(bytes32 organizationId, address newOwner) external virtual;
+	function setOrganizationController(bytes32 organizationId, address newController) external virtual;
+	function transferOrganizationControl(bytes32 organizationId, address newController) external virtual;
+	function registerPackage(bytes32 organizationId, bytes32 packageName, address packageOwner, address packageController) external virtual;
+	function setPackageOwner(bytes32 packageId, address newOwner) external virtual;
+	function transferPackageOwnership(bytes32 packageId, address newOwner) external virtual;
+	function setPackageController(bytes32 packageId, address newController) external virtual;
+	function transferPackageControl(bytes32 packageId, address newController) external virtual;
   function organizationOwner(bytes32 organizationId) external virtual view returns (address);
 	function organizationController(bytes32 organizationId) external virtual view returns (address);
 	function organizationExists(bytes32 organizationId) external virtual view returns (bool);
