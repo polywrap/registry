@@ -302,7 +302,7 @@ abstract contract VersionRegistryV1 is PackageRegistryV1, IVersionRegistry {
     versionNodes[nodeId].versionMetadata = metadata;
   }
 
-  function isSemverCompliantIdentifier(uint256 identifier) private view returns (bool) {
+  function isSemverCompliantIdentifier(uint256 identifier) private pure returns (bool) {
     //The identifier is numeric
     if(bytes32(identifier)[16] == 0) {
       return true;
@@ -312,7 +312,7 @@ abstract contract VersionRegistryV1 is PackageRegistryV1, IVersionRegistry {
     return isSemverCompliantIdentifierString(identifier);
   }
 
-  function isSemverCompliantIdentifierString(uint256 identifier) private view returns (bool) {
+  function isSemverCompliantIdentifierString(uint256 identifier) private pure returns (bool) {
     //Track whether a character is found or is empty (null)
     //If it's empty then the rest of the string should be empty too
     bool foundCharacter = false;
