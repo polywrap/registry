@@ -26,9 +26,9 @@ abstract contract OrganizationOwnershipManagerV1 is VersionResolverV1, IOrganiza
   }
 
 	function claimOrganizationOwnership(bytes32 domainRegistry, bytes32 domainRegistryNode, address newOrganizationOwner) public virtual override {
-    address domainOwner = domainOwner(domainRegistry, domainRegistryNode);
+    address domainOwnerAddress = domainOwner(domainRegistry, domainRegistryNode);
 
-    if(msg.sender != domainOwner) {
+    if(msg.sender != domainOwnerAddress) {
       revert OnlyDomainRegistryOwner();
     }
 
@@ -39,7 +39,7 @@ abstract contract OrganizationOwnershipManagerV1 is VersionResolverV1, IOrganiza
       newOrganizationOwner
     );
 
-		emit OrganizationOwnershipClaimed(domainRegistry, domainRegistryNode, domainOwner, newOrganizationOwner);
+		emit OrganizationOwnershipClaimed(domainRegistry, domainRegistryNode, domainOwnerAddress, newOrganizationOwner);
 	}
 	
 	function domainOwner(bytes32 domainRegistry, bytes32 domainRegistryNode) public virtual override view returns (address) {

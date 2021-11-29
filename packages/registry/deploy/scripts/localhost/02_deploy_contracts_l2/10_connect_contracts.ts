@@ -13,7 +13,7 @@ import {
   VerificationTreeManager__factory,
   VersionVerificationManager__factory,
   VotingMachine__factory,
-} from "../../../../typechain";
+} from "../../../../typechain-types";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deployer } = await hre.getNamedAccounts();

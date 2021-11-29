@@ -12,7 +12,7 @@ error NodeNotFound();
 abstract contract VersionResolverV1 is VersionRegistryV1, IVersionResolver {
 
   function latestReleaseNode(bytes32 versionNodeId) public virtual override view returns (bytes32 nodeId) {
-    (bool leaf, bool exists, uint8 level, , uint256 latestReleaseVersion,,) = version(versionNodeId);
+    (bool exists,, uint8 level,, uint256 latestReleaseVersion,, string memory location) = version(versionNodeId);
 
     if(!exists) {
       revert NodeNotFound();
@@ -21,6 +21,10 @@ abstract contract VersionResolverV1 is VersionRegistryV1, IVersionResolver {
     //level == 3 is true for release versions versions(patch nodes)
     //eg. 1.0.1
     if (level == 3) {
+      if(bytes(location).length == 0) {
+        revert NodeNotFound();
+      }
+
       return versionNodeId;
     }
 
@@ -32,7 +36,7 @@ abstract contract VersionResolverV1 is VersionRegistryV1, IVersionResolver {
   }
 
   function latestPrereleaseNode(bytes32 versionNodeId) public virtual override view returns (bytes32 nodeId) {
-    (bool leaf, bool exists, uint8 level, uint256 latestPrereleaseVersion,,, string memory location) = version(versionNodeId);
+    (bool exists, bool leaf, uint8 level, uint256 latestPrereleaseVersion,,, string memory location) = version(versionNodeId);
  
     if(!exists) {
       revert NodeNotFound();
@@ -58,7 +62,7 @@ abstract contract VersionResolverV1 is VersionRegistryV1, IVersionResolver {
     returns (string memory location)
   {
     bytes32 concreteVersionId = latestReleaseNode(versionNodeId);
-    (,,,,,, string memory location) = version(concreteVersionId);
+    (,,,,,, location) = version(concreteVersionId);
 
     return location;
   }
@@ -69,7 +73,7 @@ abstract contract VersionResolverV1 is VersionRegistryV1, IVersionResolver {
     returns (string memory location)
   {
     bytes32 concreteVersionId = latestPrereleaseNode(versionNodeId);
-    (,,,,,, string memory location) = version(concreteVersionId);
+    (,,,,,, location) = version(concreteVersionId);
 
     return location;
   }

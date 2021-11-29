@@ -2,7 +2,7 @@
 import { ethers } from "hardhat";
 import chai, { expect } from "chai";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { RegistryBridgeLink } from "../typechain";
+import { RegistryBridgeLink } from "../typechain-types";
 
 
 describe("Bridge Info", () => {
