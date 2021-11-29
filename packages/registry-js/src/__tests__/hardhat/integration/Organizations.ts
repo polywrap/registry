@@ -5,7 +5,7 @@ import { deployments } from "hardhat";
 import "hardhat-deploy";
 import "@nomiclabs/hardhat-ethers";
 import { Signer } from "ethers";
-import { EnsDomain } from "./helpers/EnsDomain";
+import { EnsDomain } from "../../../v1/types/EnsDomain";
 import { PolywrapRegistry, RegistryContractAddresses } from "../../../v1";
 
 describe("Organizations", () => {

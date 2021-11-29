@@ -1,0 +1,24 @@
+import { ethers } from "ethers";
+import { solidityKeccak256 } from "ethers/lib/utils";
+import { EnsDomain } from "../types/EnsDomain";
+import { PolywrapPackage } from "../types/PolywrapPackage";
+
+export const buildPolywrapPackage = (
+  domain: EnsDomain,
+  packageName: string
+): PolywrapPackage => {
+  const organizationId = solidityKeccak256(
+    ["bytes32", "bytes32"],
+    [domain.registryBytes32, domain.node]
+  );
+  const packageId = solidityKeccak256(
+    ["bytes32", "bytes32"],
+    [organizationId, ethers.utils.formatBytes32String(packageName)]
+  );
+
+  return {
+    organizationId,
+    packageId,
+    packageName,
+  };
+};

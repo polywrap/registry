@@ -6,7 +6,7 @@ import {
   TestEthRegistrar__factory,
 } from "../../../../typechain-types";
 import { BaseProvider } from "@ethersproject/providers";
-import { EnsDomain } from "./EnsDomain";
+import { EnsDomain } from "../../../../v1/types/EnsDomain";
 
 export class EnsApi {
   private ensRegistryL1: ENSRegistry;
