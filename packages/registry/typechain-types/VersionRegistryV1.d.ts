@@ -34,6 +34,7 @@ interface VersionRegistryV1Interface extends ethers.utils.Interface {
     "packageCount(bytes32)": FunctionFragment;
     "packageExists(bytes32)": FunctionFragment;
     "packageIds(bytes32,uint256,uint256)": FunctionFragment;
+    "packageOrganizationId(bytes32)": FunctionFragment;
     "packageOwner(bytes32)": FunctionFragment;
     "publishVersion(bytes32,bytes,bytes32,string)": FunctionFragment;
     "registerPackage(bytes32,bytes32,address,address)": FunctionFragment;
@@ -99,6 +100,10 @@ interface VersionRegistryV1Interface extends ethers.utils.Interface {
   encodeFunctionData(
     functionFragment: "packageIds",
     values: [BytesLike, BigNumberish, BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "packageOrganizationId",
+    values: [BytesLike]
   ): string;
   encodeFunctionData(
     functionFragment: "packageOwner",
@@ -210,6 +215,10 @@ interface VersionRegistryV1Interface extends ethers.utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "packageIds", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "packageOrganizationId",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(
     functionFragment: "packageOwner",
     data: BytesLike
@@ -454,10 +463,11 @@ export class VersionRegistryV1 extends BaseContract {
       packageId: BytesLike,
       overrides?: CallOverrides
     ): Promise<
-      [boolean, string, string] & {
+      [boolean, string, string, string] & {
         exists: boolean;
         owner: string;
         controller: string;
+        organizationId: string;
       }
     >;
 
@@ -482,6 +492,11 @@ export class VersionRegistryV1 extends BaseContract {
       count: BigNumberish,
       overrides?: CallOverrides
     ): Promise<[string[]]>;
+
+    packageOrganizationId(
+      packageId: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<[string]>;
 
     packageOwner(
       packageId: BytesLike,
@@ -660,10 +675,11 @@ export class VersionRegistryV1 extends BaseContract {
     packageId: BytesLike,
     overrides?: CallOverrides
   ): Promise<
-    [boolean, string, string] & {
+    [boolean, string, string, string] & {
       exists: boolean;
       owner: string;
       controller: string;
+      organizationId: string;
     }
   >;
 
@@ -688,6 +704,11 @@ export class VersionRegistryV1 extends BaseContract {
     count: BigNumberish,
     overrides?: CallOverrides
   ): Promise<string[]>;
+
+  packageOrganizationId(
+    packageId: BytesLike,
+    overrides?: CallOverrides
+  ): Promise<string>;
 
   packageOwner(
     packageId: BytesLike,
@@ -854,10 +875,11 @@ export class VersionRegistryV1 extends BaseContract {
       packageId: BytesLike,
       overrides?: CallOverrides
     ): Promise<
-      [boolean, string, string] & {
+      [boolean, string, string, string] & {
         exists: boolean;
         owner: string;
         controller: string;
+        organizationId: string;
       }
     >;
 
@@ -882,6 +904,11 @@ export class VersionRegistryV1 extends BaseContract {
       count: BigNumberish,
       overrides?: CallOverrides
     ): Promise<string[]>;
+
+    packageOrganizationId(
+      packageId: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<string>;
 
     packageOwner(
       packageId: BytesLike,
@@ -1256,6 +1283,11 @@ export class VersionRegistryV1 extends BaseContract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
+    packageOrganizationId(
+      packageId: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
     packageOwner(
       packageId: BytesLike,
       overrides?: CallOverrides
@@ -1417,6 +1449,11 @@ export class VersionRegistryV1 extends BaseContract {
       organizationId: BytesLike,
       start: BigNumberish,
       count: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    packageOrganizationId(
+      packageId: BytesLike,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 

@@ -4,7 +4,7 @@ import {
   PolywrapRegistryV1,
   PolywrapRegistryV1__factory,
   VersionResolverV1,
-} from "../../../../typechain";
+} from "../../../../typechain-types";
 import { BytesLike, formatBytes32String } from "ethers/lib/utils";
 import {
   expectEvent,

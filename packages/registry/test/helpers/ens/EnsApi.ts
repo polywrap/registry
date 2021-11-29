@@ -7,7 +7,7 @@ import {
   TestEthRegistrar__factory,
   TestPublicResolver,
   TestPublicResolver__factory,
-} from "../../../typechain";
+} from "../../../typechain-types";
 import { BaseProvider } from "@ethersproject/providers";
 import { EnsDomain } from "../EnsDomain";
 

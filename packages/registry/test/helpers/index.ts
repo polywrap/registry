@@ -1,7 +1,6 @@
 import hre from "hardhat";
 import { expect } from "chai";
 import {
-  BaseContract,
   BigNumber,
   BytesLike,
   Contract,
@@ -9,16 +8,13 @@ import {
   ethers,
   providers,
 } from "ethers";
-import { eventNames } from "process";
-import { DeploymentsExtension } from "hardhat-deploy/dist/types";
 import {
   zeroPad,
-  arrayify,
   formatBytes32String,
   solidityKeccak256,
   concat,
 } from "ethers/lib/utils";
-import { PolywrapRegistryV1 } from "../../typechain";
+import { PolywrapRegistryV1 } from "../../typechain-types";
 
 export const getSubnodeHash = (
   parentHash: string,

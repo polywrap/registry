@@ -463,6 +463,11 @@ const _abi = [
         name: "controller",
         type: "address",
       },
+      {
+        internalType: "bytes32",
+        name: "organizationId",
+        type: "bytes32",
+      },
     ],
     stateMutability: "view",
     type: "function",
@@ -548,6 +553,25 @@ const _abi = [
         internalType: "bytes32[]",
         name: "",
         type: "bytes32[]",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "bytes32",
+        name: "packageId",
+        type: "bytes32",
+      },
+    ],
+    name: "packageOrganizationId",
+    outputs: [
+      {
+        internalType: "bytes32",
+        name: "",
+        type: "bytes32",
       },
     ],
     stateMutability: "view",

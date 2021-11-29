@@ -229,6 +229,10 @@ abstract contract PackageRegistryV1 is OwnableUpgradeable, IPackageRegistry {
     return organizations[organizationId].packageList.length;
 	}
 
+  function packageExists(bytes32 packageId) public virtual override view returns (bool) {
+    return packages[packageId].exists;
+  }
+
   function packageOwner(bytes32 packageId) public virtual override view returns (address) {
     return packages[packageId].owner;
   }
@@ -237,15 +241,17 @@ abstract contract PackageRegistryV1 is OwnableUpgradeable, IPackageRegistry {
     return packages[packageId].controller;
   }
 
-  function packageExists(bytes32 packageId) public virtual override view returns (bool) {
-    return packages[packageId].exists;
+  function packageOrganizationId(bytes32 packageId) public virtual override view returns (bytes32) {
+    return packages[packageId].organizationId;
   }
 
-  function package(bytes32 packageId) public virtual override view returns (bool exists, address owner, address controller) {
+  function package(bytes32 packageId) 
+    public virtual override view returns (bool exists, address owner, address controller, bytes32 organizationId) {
     return (
       packages[packageId].exists,
       packages[packageId].owner,
-      packages[packageId].controller
+      packages[packageId].controller,
+      packages[packageId].organizationId
     );
   }
 

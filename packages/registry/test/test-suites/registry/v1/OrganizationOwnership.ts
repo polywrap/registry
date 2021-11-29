@@ -3,7 +3,7 @@ import chai, { expect } from "chai";
 import {
   PolywrapRegistryV1,
   PolywrapRegistryV1__factory,
-} from "../../../../typechain";
+} from "../../../../typechain-types";
 import {
   expectEvent,
 } from "../../../helpers";
@@ -284,7 +284,7 @@ describe("Organization ownership", () => {
     ).to.equal(organizationControllerAddress);
   });
 
-  it("allows organization controller to set organization controller", async () => {
+  it("allows organization controller to transfer organization control", async () => {
     const organizationOwnerAddress = await organizationOwner.getAddress();
     const organizationControllerAddress =
       await organizationController.getAddress();
@@ -335,9 +335,9 @@ describe("Organization ownership", () => {
     ).to.equal(organizationControllerAddress2);
   });
 
-  it("forbids organization controller transfer organization ownership", async () => {
+  it("forbids non organization owner from setting organization owner", async () => {
     const organizationOwnerAddress1 = await organizationOwner.getAddress();
-    const organizationOwnerAddress2 = await organizationOwner2.getAddress();
+    const organizationControllerAddress2 = await organizationController2.getAddress();
 
     const testDomain = new EnsDomain("test-domain");
 
@@ -357,15 +357,26 @@ describe("Organization ownership", () => {
       await registry.organizationOwner(testDomain.organizationId)
     ).to.equal(organizationOwnerAddress1);
 
-    registry = registry.connect(organizationController);
+    registry = registry.connect(organizationOwner);
 
-    const promise = registry.transferOrganizationOwnership(
+    let promise = registry.transferOrganizationControl(
       testDomain.organizationId,
-      organizationOwnerAddress2
+      organizationControllerAddress2
     );
 
     await expect(promise).to.revertedWith(
-      "reverted with custom error 'OnlyOrganizationOwner()'"
+      "reverted with custom error 'OnlyOrganizationController()'"
+    );
+
+    registry = registry.connect(randomAcc);
+
+    promise = registry.transferOrganizationControl(
+      testDomain.organizationId,
+      organizationControllerAddress2
+    );
+
+    await expect(promise).to.revertedWith(
+      "reverted with custom error 'OnlyOrganizationController()'"
     );
   });
 });

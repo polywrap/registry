@@ -6,7 +6,7 @@ import {
   ENSRegistry__factory,
   TestEthRegistrar__factory,
   TestPublicResolver__factory,
-} from "../../../../typechain";
+} from "../../../../typechain-types";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deployer } = await hre.getNamedAccounts();
