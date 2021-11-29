@@ -115,10 +115,10 @@ describe("Publishing versions", () => {
       versionNodeId: versionId,
       location: packageLocation,
     });
-    const versionNodeL1 = await registry.version(versionId);
-    expect(versionNodeL1.exists).to.be.true;
-    expect(versionNodeL1.leaf).to.be.true;
-    expect(versionNodeL1.location).to.equal(packageLocation);
+    const versionNode = await registry.version(versionId);
+    expect(versionNode.exists).to.be.true;
+    expect(versionNode.leaf).to.be.true;
+    expect(versionNode.location).to.equal(packageLocation);
   });
 
   it("can publish production release versions", async () => {
@@ -135,10 +135,10 @@ describe("Publishing versions", () => {
       location: packageLocation,
     });
 
-    const versionNodeL1 = await registry.version(versionId);
-    expect(versionNodeL1.leaf).to.be.true;
-    expect(versionNodeL1.exists).to.be.true;
-    expect(versionNodeL1.location).to.equal(packageLocation);
+    const versionNode = await registry.version(versionId);
+    expect(versionNode.leaf).to.be.true;
+    expect(versionNode.exists).to.be.true;
+    expect(versionNode.location).to.equal(packageLocation);
   });
 
   it("can publish development release versions", async () => {
@@ -155,10 +155,10 @@ describe("Publishing versions", () => {
       location: packageLocation,
     });
 
-    const versionNodeL1 = await registry.version(versionId);
-    expect(versionNodeL1.leaf).to.be.true;
-    expect(versionNodeL1.exists).to.be.true;
-    expect(versionNodeL1.location).to.equal(packageLocation);
+    const versionNode = await registry.version(versionId);
+    expect(versionNode.leaf).to.be.true;
+    expect(versionNode.exists).to.be.true;
+    expect(versionNode.location).to.equal(packageLocation);
   });
 
   it("can publish production prerelease versions", async () => {
@@ -175,10 +175,10 @@ describe("Publishing versions", () => {
       location: packageLocation,
     });
 
-    const versionNodeL1 = await registry.version(versionId);
-    expect(versionNodeL1.leaf).to.be.true;
-    expect(versionNodeL1.exists).to.be.true;
-    expect(versionNodeL1.location).to.equal(packageLocation);
+    const versionNode = await registry.version(versionId);
+    expect(versionNode.leaf).to.be.true;
+    expect(versionNode.exists).to.be.true;
+    expect(versionNode.location).to.equal(packageLocation);
   });
 
   it("can publish development prerelease versions", async () => {
@@ -195,10 +195,10 @@ describe("Publishing versions", () => {
       location: packageLocation,
     });
 
-    const versionNodeL1 = await registry.version(versionId);
-    expect(versionNodeL1.leaf).to.be.true;
-    expect(versionNodeL1.exists).to.be.true;
-    expect(versionNodeL1.location).to.equal(packageLocation);
+    const versionNode = await registry.version(versionId);
+    expect(versionNode.leaf).to.be.true;
+    expect(versionNode.exists).to.be.true;
+    expect(versionNode.location).to.equal(packageLocation);
   });
 
   it("can publish version with build metadata", async () => {
@@ -217,11 +217,11 @@ describe("Publishing versions", () => {
       location: packageLocation,
     });
 
-    const versionNodeL1 = await registry.version(versionId);
-    expect(versionNodeL1.leaf).to.be.true;
-    expect(versionNodeL1.exists).to.be.true;
-    expect(versionNodeL1.location).to.equal(packageLocation);
-    expect(versionNodeL1.buildMetadata).to.equal(
+    const versionNode = await registry.version(versionId);
+    expect(versionNode.leaf).to.be.true;
+    expect(versionNode.exists).to.be.true;
+    expect(versionNode.location).to.equal(packageLocation);
+    expect(versionNode.buildMetadata).to.equal(
       formatBytes32String(buildMetadata)
     );
   });
