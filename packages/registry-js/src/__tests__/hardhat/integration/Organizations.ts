@@ -116,6 +116,8 @@ describe("Organizations", () => {
       organizationOwnerAddress1
     );
 
+    await tx.wait();
+
     expect(
       await registry.organizationOwner(testDomain.organizationId)
     ).to.equal(organizationOwnerAddress1);
@@ -166,6 +168,8 @@ describe("Organizations", () => {
       testDomain.name,
       organizationOwnerAddress1
     );
+
+    await tx.wait();
 
     expect(
       await registry.organizationOwner(testDomain.organizationId)
@@ -219,8 +223,7 @@ describe("Organizations", () => {
 
   it("allows organization owner to set organization controller", async () => {
     const organizationOwnerAddress = await organizationOwner.getAddress();
-    const organizationControllerAddress =
-      await organizationController.getAddress();
+    const organizationControllerAddress = await organizationController.getAddress();
 
     const testDomain = new EnsDomain("test-domain");
 
@@ -233,6 +236,8 @@ describe("Organizations", () => {
       testDomain.name,
       organizationOwnerAddress
     );
+
+    await tx.wait();
 
     registry = connectRegistry(organizationOwner);
 
@@ -255,10 +260,8 @@ describe("Organizations", () => {
 
   it("allows organization controller to transfer organization control", async () => {
     const organizationOwnerAddress = await organizationOwner.getAddress();
-    const organizationControllerAddress =
-      await organizationController.getAddress();
-    const organizationControllerAddress2 =
-      await organizationController2.getAddress();
+    const organizationControllerAddress = await organizationController.getAddress();
+    const organizationControllerAddress2 = await organizationController2.getAddress();
 
     const testDomain = new EnsDomain("test-domain");
 
@@ -271,6 +274,8 @@ describe("Organizations", () => {
       testDomain.name,
       organizationOwnerAddress
     );
+
+    await tx.wait();
 
     registry = connectRegistry(organizationOwner);
 
@@ -287,6 +292,8 @@ describe("Organizations", () => {
       testDomain.organizationId,
       organizationControllerAddress2
     );
+
+    await tx.wait();
 
     const organization = await registry.organization(testDomain.organizationId);
     expect(organization.exists).to.be.true;

@@ -4,7 +4,7 @@ import {
   ENSRegistry__factory,
   TestEthRegistrar,
   TestEthRegistrar__factory,
-} from "../../../../typechain";
+} from "../../../../typechain-types";
 import { BaseProvider } from "@ethersproject/providers";
 import { EnsDomain } from "./EnsDomain";
 

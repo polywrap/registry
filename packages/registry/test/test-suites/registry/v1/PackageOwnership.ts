@@ -52,7 +52,7 @@ describe("Package ownership", () => {
     const provider = ethers.getDefaultProvider();
 
     registry = PolywrapRegistryV1__factory.connect(
-      deploys["PolywrapRegistryL1"].address,
+      deploys["PolywrapRegistryV1"].address,
       provider
     );
 

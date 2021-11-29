@@ -7,7 +7,7 @@ import {
   TestEthRegistrar__factory,
   TestPublicResolver,
   TestPublicResolver__factory,
-} from "@polywrap/registry/typechain";
+} from "../../../../typechain";
 
 export const POLYWRAP_OWNER_RECORD_NAME = "polywrap-owner";
 const rootNode = ethers.utils.zeroPad([0], 32);
