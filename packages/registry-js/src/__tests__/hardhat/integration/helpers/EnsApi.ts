@@ -30,6 +30,11 @@ export class EnsApi {
     );
   }
 
+  connect(signer: Signer) {
+    this.ensRegistryL1 = this.ensRegistryL1.connect(signer);
+    this.testEthRegistrarL1 = this.testEthRegistrarL1.connect(signer);
+  }
+
   async registerDomainName(
     owner: Signer,
     domainOwner: Signer,
@@ -46,5 +51,9 @@ export class EnsApi {
       .register(domain.labelHash, await domainOwner.getAddress(), 10 * 60);
 
     await tx.wait();
+  }
+
+  async owner(domain: EnsDomain): Promise<string> {
+    return this.ensRegistryL1.owner(domain.node);
   }
 }

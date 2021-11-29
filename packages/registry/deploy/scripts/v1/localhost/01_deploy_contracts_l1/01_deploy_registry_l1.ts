@@ -9,7 +9,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   const ensLinkL1 = await hre.deployments.get("EnsLinkL1");
 
-  await deploy("PolywrapRegistryL1", {
+  await deploy("PolywrapRegistryV1", {
     contract: "PolywrapRegistryV1",
     from: deployer,
     args: [[formatBytes32String("ens")], [ensLinkL1.address]],

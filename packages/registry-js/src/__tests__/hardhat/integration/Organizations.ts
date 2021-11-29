@@ -38,9 +38,9 @@ describe("Organizations", () => {
   });
 
   beforeEach(async () => {
-    const deploys = await deployments.fixture(["ens"]);
+    const deploys = await deployments.fixture(["ens", "v1"]);
     registryContractAddresses = {
-      polywrapRegistry: deploys["PolyWrapRegistryV1"].address,
+      polywrapRegistry: deploys["PolywrapRegistryV1"].address,
     };
 
     const provider = ethers.getDefaultProvider();
@@ -70,7 +70,7 @@ describe("Organizations", () => {
 
     const tx = await registry.claimOrganizationOwnership(
       testDomain.registry,
-      testDomain.node,
+      testDomain.name,
       organizationOwnerAddress
     );
 
@@ -108,11 +108,11 @@ describe("Organizations", () => {
 
     await ens.registerDomainName(owner, domainOwner, testDomain);
 
-    registry = connectRegistry(randomAcc);
+    registry = connectRegistry(domainOwner);
 
     let tx = await registry.claimOrganizationOwnership(
       testDomain.registry,
-      testDomain.node,
+      testDomain.name,
       organizationOwnerAddress1
     );
 
@@ -122,7 +122,7 @@ describe("Organizations", () => {
 
     tx = await registry.claimOrganizationOwnership(
       testDomain.registry,
-      testDomain.node,
+      testDomain.name,
       organizationOwnerAddress2
     );
 
@@ -144,13 +144,11 @@ describe("Organizations", () => {
 
     const promise = registry.claimOrganizationOwnership(
       testDomain.registry,
-      testDomain.node,
+      testDomain.name,
       organizationOwnerAddress
     );
 
-    await expect(promise).to.revertedWith(
-      "reverted with custom error 'OnlyDomainRegistryOwner()'"
-    );
+    await expect(promise).to.be.reverted;
   });
 
   it("can transfer organization ownership", async () => {
@@ -161,11 +159,11 @@ describe("Organizations", () => {
 
     await ens.registerDomainName(owner, domainOwner, testDomain);
 
-    registry = connectRegistry(randomAcc);
+    registry = connectRegistry(domainOwner);
 
     let tx = await registry.claimOrganizationOwnership(
       testDomain.registry,
-      testDomain.node,
+      testDomain.name,
       organizationOwnerAddress1
     );
 
@@ -173,9 +171,9 @@ describe("Organizations", () => {
       await registry.organizationOwner(testDomain.organizationId)
     ).to.equal(organizationOwnerAddress1);
 
-    registry = connectRegistry(randomAcc);
+    registry = connectRegistry(organizationOwner);
 
-    tx = await registry.setOrganizationOwner(
+    tx = await registry.transferOrganizationOwnership(
       testDomain.organizationId,
       organizationOwnerAddress2
     );
@@ -195,11 +193,11 @@ describe("Organizations", () => {
 
     await ens.registerDomainName(owner, domainOwner, testDomain);
 
-    registry = connectRegistry(randomAcc);
+    registry = connectRegistry(domainOwner);
 
     const tx = await registry.claimOrganizationOwnership(
       testDomain.registry,
-      testDomain.node,
+      testDomain.name,
       organizationOwnerAddress1
     );
 
@@ -211,33 +209,32 @@ describe("Organizations", () => {
 
     registry = connectRegistry(randomAcc);
 
-    const promise = registry.setOrganizationOwner(
+    const promise = registry.transferOrganizationOwnership(
       testDomain.organizationId,
       organizationOwnerAddress2
     );
 
-    await expect(promise).to.revertedWith(
-      "reverted with custom error 'OnlyOrganizationOwner()'"
-    );
+    await expect(promise).to.reverted;
   });
 
   it("allows organization owner to set organization controller", async () => {
     const organizationOwnerAddress = await organizationOwner.getAddress();
-    const organizationControllerAddress = await organizationController.getAddress();
+    const organizationControllerAddress =
+      await organizationController.getAddress();
 
     const testDomain = new EnsDomain("test-domain");
 
     await ens.registerDomainName(owner, domainOwner, testDomain);
 
-    registry = connectRegistry(randomAcc);
+    registry = connectRegistry(domainOwner);
 
     let tx = await registry.claimOrganizationOwnership(
       testDomain.registry,
-      testDomain.node,
+      testDomain.name,
       organizationOwnerAddress
     );
 
-    registry = connectRegistry(randomAcc);
+    registry = connectRegistry(organizationOwner);
 
     tx = await registry.setOrganizationController(
       testDomain.organizationId,
@@ -256,22 +253,26 @@ describe("Organizations", () => {
     ).to.equal(organizationControllerAddress);
   });
 
-  it("allows organization controller to set organization controller", async () => {
+  it("allows organization controller to transfer organization control", async () => {
     const organizationOwnerAddress = await organizationOwner.getAddress();
-    const organizationControllerAddress = await organizationController.getAddress();
-    const organizationControllerAddress2 = await organizationController2.getAddress();
+    const organizationControllerAddress =
+      await organizationController.getAddress();
+    const organizationControllerAddress2 =
+      await organizationController2.getAddress();
 
     const testDomain = new EnsDomain("test-domain");
 
     await ens.registerDomainName(owner, domainOwner, testDomain);
 
-    registry = connectRegistry(randomAcc);
+    registry = connectRegistry(domainOwner);
 
     let tx = await registry.claimOrganizationOwnership(
       testDomain.registry,
-      testDomain.node,
+      testDomain.name,
       organizationOwnerAddress
     );
+
+    registry = connectRegistry(organizationOwner);
 
     tx = await registry.setOrganizationController(
       testDomain.organizationId,
@@ -280,9 +281,9 @@ describe("Organizations", () => {
 
     await tx.wait();
 
-    registry = connectRegistry(randomAcc);
+    registry = connectRegistry(organizationController);
 
-    tx = await registry.setOrganizationController(
+    tx = await registry.transferOrganizationControl(
       testDomain.organizationId,
       organizationControllerAddress2
     );
@@ -297,60 +298,19 @@ describe("Organizations", () => {
     ).to.equal(organizationControllerAddress2);
   });
 
-  it("allows organization owner to set organization owner and controller in a single transaction", async () => {
-    const organizationOwnerAddress = await organizationOwner.getAddress();
-    const organizationOwnerAddress2 = await organizationOwner2.getAddress();
-    const organizationControllerAddress = await organizationController.getAddress();
-
-    const testDomain = new EnsDomain("test-domain");
-
-    await ens.registerDomainName(owner, domainOwner, testDomain);
-
-    registry = connectRegistry(randomAcc);
-
-    let tx = await registry.claimOrganizationOwnership(
-      testDomain.registry,
-      testDomain.node,
-      organizationOwnerAddress
-    );
-
-    registry = connectRegistry(randomAcc);
-
-    tx = await registry.setOrganizationOwnerAndController(
-      testDomain.organizationId,
-      organizationOwnerAddress2,
-      organizationControllerAddress
-    );
-
-    await tx.wait();
-
-    const organization = await registry.organization(testDomain.organizationId);
-    expect(organization.exists).to.be.true;
-    expect(organization.owner).to.equal(organizationOwnerAddress2);
-    expect(organization.controller).to.equal(organizationControllerAddress);
-
-    expect(
-      await registry.organizationOwner(testDomain.organizationId)
-    ).to.equal(organizationOwnerAddress2);
-
-    expect(
-      await registry.organizationController(testDomain.organizationId)
-    ).to.equal(organizationControllerAddress);
-  });
-
-  it("forbids organization controller transfer organization ownership", async () => {
+  it("forbids non organization owner from setting organization owner", async () => {
     const organizationOwnerAddress1 = await organizationOwner.getAddress();
-    const organizationOwnerAddress2 = await organizationOwner2.getAddress();
+    const organizationControllerAddress2 = await organizationController2.getAddress();
 
     const testDomain = new EnsDomain("test-domain");
 
     await ens.registerDomainName(owner, domainOwner, testDomain);
 
-    registry = connectRegistry(randomAcc);
+    registry = connectRegistry(domainOwner);
 
     const tx = await registry.claimOrganizationOwnership(
       testDomain.registry,
-      testDomain.node,
+      testDomain.name,
       organizationOwnerAddress1
     );
 
@@ -360,15 +320,22 @@ describe("Organizations", () => {
       await registry.organizationOwner(testDomain.organizationId)
     ).to.equal(organizationOwnerAddress1);
 
+    registry = connectRegistry(organizationOwner);
+
+    let promise = registry.transferOrganizationControl(
+      testDomain.organizationId,
+      organizationControllerAddress2
+    );
+
+    await expect(promise).to.reverted;
+
     registry = connectRegistry(randomAcc);
 
-    const promise = registry.setOrganizationOwner(
+    promise = registry.transferOrganizationControl(
       testDomain.organizationId,
-      organizationOwnerAddress2
+      organizationControllerAddress2
     );
 
-    await expect(promise).to.revertedWith(
-      "reverted with custom error 'OnlyOrganizationOwner()'"
-    );
+    await expect(promise).to.reverted;
   });
 });

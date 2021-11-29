@@ -31,5 +31,11 @@ describe("ENS", () => {
     const testDomain = new EnsDomain("test-domain");
 
     await ens.registerDomainName(owner, polywrapOwner, testDomain);
+
+    ens.connect(polywrapOwner);
+
+    expect(await ens.owner(testDomain)).to.equal(
+      await polywrapOwner.getAddress()
+    );
   });
 });

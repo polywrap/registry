@@ -51,6 +51,6 @@ const config: HardhatUserConfig = {
   },
   etherscan: {
     apiKey: "FZ1ANB251FC8ISFDXFGFCUDCANSJNWPF9Q",
-  },
+  }
 };
 export default config;

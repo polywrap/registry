@@ -2,21 +2,20 @@ import { BigNumber, ContractTransaction, Signer } from "ethers";
 import { BytesLike, formatBytes32String, namehash } from "ethers/lib/utils";
 
 import { RegistryContractAddresses } from "./RegistryContractAddresses";
-import {
-  PolywrapRegistry__factory,
-  PolywrapRegistry as PolywrapRegistryContract,
-} from "../typechain";
 import { parseVersionString } from "./parseVersionString";
 import { calculateVersionNodeId } from "./calculateVersionNodeId";
-import { OrganizationInfo } from "./OrganizationInfo";
-import { PackageInfo } from "./PackageInfo";
+import { PackageInfo } from "./types/PackageInfo";
 import { calculateVersionBytes } from "./calculateVersionBytes";
-import { VersionInfo } from ".";
+import {
+  PolywrapRegistryV1__factory,
+  PolywrapRegistryV1 as PolywrapRegistryContract,
+} from "../typechain-types";
+import { OrganizationInfo, VersionInfo } from ".";
 
 export class PolywrapRegistry {
   constructor(signer: Signer, contractAddresses: RegistryContractAddresses) {
     this.signer = signer;
-    this.polywrapRegistry = PolywrapRegistry__factory.connect(
+    this.polywrapRegistry = PolywrapRegistryV1__factory.connect(
       contractAddresses.polywrapRegistry,
       signer
     );
@@ -25,7 +24,7 @@ export class PolywrapRegistry {
   signer: Signer;
   private polywrapRegistry: PolywrapRegistryContract;
 
-  async publishVersion(
+  publishVersion(
     packageId: BytesLike,
     version: string,
     packageLocation: string
@@ -41,208 +40,207 @@ export class PolywrapRegistry {
     );
   }
 
-  async claimOrganizationOwnership(
+  claimOrganizationOwnership(
     domainRegistry: "ens",
     domain: string,
     newOrganizationOwner: string
   ): Promise<ContractTransaction> {
     const domainRegistryNode = namehash(domain);
 
-    return await this.polywrapRegistry.claimOrganizationOwnership(
-      domainRegistry,
+    return this.polywrapRegistry.claimOrganizationOwnership(
+      formatBytes32String(domainRegistry),
       domainRegistryNode,
       newOrganizationOwner
     );
   }
 
-  async domainOwner(domainRegistry: "ens", domain: string): Promise<string> {
+  domainOwner(domainRegistry: "ens", domain: string): Promise<string> {
     const domainRegistryNode = namehash(domain);
 
-    return await this.polywrapRegistry.domainOwner(
+    return this.polywrapRegistry.domainOwner(
       domainRegistry,
       domainRegistryNode
     );
   }
 
-  async setOrganizationOwner(
+  transferOrganizationOwnership(
     organizationId: BytesLike,
-    owner: string
+    newOwner: string
   ): Promise<ContractTransaction> {
-    return await this.polywrapRegistry.setOrganizationOwner(
+    return this.polywrapRegistry.transferOrganizationOwnership(
       organizationId,
-      owner
+      newOwner
     );
   }
 
-  async setOrganizationController(
+  setOrganizationController(
     organizationId: BytesLike,
     controller: string
   ): Promise<ContractTransaction> {
-    return await this.polywrapRegistry.setOrganizationController(
+    return this.polywrapRegistry.setOrganizationController(
       organizationId,
       controller
     );
   }
 
-  async setOrganizationOwnerAndController(
+  transferOrganizationControl(
     organizationId: BytesLike,
-    owner: string,
-    controller: string
+    newController: string
   ): Promise<ContractTransaction> {
-    return await this.polywrapRegistry.setOrganizationOwnerAndController(
+    return this.polywrapRegistry.transferOrganizationControl(
       organizationId,
-      owner,
-      controller
+      newController
     );
   }
 
-  async registerPackage(
+  registerPackage(
     organizationId: BytesLike,
     packageName: string,
-    packageOwner: string
+    packageOwner: string,
+    packageController: string
   ): Promise<ContractTransaction> {
-    return await this.polywrapRegistry.registerPackage(
+    return this.polywrapRegistry.registerPackage(
       organizationId,
       packageName,
-      packageOwner
+      packageOwner,
+      packageController
     );
   }
 
-  async setPackageOwner(
+  setPackageOwner(
     packageId: BytesLike,
-    owner: string
+    newOwner: string
   ): Promise<ContractTransaction> {
-    return await this.polywrapRegistry.setPackageOwner(packageId, owner);
+    return this.polywrapRegistry.setPackageOwner(packageId, newOwner);
   }
 
-  async setPackageController(
+  transferPackageOwnership(
     packageId: BytesLike,
-    controller: string
+    newOwner: string
   ): Promise<ContractTransaction> {
-    return await this.polywrapRegistry.setPackageController(
+    return this.polywrapRegistry.transferPackageOwnership(packageId, newOwner);
+  }
+
+  setPackageController(
+    packageId: BytesLike,
+    newController: string
+  ): Promise<ContractTransaction> {
+    return this.polywrapRegistry.setPackageController(packageId, newController);
+  }
+
+  transferPackageControl(
+    packageId: BytesLike,
+    newController: string
+  ): Promise<ContractTransaction> {
+    return this.polywrapRegistry.transferPackageControl(
       packageId,
-      controller
+      newController
     );
   }
 
-  async setPackageOwnerAndController(
-    packageId: BytesLike,
-    owner: string,
-    controller: string
-  ): Promise<ContractTransaction> {
-    return await this.polywrapRegistry.setPackageOwnerAndController(
-      packageId,
-      owner,
-      controller
-    );
+  organizationOwner(organizationId: BytesLike): Promise<string> {
+    return this.polywrapRegistry.organizationOwner(organizationId);
   }
 
-  async organizationOwner(organizationId: BytesLike): Promise<string> {
-    return await this.polywrapRegistry.organizationOwner(organizationId);
+  organizationController(organizationId: BytesLike): Promise<string> {
+    return this.polywrapRegistry.organizationController(organizationId);
   }
 
-  async organizationController(organizationId: BytesLike): Promise<string> {
-    return await this.polywrapRegistry.organizationController(organizationId);
+  organizationExists(organizationId: BytesLike): Promise<boolean> {
+    return this.polywrapRegistry.organizationExists(organizationId);
   }
 
-  async organizationExists(organizationId: BytesLike): Promise<boolean> {
-    return await this.polywrapRegistry.organizationExists(organizationId);
+  organization(organizationId: BytesLike): Promise<OrganizationInfo> {
+    return this.polywrapRegistry.organization(organizationId);
   }
 
-  async organization(organizationId: BytesLike): Promise<OrganizationInfo> {
-    return await this.polywrapRegistry.organization(organizationId);
+  organizationIds(start: number, count: number): Promise<BytesLike[]> {
+    return this.polywrapRegistry.organizationIds(start, count);
   }
 
-  async organizationIds(start: number, count: number): Promise<BytesLike[]> {
-    return await this.polywrapRegistry.organizationIds(start, count);
+  organizationCount(): Promise<BigNumber> {
+    return this.polywrapRegistry.organizationCount();
   }
 
-  async organizationCount(): Promise<BigNumber> {
-    return await this.polywrapRegistry.organizationCount();
-  }
-
-  async packageIds(
+  packageIds(
     organizationId: BytesLike,
     start: number,
     count: number
   ): Promise<BytesLike[]> {
-    return await this.polywrapRegistry.packageIds(organizationId, start, count);
+    return this.polywrapRegistry.packageIds(organizationId, start, count);
   }
 
-  async packageCount(packageId: BytesLike): Promise<BigNumber> {
-    return await this.polywrapRegistry.packageCount(packageId);
+  packageCount(packageId: BytesLike): Promise<BigNumber> {
+    return this.polywrapRegistry.packageCount(packageId);
   }
 
-  async packageExists(packageId: BytesLike): Promise<boolean> {
-    return await this.polywrapRegistry.packageExists(packageId);
+  packageExists(packageId: BytesLike): Promise<boolean> {
+    return this.polywrapRegistry.packageExists(packageId);
   }
 
-  async packageOwner(packageId: BytesLike): Promise<string> {
-    return await this.polywrapRegistry.packageOwner(packageId);
+  packageOwner(packageId: BytesLike): Promise<string> {
+    return this.polywrapRegistry.packageOwner(packageId);
   }
 
-  async packageController(packageId: BytesLike): Promise<string> {
-    return await this.polywrapRegistry.packageController(packageId);
+  packageController(packageId: BytesLike): Promise<string> {
+    return this.polywrapRegistry.packageController(packageId);
   }
 
-  async package(packageId: BytesLike): Promise<PackageInfo> {
-    return await this.polywrapRegistry.package(packageId);
+  package(packageId: BytesLike): Promise<PackageInfo> {
+    return this.polywrapRegistry.package(packageId);
   }
 
-  async version(
-    packageId: BytesLike,
-    partialVersion: string
-  ): Promise<VersionInfo> {
+  version(packageId: BytesLike, partialVersion: string): Promise<VersionInfo> {
     const nodeId = calculateVersionNodeId(packageId, partialVersion);
 
-    return await this.polywrapRegistry.version(nodeId);
+    return this.polywrapRegistry.version(nodeId);
   }
 
-  async versionIds(
+  versionIds(
     packageId: BytesLike,
     start: BigNumber,
     count: BigNumber
   ): Promise<BytesLike[]> {
-    return await this.polywrapRegistry.versionIds(packageId, start, count);
+    return this.polywrapRegistry.versionIds(packageId, start, count);
   }
 
-  async versionCount(packageId: BytesLike): Promise<BigNumber> {
-    return await this.polywrapRegistry.versionCount(packageId);
+  versionCount(packageId: BytesLike): Promise<BigNumber> {
+    return this.polywrapRegistry.versionCount(packageId);
   }
 
-  async latestReleaseNode(
+  latestReleaseNode(
     packageId: BytesLike,
     partialVersion: string
   ): Promise<BytesLike> {
     const nodeId = calculateVersionNodeId(packageId, partialVersion);
 
-    return await this.polywrapRegistry.latestReleaseNode(nodeId);
+    return this.polywrapRegistry.latestReleaseNode(nodeId);
   }
 
-  async latestPrereleaseNode(
+  latestPrereleaseNode(
     packageId: BytesLike,
     partialVersion: string
   ): Promise<BytesLike> {
     const nodeId = calculateVersionNodeId(packageId, partialVersion);
 
-    return await this.polywrapRegistry.latestPrereleaseNode(nodeId);
+    return this.polywrapRegistry.latestPrereleaseNode(nodeId);
   }
 
-  async latestReleaseLocation(
+  latestReleaseLocation(
     packageId: BytesLike,
     partialVersion: string
   ): Promise<string> {
     const nodeId = calculateVersionNodeId(packageId, partialVersion);
 
-    return await this.polywrapRegistry.latestReleaseLocation(nodeId);
+    return this.polywrapRegistry.latestReleaseLocation(nodeId);
   }
 
-  async latestPrereleaseLocation(
+  latestPrereleaseLocation(
     packageId: BytesLike,
     partialVersion: string
   ): Promise<string> {
     const nodeId = calculateVersionNodeId(packageId, partialVersion);
 
-    return await this.polywrapRegistry.latestPrereleaseLocation(nodeId);
+    return this.polywrapRegistry.latestPrereleaseLocation(nodeId);
   }
 }
