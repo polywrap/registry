@@ -6,7 +6,7 @@ import { PolywrapRegistry, RegistryContractAddresses } from "../../../v1";
 import { EnsApi } from "./helpers/EnsApi";
 import { Signer } from "ethers";
 import { EnsDomain } from "../../../v1/types/EnsDomain";
-import { buildPolywrapPackage } from "../../../v1/utils/buildPolywrapPackage";
+import { buildPolywrapPackage } from "../../../v1/buildPolywrapPackage";
 
 describe("Package ownership", () => {
   let registry: PolywrapRegistry;
@@ -26,6 +26,7 @@ describe("Package ownership", () => {
   let randomAcc: Signer;
 
   let registryContractAddresses: RegistryContractAddresses;
+
   const testDomain = new EnsDomain("test-domain");
 
   const connectRegistry = (signer: Signer): PolywrapRegistry => {

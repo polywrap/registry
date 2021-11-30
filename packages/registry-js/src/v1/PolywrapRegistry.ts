@@ -29,8 +29,8 @@ export class PolywrapRegistry {
     version: string,
     packageLocation: string
   ): Promise<ContractTransaction> {
-    const [versionIdentifiers, buildMetadata] = parseVersionString(version);
-    const versionBytes = calculateVersionBytes(packageId, versionIdentifiers);
+    const buildMetadata = parseVersionString(version).buildMetadata;
+    const versionBytes = calculateVersionBytes(version);
 
     return this.polywrapRegistry.publishVersion(
       packageId,
@@ -184,6 +184,10 @@ export class PolywrapRegistry {
 
   packageController(packageId: BytesLike): Promise<string> {
     return this.polywrapRegistry.packageController(packageId);
+  }
+
+  packageOrganizationId(packageId: BytesLike): Promise<BytesLike> {
+    return this.polywrapRegistry.packageOrganizationId(packageId);
   }
 
   package(packageId: BytesLike): Promise<PackageInfo> {

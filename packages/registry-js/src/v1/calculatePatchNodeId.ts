@@ -1,9 +1,9 @@
 import { BytesLike, BigNumber } from "ethers";
-import { zeroPad, solidityKeccak256 } from "ethers/lib/utils";
+import { solidityKeccak256, zeroPad } from "ethers/lib/utils";
+import { parseVersionString } from ".";
 import { encodeAlphanumericIdentifier } from "./encodeAlphanumericIdentifier";
-import { parseVersionString } from "./parseVersionString";
 
-export const calculateVersionNodeId = (
+export const calculatePatchNodeId = (
   packageId: BytesLike,
   version: string
 ): BytesLike => {
@@ -11,8 +11,8 @@ export const calculateVersionNodeId = (
 
   let nodeId = packageId;
 
-  for (let i = 0; i < versionIdentifiers.length; i++) {
-    const identifier = versionIdentifiers[i];
+  for (let i = 1; i < versionIdentifiers.length + 1; i++) {
+    const identifier = versionIdentifiers[i - 1];
 
     let encodedIdentifier = BigNumber.from(0);
 
@@ -26,7 +26,11 @@ export const calculateVersionNodeId = (
       ["bytes32", "bytes32"],
       [nodeId, zeroPad(encodedIdentifier.toHexString(), 32)]
     );
+
+    if (i == 2) {
+      return nodeId;
+    }
   }
 
-  return nodeId;
+  throw Error("Could not calculate patch node id");
 };

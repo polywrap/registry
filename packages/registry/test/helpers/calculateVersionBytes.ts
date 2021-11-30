@@ -1,7 +1,7 @@
 import { BytesLike, BigNumber } from "ethers";
 import { zeroPad, concat } from "ethers/lib/utils";
-import { parseVersionString } from "./parseVersionString";
 import { encodeAlphanumericIdentifier } from "./encodeAlphanumericIdentifier";
+import { parseVersionString } from "./parseVersionString";
 
 export const calculateVersionBytes = (version: string): Uint8Array => {
   const versionIdentifiers = parseVersionString(version).identifiers;

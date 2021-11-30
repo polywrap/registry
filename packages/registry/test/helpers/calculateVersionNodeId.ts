@@ -1,5 +1,5 @@
 import { BytesLike, BigNumber } from "ethers";
-import { zeroPad, solidityKeccak256 } from "ethers/lib/utils";
+import { solidityKeccak256, zeroPad } from "ethers/lib/utils";
 import { encodeAlphanumericIdentifier } from "./encodeAlphanumericIdentifier";
 import { parseVersionString } from "./parseVersionString";
 
