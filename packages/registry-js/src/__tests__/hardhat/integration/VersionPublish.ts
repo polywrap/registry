@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import { formatBytes32String } from "ethers/lib/utils";
+import { BytesLike, formatBytes32String } from "ethers/lib/utils";
 import { deployments } from "hardhat";
 import { PolywrapRegistry, RegistryContractAddresses } from "../../../v1";
 import { EnsApi } from "./helpers/EnsApi";
@@ -27,6 +27,36 @@ describe("Publishing versions", () => {
 
   const connectRegistry = (signer: Signer): PolywrapRegistry => {
     return new PolywrapRegistry(signer, registryContractAddresses);
+  };
+
+  const publishAndVerifyVersionPublished = async (
+    packageId: BytesLike,
+    version: string,
+    packageLocation: string
+  ): Promise<void> => {
+    const tx = await registry.publishVersion(
+      packageId,
+      version,
+      packageLocation
+    );
+
+    await tx.wait();
+
+    const versionNode = await registry.version(packageId, version);
+    expect(versionNode.exists).to.be.true;
+    expect(versionNode.leaf).to.be.true;
+    expect(versionNode.location).to.equal(packageLocation);
+
+    expect(await registry.versionExists(packageId, version)).to.be.true;
+    expect(await registry.versionLocation(packageId, version)).to.equal(
+      packageLocation
+    );
+
+    const nodeMetadata = await registry.versionMetadata(packageId, version);
+    expect(nodeMetadata.exists).to.be.true;
+    expect(nodeMetadata.leaf).to.be.true;
+    expect(nodeMetadata.latestPrereleaseVersion).to.equal(0);
+    expect(nodeMetadata.latestReleaseVersion).to.equal(0);
   };
 
   before(async () => {
@@ -94,115 +124,103 @@ describe("Publishing versions", () => {
     registry = connectRegistry(packageController);
   });
 
-  it("can publish a development version", async () => {
-    const packageLocation = "ss";
-
-    const tx = await registry.publishVersion(
+  it("can publish development release versions", async () => {
+    await publishAndVerifyVersionPublished(
       testPackage.packageId,
-      "0.1.0",
-      packageLocation
+      "0.0.1",
+      "Qmexhq2sBHnXQbvyP2GfUdbnY7HCagH2Mw5vUNSBn2nxip"
     );
 
-    await tx.wait();
-
-    const versionNode = await registry.version(testPackage.packageId, "0.1.0");
-    expect(versionNode.exists).to.be.true;
-    expect(versionNode.leaf).to.be.true;
-    expect(versionNode.location).to.equal(packageLocation);
+    await publishAndVerifyVersionPublished(
+      testPackage.packageId,
+      "0.1.0",
+      "Qmexhq2sBHnXQbvyP2GfUdbnY7HCagH2Mw5vUNSBn2nxip"
+    );
   });
 
   it("can publish production release versions", async () => {
-    const packageLocation = "Qmexhq2sBHnXQbvyP2GfUdbnY7HCagH2Mw5vUNSBn2nxip";
-
-    const tx = await registry.publishVersion(
+    await publishAndVerifyVersionPublished(
       testPackage.packageId,
       "1.0.0",
-      packageLocation
+      "Qmexhq2sBHnXQbvyP2GfUdbnY7HCagH2Mw5vUNSBn2nxip"
     );
 
-    await tx.wait();
-
-    const versionNode = await registry.version(testPackage.packageId, "1.0.0");
-    expect(versionNode.leaf).to.be.true;
-    expect(versionNode.exists).to.be.true;
-    expect(versionNode.location).to.equal(packageLocation);
-  });
-
-  it("can publish development release versions", async () => {
-    const packageLocation = "Qmexhq2sBHnXQbvyP2GfUdbnY7HCagH2Mw5vUNSBn2nxip";
-
-    const tx = await registry.publishVersion(
+    await publishAndVerifyVersionPublished(
       testPackage.packageId,
-      "0.0.1",
-      packageLocation
+      "1.0.1",
+      "Qmexhq2sBHnXQbvyP2GfUdbnY7HCagH2Mw5vUNSBn2nxip"
     );
 
-    await tx.wait();
-
-    const versionNode = await registry.version(testPackage.packageId, "0.0.1");
-    expect(versionNode.leaf).to.be.true;
-    expect(versionNode.exists).to.be.true;
-    expect(versionNode.location).to.equal(packageLocation);
-  });
-
-  it("can publish production prerelease versions", async () => {
-    const packageLocation = "Qmexhq2sBHnXQbvyP2GfUdbnY7HCagH2Mw5vUNSBn2nxip";
-
-    const tx = await registry.publishVersion(
+    await publishAndVerifyVersionPublished(
       testPackage.packageId,
-      "1.0.0-alpha",
-      packageLocation
+      "1.1.0",
+      "Qmexhq2sBHnXQbvyP2GfUdbnY7HCagH2Mw5vUNSBn2nxip"
     );
 
-    await tx.wait();
-
-    const versionNode = await registry.version(
+    await publishAndVerifyVersionPublished(
       testPackage.packageId,
-      "1.0.0-alpha"
+      "2.0.0",
+      "Qmexhq2sBHnXQbvyP2GfUdbnY7HCagH2Mw5vUNSBn2nxip"
     );
-    expect(versionNode.leaf).to.be.true;
-    expect(versionNode.exists).to.be.true;
-    expect(versionNode.location).to.equal(packageLocation);
   });
 
   it("can publish development prerelease versions", async () => {
-    const packageLocation = "Qmexhq2sBHnXQbvyP2GfUdbnY7HCagH2Mw5vUNSBn2nxip";
-
-    const tx = await registry.publishVersion(
+    await publishAndVerifyVersionPublished(
       testPackage.packageId,
       "0.0.1-alpha",
-      packageLocation
+      "Qmexhq2sBHnXQbvyP2GfUdbnY7HCagH2Mw5vUNSBn2nxip"
     );
 
-    await tx.wait();
-
-    const versionNode = await registry.version(
+    await publishAndVerifyVersionPublished(
       testPackage.packageId,
-      "0.0.1-alpha"
+      "0.1.0-alpha.1.2.3",
+      "Qmexhq2sBHnXQbvyP2GfUdbnY7HCagH2Mw5vUNSBn2nxip"
     );
-    expect(versionNode.leaf).to.be.true;
-    expect(versionNode.exists).to.be.true;
-    expect(versionNode.location).to.equal(packageLocation);
+  });
+
+  it("can publish production prerelease versions", async () => {
+    await publishAndVerifyVersionPublished(
+      testPackage.packageId,
+      "1.0.0-alpha",
+      "Qmexhq2sBHnXQbvyP2GfUdbnY7HCagH2Mw5vUNSBn2nxip"
+    );
+
+    await publishAndVerifyVersionPublished(
+      testPackage.packageId,
+      "1.0.0-alpha.1",
+      "Qmexhq2sBHnXQbvyP2GfUdbnY7HCagH2Mw5vUNSBn2nxip"
+    );
+
+    await publishAndVerifyVersionPublished(
+      testPackage.packageId,
+      "1.0.0-beta-test.1.0.0",
+      "Qmexhq2sBHnXQbvyP2GfUdbnY7HCagH2Mw5vUNSBn2nxip"
+    );
   });
 
   it("can publish version with build metadata", async () => {
     const buildMetadata = "test-metadata";
     const packageLocation = "Qmexhq2sBHnXQbvyP2GfUdbnY7HCagH2Mw5vUNSBn2nxip";
+    const version = "1.0.0";
 
     const tx = await registry.publishVersion(
       testPackage.packageId,
-      `1.0.0+${buildMetadata}`,
+      `${version}+${buildMetadata}`,
       packageLocation
     );
 
     await tx.wait();
 
-    const versionNode = await registry.version(testPackage.packageId, "1.0.0");
+    const versionNode = await registry.version(testPackage.packageId, version);
     expect(versionNode.leaf).to.be.true;
     expect(versionNode.exists).to.be.true;
     expect(versionNode.location).to.equal(packageLocation);
     expect(versionNode.buildMetadata).to.equal(
       formatBytes32String(buildMetadata)
     );
+
+    expect(
+      await registry.versionBuildMetadata(testPackage.packageId, version)
+    ).to.equal(formatBytes32String(buildMetadata));
   });
 });

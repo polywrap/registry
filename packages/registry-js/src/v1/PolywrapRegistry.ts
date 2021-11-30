@@ -11,6 +11,7 @@ import {
   PolywrapRegistryV1 as PolywrapRegistryContract,
 } from "../typechain-types";
 import { OrganizationInfo, VersionInfo } from ".";
+import { VersionNodeMetadata } from "./types/VersionNodeMetadata";
 
 export class PolywrapRegistry {
   constructor(signer: Signer, contractAddresses: RegistryContractAddresses) {
@@ -192,6 +193,36 @@ export class PolywrapRegistry {
 
   package(packageId: BytesLike): Promise<PackageInfo> {
     return this.polywrapRegistry.package(packageId);
+  }
+
+  versionExists(
+    packageId: BytesLike,
+    partialVersion: string
+  ): Promise<boolean> {
+    const nodeId = calculateVersionNodeId(packageId, partialVersion);
+
+    return this.polywrapRegistry.versionExists(nodeId);
+  }
+
+  versionLocation(packageId: BytesLike, version: string): Promise<string> {
+    const nodeId = calculateVersionNodeId(packageId, version);
+
+    return this.polywrapRegistry.versionLocation(nodeId);
+  }
+
+  versionMetadata(
+    packageId: BytesLike,
+    version: string
+  ): Promise<VersionNodeMetadata> {
+    const nodeId = calculateVersionNodeId(packageId, version);
+
+    return this.polywrapRegistry.versionMetadata(nodeId);
+  }
+
+  versionBuildMetadata(packageId: BytesLike, version: string): Promise<string> {
+    const nodeId = calculateVersionNodeId(packageId, version);
+
+    return this.polywrapRegistry.versionBuildMetadata(nodeId);
   }
 
   version(packageId: BytesLike, partialVersion: string): Promise<VersionInfo> {

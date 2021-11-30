@@ -17,7 +17,7 @@ import { FunctionFragment, Result, EventFragment } from "@ethersproject/abi";
 import { Listener, Provider } from "@ethersproject/providers";
 import { TypedEventFilter, TypedEvent, TypedListener, OnEvent } from "./common";
 
-export type NodeInfoStruct = {
+export type VersionNodeMetadataStruct = {
   exists: boolean;
   leaf: boolean;
   level: BigNumberish;
@@ -25,7 +25,7 @@ export type NodeInfoStruct = {
   latestReleaseVersion: BigNumberish;
 };
 
-export type NodeInfoStructOutput = [
+export type VersionNodeMetadataStructOutput = [
   boolean,
   boolean,
   number,
@@ -70,6 +70,7 @@ export interface VersionRegistryV1Interface extends utils.Interface {
     "version(bytes32)": FunctionFragment;
     "versionBuildMetadata(bytes32)": FunctionFragment;
     "versionCount(bytes32)": FunctionFragment;
+    "versionExists(bytes32)": FunctionFragment;
     "versionIds(bytes32,uint256,uint256)": FunctionFragment;
     "versionLocation(bytes32)": FunctionFragment;
     "versionMetadata(bytes32)": FunctionFragment;
@@ -180,6 +181,10 @@ export interface VersionRegistryV1Interface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "versionCount",
+    values: [BytesLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "versionExists",
     values: [BytesLike]
   ): string;
   encodeFunctionData(
@@ -294,6 +299,10 @@ export interface VersionRegistryV1Interface extends utils.Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "versionCount",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "versionExists",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "versionIds", data: BytesLike): Result;
@@ -618,6 +627,11 @@ export interface VersionRegistryV1 extends BaseContract {
       overrides?: CallOverrides
     ): Promise<[BigNumber]>;
 
+    versionExists(
+      nodeId: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<[boolean]>;
+
     versionIds(
       packageId: BytesLike,
       start: BigNumberish,
@@ -633,7 +647,11 @@ export interface VersionRegistryV1 extends BaseContract {
     versionMetadata(
       versionNodeId: BytesLike,
       overrides?: CallOverrides
-    ): Promise<[NodeInfoStructOutput] & { nodeInfo: NodeInfoStructOutput }>;
+    ): Promise<
+      [VersionNodeMetadataStructOutput] & {
+        nodeMetadata: VersionNodeMetadataStructOutput;
+      }
+    >;
   };
 
   initialize(
@@ -812,6 +830,8 @@ export interface VersionRegistryV1 extends BaseContract {
     overrides?: CallOverrides
   ): Promise<BigNumber>;
 
+  versionExists(nodeId: BytesLike, overrides?: CallOverrides): Promise<boolean>;
+
   versionIds(
     packageId: BytesLike,
     start: BigNumberish,
@@ -827,7 +847,7 @@ export interface VersionRegistryV1 extends BaseContract {
   versionMetadata(
     versionNodeId: BytesLike,
     overrides?: CallOverrides
-  ): Promise<NodeInfoStructOutput>;
+  ): Promise<VersionNodeMetadataStructOutput>;
 
   callStatic: {
     initialize(overrides?: CallOverrides): Promise<void>;
@@ -1002,6 +1022,11 @@ export interface VersionRegistryV1 extends BaseContract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
+    versionExists(
+      nodeId: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<boolean>;
+
     versionIds(
       packageId: BytesLike,
       start: BigNumberish,
@@ -1017,7 +1042,7 @@ export interface VersionRegistryV1 extends BaseContract {
     versionMetadata(
       versionNodeId: BytesLike,
       overrides?: CallOverrides
-    ): Promise<NodeInfoStructOutput>;
+    ): Promise<VersionNodeMetadataStructOutput>;
   };
 
   filters: {
@@ -1272,6 +1297,11 @@ export interface VersionRegistryV1 extends BaseContract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
+    versionExists(
+      nodeId: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
     versionIds(
       packageId: BytesLike,
       start: BigNumberish,
@@ -1441,6 +1471,11 @@ export interface VersionRegistryV1 extends BaseContract {
 
     versionCount(
       packageId: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    versionExists(
+      nodeId: BytesLike,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 

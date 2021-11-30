@@ -188,6 +188,25 @@ const _abi = [
         name: "packageId",
         type: "bytes32",
       },
+    ],
+    name: "versionExists",
+    outputs: [
+      {
+        internalType: "bool",
+        name: "",
+        type: "bool",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "bytes32",
+        name: "packageId",
+        type: "bytes32",
+      },
       {
         internalType: "uint256",
         name: "start",
@@ -224,6 +243,52 @@ const _abi = [
         internalType: "string",
         name: "",
         type: "string",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "bytes32",
+        name: "versionNodeId",
+        type: "bytes32",
+      },
+    ],
+    name: "versionMetadata",
+    outputs: [
+      {
+        components: [
+          {
+            internalType: "bool",
+            name: "exists",
+            type: "bool",
+          },
+          {
+            internalType: "bool",
+            name: "leaf",
+            type: "bool",
+          },
+          {
+            internalType: "uint8",
+            name: "level",
+            type: "uint8",
+          },
+          {
+            internalType: "uint256",
+            name: "latestPrereleaseVersion",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "latestReleaseVersion",
+            type: "uint256",
+          },
+        ],
+        internalType: "struct IVersionRegistry.VersionNodeMetadata",
+        name: "nodeMetadata",
+        type: "tuple",
       },
     ],
     stateMutability: "view",

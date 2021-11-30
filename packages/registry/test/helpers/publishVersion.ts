@@ -9,7 +9,7 @@ export const publishVersion = async (
   packageLocation: string
 ): Promise<{
   versionId: BytesLike;
-  patchNodeId: BytesLike;
+  patchNodeId: BytesLike | undefined;
   packageLocation: string;
   tx: ContractTransaction;
 }> => {

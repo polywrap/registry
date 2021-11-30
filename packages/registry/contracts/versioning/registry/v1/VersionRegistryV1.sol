@@ -39,14 +39,6 @@ abstract contract VersionRegistryV1 is PackageRegistryV1, IVersionRegistry {
     string location;
   }
 
-  struct NodeInfo {
-    bool exists;
-    bool leaf;
-    uint8 level;
-    uint256 latestPrereleaseVersion; 
-    uint256 latestReleaseVersion;
-  }
-
   mapping(bytes32 => VersionNode) versionNodes;
   mapping(bytes32 => bytes32[]) packageVersionLists;
 
@@ -86,11 +78,11 @@ abstract contract VersionRegistryV1 is PackageRegistryV1, IVersionRegistry {
     //Tracking whether changes were made to the node, so that we can batch them
     bool hasMadeChange = false;
 
-    NodeInfo memory nodeInfo = versionMetadata(packageId);
+    VersionNodeMetadata memory nodeMetadata = versionMetadata(packageId);
     
-    if(!nodeInfo.exists) {
+    if(!nodeMetadata.exists) {
       hasMadeChange = true;
-      nodeInfo.exists = true;
+      nodeMetadata.exists = true;
     }
 
     //First byte of the version array is the number of identifiers
@@ -158,33 +150,33 @@ abstract contract VersionRegistryV1 is PackageRegistryV1, IVersionRegistry {
 
         //Numeric identifier are always lower (lower precedence) than alphanumeric ones
         //Alphanumeric identifiers are ordered lexically in ASCII order
-        if (nodeInfo.latestPrereleaseVersion < identifier) {
-          nodeInfo.latestPrereleaseVersion = identifier;
+        if (nodeMetadata.latestPrereleaseVersion < identifier) {
+          nodeMetadata.latestPrereleaseVersion = identifier;
           hasMadeChange = true;
         }
 
-        if (!isPrerelease && nodeInfo.latestReleaseVersion < identifier) {
-          nodeInfo.latestReleaseVersion = identifier;
+        if (!isPrerelease && nodeMetadata.latestReleaseVersion < identifier) {
+          nodeMetadata.latestReleaseVersion = identifier;
           hasMadeChange = true;
         }
 
-        if(nodeInfo.leaf) {
-          nodeInfo.leaf = false;
+        if(nodeMetadata.leaf) {
+          nodeMetadata.leaf = false;
           hasMadeChange = true;
         }
 
         if(hasMadeChange) {
-          setVersionMetadata(nodeId, nodeInfo);
+          setVersionMetadata(nodeId, nodeMetadata);
 
           hasMadeChange = false;
         }
 
         nodeId = keccak256(abi.encodePacked(nodeId, identifier));
-        nodeInfo = versionMetadata(nodeId);
+        nodeMetadata = versionMetadata(nodeId);
 
         //If the node doesn't exist then create it
-        if(!nodeInfo.exists) {
-          nodeInfo.exists = true;
+        if(!nodeMetadata.exists) {
+          nodeMetadata.exists = true;
           hasMadeChange = true;
             
           //Check whether the identifier matches [0-9A-Za-z-]+
@@ -192,7 +184,7 @@ abstract contract VersionRegistryV1 is PackageRegistryV1, IVersionRegistry {
             revert InvalidIdentifier();
           }
 
-          nodeInfo.level = levelCnt;
+          nodeMetadata.level = levelCnt;
 
           //Check whether the identifier needs to be reset to 0 (when incrementing major or minor numbers)
           if(
@@ -229,10 +221,10 @@ abstract contract VersionRegistryV1 is PackageRegistryV1, IVersionRegistry {
 
     //If a new node was created, then it doesn't have children and is a leaf node
     if(lastNodeCreated) {
-      nodeInfo.leaf = true;
+      nodeMetadata.leaf = true;
     }
 
-    setVersionMetadata(nodeId, nodeInfo);
+    setVersionMetadata(nodeId, nodeMetadata);
 
     emit VersionPublished(
       packageId,
@@ -243,61 +235,6 @@ abstract contract VersionRegistryV1 is PackageRegistryV1, IVersionRegistry {
     );
 
     return nodeId;
-  }
-
-  function versionMetadata(bytes32 versionNodeId) public view returns (
-    NodeInfo memory nodeInfo
-  ) {
-    /*
-    Contains:
-      1 bit = exists;
-      1 bit = leaf;
-      6 bits = level;
-      6 bits = empty
-      1 bit = isLatestPrereleaseAlphanumeric
-      120 bits = latestPrereleaseVersion;
-      1 bit = isLatestReleaseAlphanumeric
-      120 bits = latestReleaseVersion;
-    */
-    uint256 metadata = versionNodes[versionNodeId].versionMetadata;
-
-    //First byte of metadata stores the exists flag (1 bit), leaf flag (1 bit) and level number (6 bits)
-    uint8 firstByte =  uint8(metadata >> 248);
-
-    //0x80 = 10000000 in binary
-    nodeInfo.exists = firstByte & 0x80 == 0x80
-      ? true
-      : false; 
-
-    if(!nodeInfo.exists) {
-      return nodeInfo;
-    }
-
-    //0x3f = 00111111 in binary
-    nodeInfo.level = firstByte & 0x3f;
-    //0x10 = 01000000 in binary
-    nodeInfo.leaf = firstByte & 0x40 == 0x40
-      ? true
-      : false;
-
-    nodeInfo.latestPrereleaseVersion = (metadata >> 121) & 0x01ffffffffffffffffffffffffffffff; 
-    nodeInfo.latestReleaseVersion = metadata & 0x01ffffffffffffffffffffffffffffff; 
-  }
-
-  function setVersionMetadata(
-    bytes32 nodeId,
-    NodeInfo memory nodeInfo
-  ) private {
-
-    uint8 firstByte = nodeInfo.level
-      | ((nodeInfo.leaf ? 1 : 0) << 6) 
-      | ((nodeInfo.exists ? 1 : 0) << 7);
-    
-    uint256 metadata = uint256(firstByte) << 248
-      | nodeInfo.latestReleaseVersion
-      | (nodeInfo.latestPrereleaseVersion << 121); 
-
-    versionNodes[nodeId].versionMetadata = metadata;
   }
 
   function isSemverCompliantIdentifier(uint256 identifier) private pure returns (bool) {
@@ -371,7 +308,66 @@ abstract contract VersionRegistryV1 is PackageRegistryV1, IVersionRegistry {
 
     return true;
   }
+
+  function setVersionMetadata(
+    bytes32 nodeId,
+    VersionNodeMetadata memory nodeMetadata
+  ) private {
+
+    uint8 firstByte = nodeMetadata.level
+      | ((nodeMetadata.leaf ? 1 : 0) << 6) 
+      | ((nodeMetadata.exists ? 1 : 0) << 7);
+    
+    uint256 metadata = uint256(firstByte) << 248
+      | nodeMetadata.latestReleaseVersion
+      | (nodeMetadata.latestPrereleaseVersion << 121); 
+
+    versionNodes[nodeId].versionMetadata = metadata;
+  }
   
+  function versionMetadata(bytes32 versionNodeId) public virtual override view returns (
+    VersionNodeMetadata memory nodeMetadata
+  ) {
+    /*
+    Contains:
+      1 bit = exists;
+      1 bit = leaf;
+      6 bits = level;
+      6 bits = empty
+      1 bit = isLatestPrereleaseAlphanumeric
+      120 bits = latestPrereleaseVersion;
+      1 bit = isLatestReleaseAlphanumeric
+      120 bits = latestReleaseVersion;
+    */
+    uint256 metadata = versionNodes[versionNodeId].versionMetadata;
+
+    //First byte of metadata stores the exists flag (1 bit), leaf flag (1 bit) and level number (6 bits)
+    uint8 firstByte =  uint8(metadata >> 248);
+
+    //0x80 = 10000000 in binary
+    nodeMetadata.exists = firstByte & 0x80 == 0x80
+      ? true
+      : false; 
+
+    if(!nodeMetadata.exists) {
+      return nodeMetadata;
+    }
+
+    //0x3f = 00111111 in binary
+    nodeMetadata.level = firstByte & 0x3f;
+    //0x10 = 01000000 in binary
+    nodeMetadata.leaf = firstByte & 0x40 == 0x40
+      ? true
+      : false;
+
+    nodeMetadata.latestPrereleaseVersion = (metadata >> 121) & 0x01ffffffffffffffffffffffffffffff; 
+    nodeMetadata.latestReleaseVersion = metadata & 0x01ffffffffffffffffffffffffffffff; 
+  }
+
+  function versionExists(bytes32 nodeId) public virtual override view returns (bool) {
+    return versionMetadata(nodeId).exists;
+  }
+
   function versionLocation(bytes32 nodeId) public virtual override view returns (string memory) {
     return versionNodes[nodeId].location;
   }
@@ -400,18 +396,16 @@ abstract contract VersionRegistryV1 is PackageRegistryV1, IVersionRegistry {
     bytes32 buildMetadata,
     string memory location
   ) {
-    NodeInfo memory nodeInfo = versionMetadata(nodeId);
+    VersionNodeMetadata memory nodeMetadata = versionMetadata(nodeId);
 
-    bytes32 a = versionBuildMetadata(nodeId);
-    string memory b = versionLocation(nodeId);
     return (
-      nodeInfo.exists, 
-      nodeInfo.leaf,
-      nodeInfo.level, 
-      nodeInfo.latestPrereleaseVersion, 
-      nodeInfo.latestReleaseVersion, 
-      a,
-      b
+      nodeMetadata.exists, 
+      nodeMetadata.leaf,
+      nodeMetadata.level, 
+      nodeMetadata.latestPrereleaseVersion, 
+      nodeMetadata.latestReleaseVersion, 
+      versionBuildMetadata(nodeId),
+      versionLocation(nodeId)
     );
   }
 

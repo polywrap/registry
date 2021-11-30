@@ -6,7 +6,7 @@ import { parseVersionString } from "./parseVersionString";
 export const calculatePatchNodeId = (
   packageId: BytesLike,
   version: string
-): BytesLike => {
+): BytesLike | undefined => {
   const versionIdentifiers = parseVersionString(version).identifiers;
 
   let nodeId = packageId;
@@ -32,5 +32,5 @@ export const calculatePatchNodeId = (
     }
   }
 
-  throw Error("Could not calculate patch node id");
+  return undefined;
 };

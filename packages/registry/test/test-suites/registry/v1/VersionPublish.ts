@@ -6,18 +6,16 @@ import {
   VersionResolverV1,
 } from "../../../../typechain-types";
 import { BytesLike, formatBytes32String } from "ethers/lib/utils";
-import {
-  expectEvent,
-  publishVersion,
-  publishVersions,
-  publishVersionWithPromise,
-  toVersionNodeId,
-} from "../../../helpers";
 import { Signer } from "ethers";
 import { EnsApi } from "../../../helpers/ens/EnsApi";
 import { buildPolywrapPackage } from "../../../helpers/buildPolywrapPackage";
 import { PolywrapPackage } from "../../../helpers/PolywrapPackage";
 import { EnsDomain } from "../../../helpers/EnsDomain";
+import { expectEvent } from "../../../helpers";
+import { publishVersion } from "../../../helpers/publishVersion";
+import { publishVersions } from "../../../helpers/publishVersions";
+import { publishVersionWithPromise } from "../../../helpers/publishVersionWithPromise";
+import { calculateVersionNodeId } from "../../../helpers/calculateVersionNodeId";
 
 describe("Publishing versions", () => {
   let testPackage: PolywrapPackage;
@@ -110,15 +108,26 @@ describe("Publishing versions", () => {
       "0.1.0",
       "some-location"
     );
+
     await expectEvent(tx, "VersionPublished", {
       packageId: testPackage.packageId,
       versionNodeId: versionId,
       location: packageLocation,
     });
+
     const versionNode = await registry.version(versionId);
     expect(versionNode.exists).to.be.true;
     expect(versionNode.leaf).to.be.true;
     expect(versionNode.location).to.equal(packageLocation);
+
+    expect(await registry.versionExists(versionId)).to.be.true;
+    expect(await registry.versionLocation(versionId)).to.equal(packageLocation);
+
+    const versionMetadata = await registry.versionMetadata(versionId);
+    expect(versionMetadata.exists).to.be.true;
+    expect(versionMetadata.leaf).to.be.true;
+    expect(versionMetadata.latestPrereleaseVersion).to.be.equal(0);
+    expect(versionMetadata.latestReleaseVersion).to.be.equal(0);
   });
 
   it("can publish production release versions", async () => {
@@ -238,27 +247,27 @@ describe("Publishing versions", () => {
       "reverted with custom error 'InvalidIdentifier()'"
     );
 
-    // result = await publishVersionWithPromise(
-    //   registry,
-    //   testPackage.packageId,
-    //   `1.0.0-test.`,
-    //   "some-location"
-    // );
+    result = await publishVersionWithPromise(
+      registry,
+      testPackage.packageId,
+      `1.0.0-test.`,
+      "some-location"
+    );
 
-    // await expect(result.txPromise).to.revertedWith(
-    //   "reverted with custom error 'InvalidIdentifier()'"
-    // );
+    await expect(result.txPromise).to.revertedWith(
+      "reverted with custom error 'InvalidIdentifier()'"
+    );
 
-    // result = await publishVersionWithPromise(
-    //   registry,
-    //   testPackage.packageId,
-    //   `1.0.0-test prerelease`,
-    //   "some-location"
-    // );
+    result = await publishVersionWithPromise(
+      registry,
+      testPackage.packageId,
+      `1.0.0-test prerelease`,
+      "some-location"
+    );
 
-    // await expect(result.txPromise).to.revertedWith(
-    //   "reverted with custom error 'InvalidIdentifier()'"
-    // );
+    await expect(result.txPromise).to.revertedWith(
+      "reverted with custom error 'InvalidIdentifier()'"
+    );
   });
 
   it("forbids publishing non [0-9A-Za-z-] strings for build metadata", async () => {
@@ -578,7 +587,7 @@ describe("Publishing versions", () => {
 
     const publishTags = async (
       preleaseTags: string[]
-    ): Promise<[BytesLike, BytesLike, BytesLike]> => {
+    ): Promise<[BytesLike, BytesLike, BytesLike | undefined]> => {
       const { versionId: versionId1, patchNodeId } = await publishVersion(
         registry,
         testPackage.packageId,
@@ -600,6 +609,10 @@ describe("Publishing versions", () => {
       const [example1_versionId1, example1_versionId2, example1_patchNodeId] =
         await publishTags(examples);
 
+      if (!example1_patchNodeId) {
+        throw new Error("patchNodeId is undefined");
+      }
+
       let versionNode = await resolver.latestPrereleaseNode(
         example1_patchNodeId
       );
@@ -609,6 +622,10 @@ describe("Publishing versions", () => {
 
       const [example2_versionId1, example2_versionId2, example2_patchNodeId] =
         await publishTags([examples[1], examples[0]]);
+
+      if (!example2_patchNodeId) {
+        throw new Error("patchNodeId is undefined");
+      }
 
       versionNode = await resolver.latestPrereleaseNode(example2_patchNodeId);
       expect(versionNode).to.equal(example2_versionId1);
@@ -629,10 +646,12 @@ const testReleaseResolution = async (
   await publishVersions(registry, packageId, versions, "some-location");
 
   const versionNode = await resolver.latestReleaseNode(
-    toVersionNodeId(packageId, searchVersion)
+    calculateVersionNodeId(packageId, searchVersion)
   );
 
-  expect(versionNode).to.equal(toVersionNodeId(packageId, expectedVersion));
+  expect(versionNode).to.equal(
+    calculateVersionNodeId(packageId, expectedVersion)
+  );
 };
 
 const testPrereleaseResolution = async (
@@ -646,8 +665,10 @@ const testPrereleaseResolution = async (
   await publishVersions(registry, packageId, versions, "some-location");
 
   const versionNode = await resolver.latestPrereleaseNode(
-    toVersionNodeId(packageId, searchVersion)
+    calculateVersionNodeId(packageId, searchVersion)
   );
 
-  expect(versionNode).to.equal(toVersionNodeId(packageId, expectedVersion));
+  expect(versionNode).to.equal(
+    calculateVersionNodeId(packageId, expectedVersion)
+  );
 };

@@ -1083,6 +1083,25 @@ const _abi = [
     inputs: [
       {
         internalType: "bytes32",
+        name: "nodeId",
+        type: "bytes32",
+      },
+    ],
+    name: "versionExists",
+    outputs: [
+      {
+        internalType: "bool",
+        name: "",
+        type: "bool",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "bytes32",
         name: "packageId",
         type: "bytes32",
       },
@@ -1165,8 +1184,8 @@ const _abi = [
             type: "uint256",
           },
         ],
-        internalType: "struct VersionRegistryV1.NodeInfo",
-        name: "nodeInfo",
+        internalType: "struct IVersionRegistry.VersionNodeMetadata",
+        name: "nodeMetadata",
         type: "tuple",
       },
     ],

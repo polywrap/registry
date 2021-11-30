@@ -17,14 +17,38 @@ import { FunctionFragment, Result, EventFragment } from "@ethersproject/abi";
 import { Listener, Provider } from "@ethersproject/providers";
 import { TypedEventFilter, TypedEvent, TypedListener, OnEvent } from "./common";
 
+export type VersionNodeMetadataStruct = {
+  exists: boolean;
+  leaf: boolean;
+  level: BigNumberish;
+  latestPrereleaseVersion: BigNumberish;
+  latestReleaseVersion: BigNumberish;
+};
+
+export type VersionNodeMetadataStructOutput = [
+  boolean,
+  boolean,
+  number,
+  BigNumber,
+  BigNumber
+] & {
+  exists: boolean;
+  leaf: boolean;
+  level: number;
+  latestPrereleaseVersion: BigNumber;
+  latestReleaseVersion: BigNumber;
+};
+
 export interface IVersionRegistryInterface extends utils.Interface {
   functions: {
     "publishVersion(bytes32,bytes,bytes32,string)": FunctionFragment;
     "version(bytes32)": FunctionFragment;
     "versionBuildMetadata(bytes32)": FunctionFragment;
     "versionCount(bytes32)": FunctionFragment;
+    "versionExists(bytes32)": FunctionFragment;
     "versionIds(bytes32,uint256,uint256)": FunctionFragment;
     "versionLocation(bytes32)": FunctionFragment;
+    "versionMetadata(bytes32)": FunctionFragment;
   };
 
   encodeFunctionData(
@@ -41,11 +65,19 @@ export interface IVersionRegistryInterface extends utils.Interface {
     values: [BytesLike]
   ): string;
   encodeFunctionData(
+    functionFragment: "versionExists",
+    values: [BytesLike]
+  ): string;
+  encodeFunctionData(
     functionFragment: "versionIds",
     values: [BytesLike, BigNumberish, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "versionLocation",
+    values: [BytesLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "versionMetadata",
     values: [BytesLike]
   ): string;
 
@@ -62,9 +94,17 @@ export interface IVersionRegistryInterface extends utils.Interface {
     functionFragment: "versionCount",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(
+    functionFragment: "versionExists",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "versionIds", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "versionLocation",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "versionMetadata",
     data: BytesLike
   ): Result;
 
@@ -159,6 +199,11 @@ export interface IVersionRegistry extends BaseContract {
       overrides?: CallOverrides
     ): Promise<[BigNumber]>;
 
+    versionExists(
+      packageId: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<[boolean]>;
+
     versionIds(
       packageId: BytesLike,
       start: BigNumberish,
@@ -170,6 +215,15 @@ export interface IVersionRegistry extends BaseContract {
       nodeId: BytesLike,
       overrides?: CallOverrides
     ): Promise<[string]>;
+
+    versionMetadata(
+      versionNodeId: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<
+      [VersionNodeMetadataStructOutput] & {
+        nodeMetadata: VersionNodeMetadataStructOutput;
+      }
+    >;
   };
 
   publishVersion(
@@ -205,6 +259,11 @@ export interface IVersionRegistry extends BaseContract {
     overrides?: CallOverrides
   ): Promise<BigNumber>;
 
+  versionExists(
+    packageId: BytesLike,
+    overrides?: CallOverrides
+  ): Promise<boolean>;
+
   versionIds(
     packageId: BytesLike,
     start: BigNumberish,
@@ -216,6 +275,11 @@ export interface IVersionRegistry extends BaseContract {
     nodeId: BytesLike,
     overrides?: CallOverrides
   ): Promise<string>;
+
+  versionMetadata(
+    versionNodeId: BytesLike,
+    overrides?: CallOverrides
+  ): Promise<VersionNodeMetadataStructOutput>;
 
   callStatic: {
     publishVersion(
@@ -251,6 +315,11 @@ export interface IVersionRegistry extends BaseContract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
+    versionExists(
+      packageId: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<boolean>;
+
     versionIds(
       packageId: BytesLike,
       start: BigNumberish,
@@ -262,6 +331,11 @@ export interface IVersionRegistry extends BaseContract {
       nodeId: BytesLike,
       overrides?: CallOverrides
     ): Promise<string>;
+
+    versionMetadata(
+      versionNodeId: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<VersionNodeMetadataStructOutput>;
   };
 
   filters: {
@@ -309,6 +383,11 @@ export interface IVersionRegistry extends BaseContract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
+    versionExists(
+      packageId: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
     versionIds(
       packageId: BytesLike,
       start: BigNumberish,
@@ -318,6 +397,11 @@ export interface IVersionRegistry extends BaseContract {
 
     versionLocation(
       nodeId: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    versionMetadata(
+      versionNodeId: BytesLike,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
   };
@@ -346,6 +430,11 @@ export interface IVersionRegistry extends BaseContract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
+    versionExists(
+      packageId: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
     versionIds(
       packageId: BytesLike,
       start: BigNumberish,
@@ -355,6 +444,11 @@ export interface IVersionRegistry extends BaseContract {
 
     versionLocation(
       nodeId: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    versionMetadata(
+      versionNodeId: BytesLike,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
   };

@@ -13,7 +13,7 @@ export const publishVersionWithPromise = async (
   packageLocation: string
 ): Promise<{
   versionId: BytesLike;
-  patchNodeId: BytesLike;
+  patchNodeId: BytesLike | undefined;
   packageLocation: string;
   txPromise: Promise<ContractTransaction>;
 }> => {
