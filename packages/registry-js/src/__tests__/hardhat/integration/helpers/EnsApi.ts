@@ -30,7 +30,7 @@ export class EnsApi {
     );
   }
 
-  connect(signer: Signer) {
+  connect(signer: Signer): void {
     this.ensRegistryL1 = this.ensRegistryL1.connect(signer);
     this.testEthRegistrarL1 = this.testEthRegistrarL1.connect(signer);
   }

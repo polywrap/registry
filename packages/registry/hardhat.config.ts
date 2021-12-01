@@ -49,13 +49,6 @@ const config: HardhatUserConfig = {
         mnemonic: "test test test test test test test test test test test test",
       },
       deploy: ["./deploy/scripts/v1/localhost"],
-
-      // live: false,
-      // forking: {
-      //   url: "https://eth-mainnet.alchemyapi.io/v2/MnO3SuHlzuCydPWE1XhsYZM_pHZP8_ix",
-      //   blockNumber: 11845661,
-      // },
-      // deploy: ["./deploy/scripts/localhosdsdst"],
     },
     localhost: {
       live: false,
@@ -68,6 +61,16 @@ const config: HardhatUserConfig = {
         mnemonic: "test test test test test test test test test test test test",
       },
       deploy: ["./deploy/scripts/localhost"],
+    },
+    rinkeby: {
+      live: true,
+      gas: "auto",
+      gasPrice: "auto",
+      gasMultiplier: 1,
+      chainId: 4,
+      url: process.env.RINKEBY_URL,
+      accounts: [`${process.env.DEPLOYER_KEY_RINKEBY}`],
+      deploy: ["./deploy/scripts/v1/rinkeby"],
     },
   },
   etherscan: {

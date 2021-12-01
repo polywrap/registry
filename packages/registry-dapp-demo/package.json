@@ -12,7 +12,7 @@
   "dependencies": {
     "@polywrap/registry-js": "^0.1.0",
     "@types/react-dom": "^17.0.9",
-    "@web3api/client-js": "0.0.1-prealpha.45",
+    "@web3api/client-js": "^0.0.1-prealpha.45",
     "@web3api/ethereum-plugin-js": "^0.0.1-prealpha.45",
     "@web3api/react": "^0.0.1-prealpha.45",
     "awesome-debounce-promise": "^2.1.0",

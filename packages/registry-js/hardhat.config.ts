@@ -45,12 +45,12 @@ const config: HardhatUserConfig = {
     contracts: [
       {
         artifacts: "../registry/artifacts",
-        deploy: "../registry/deploy",
+        deploy: "../registry/deploy/scripts/v1/localhost",
       },
     ],
   },
   etherscan: {
     apiKey: "FZ1ANB251FC8ISFDXFGFCUDCANSJNWPF9Q",
-  }
+  },
 };
 export default config;
