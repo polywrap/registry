@@ -1,7 +1,7 @@
 import { ethers } from "ethers";
 import { solidityKeccak256 } from "ethers/lib/utils";
-import { EnsDomain } from "./types/EnsDomain";
-import { PolywrapPackage } from "./types/PolywrapPackage";
+import { EnsDomain } from "../../../v1/types/EnsDomain";
+import { PolywrapPackage } from "./PolywrapPackage";
 
 export const buildPolywrapPackage = (
   domain: EnsDomain,

@@ -6,7 +6,7 @@ import { PolywrapRegistry, RegistryContractAddresses } from "../../../v1";
 import { EnsApi } from "./helpers/EnsApi";
 import { Signer } from "ethers";
 import { EnsDomain } from "../../../v1/types/EnsDomain";
-import { buildPolywrapPackage } from "../../../v1/buildPolywrapPackage";
+import { buildPolywrapPackage } from "../helpers/buildPolywrapPackage";
 
 describe("Registering packages", () => {
   let registry: PolywrapRegistry;

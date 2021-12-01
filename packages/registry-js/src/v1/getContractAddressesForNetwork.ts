@@ -1,5 +1,4 @@
-import { RegistryContractAddresses } from "./RegistryContractAddresses";
-// import * as PolywrapRegistryV1 from "./deployments/localhost/PolywrapRegistryV1.json";
+import { RegistryContractAddresses } from "./types/RegistryContractAddresses";
 
 export const getContractAddressesForNetwork = (
   networkName: string
@@ -9,7 +8,7 @@ export const getContractAddressesForNetwork = (
       throw Error("Not Implemented");
     case "rinkeby":
       return {
-        polywrapRegistry: "PolywrapRegistryV1.address",
+        polywrapRegistry: "",
       };
     default:
       throw Error("Network not supported");

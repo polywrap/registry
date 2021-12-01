@@ -1,4 +1,4 @@
-import { BytesLike, ethers } from "ethers";
+import { BytesLike } from "ethers";
 import {
   formatBytes32String,
   namehash,

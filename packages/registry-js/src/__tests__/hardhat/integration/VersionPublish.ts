@@ -6,8 +6,8 @@ import { PolywrapRegistry, RegistryContractAddresses } from "../../../v1";
 import { EnsApi } from "./helpers/EnsApi";
 import { Signer } from "ethers";
 import { EnsDomain } from "../../../v1/types/EnsDomain";
-import { buildPolywrapPackage } from "../../../v1/buildPolywrapPackage";
-import { PolywrapPackage } from "../../../v1/types/PolywrapPackage";
+import { PolywrapPackage } from "../helpers/PolywrapPackage";
+import { buildPolywrapPackage } from "../helpers/buildPolywrapPackage";
 
 describe("Publishing versions", () => {
   let testPackage: PolywrapPackage;

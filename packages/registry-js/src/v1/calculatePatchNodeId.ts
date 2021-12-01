@@ -29,6 +29,8 @@ export const calculatePatchNodeId = (
 
     if (i == 2) {
       return nodeId;
+    } else if (i > 2) {
+      throw Error("Could not calculate patch node id");
     }
   }
 

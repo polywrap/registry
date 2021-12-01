@@ -1,7 +1,7 @@
 import { BigNumber, ContractTransaction, Signer } from "ethers";
 import { BytesLike, formatBytes32String, namehash } from "ethers/lib/utils";
 
-import { RegistryContractAddresses } from "./RegistryContractAddresses";
+import { RegistryContractAddresses } from "./types/RegistryContractAddresses";
 import { parseVersionString } from "./parseVersionString";
 import { calculateVersionNodeId } from "./calculateVersionNodeId";
 import { PackageInfo } from "./types/PackageInfo";
