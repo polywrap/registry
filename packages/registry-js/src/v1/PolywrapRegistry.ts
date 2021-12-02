@@ -12,6 +12,8 @@ import {
 } from "../typechain-types";
 import { OrganizationInfo, VersionInfo } from ".";
 import { VersionNodeMetadata } from "./types/VersionNodeMetadata";
+import { MaybeError } from "./types/MaybeError";
+import { handleContractError } from "./utils/handleContractError";
 
 export class PolywrapRegistry {
   constructor(signer: Signer, contractAddresses: RegistryContractAddresses) {
@@ -29,15 +31,17 @@ export class PolywrapRegistry {
     packageId: BytesLike,
     version: string,
     packageLocation: string
-  ): Promise<ContractTransaction> {
+  ): Promise<MaybeError<ContractTransaction>> {
     const buildMetadata = parseVersionString(version).buildMetadata;
     const versionBytes = calculateVersionBytes(version);
 
-    return this.polywrapRegistry.publishVersion(
-      packageId,
-      versionBytes,
-      formatBytes32String(buildMetadata),
-      packageLocation
+    return handleContractError(
+      this.polywrapRegistry.publishVersion(
+        packageId,
+        versionBytes,
+        formatBytes32String(buildMetadata),
+        packageLocation
+      )
     );
   }
 
@@ -45,13 +49,15 @@ export class PolywrapRegistry {
     domainRegistry: "ens",
     domain: string,
     newOrganizationOwner: string
-  ): Promise<ContractTransaction> {
+  ): Promise<MaybeError<ContractTransaction>> {
     const domainRegistryNode = namehash(domain);
 
-    return this.polywrapRegistry.claimOrganizationOwnership(
-      formatBytes32String(domainRegistry),
-      domainRegistryNode,
-      newOrganizationOwner
+    return handleContractError(
+      this.polywrapRegistry.claimOrganizationOwnership(
+        formatBytes32String(domainRegistry),
+        domainRegistryNode,
+        newOrganizationOwner
+      )
     );
   }
 
@@ -59,7 +65,7 @@ export class PolywrapRegistry {
     const domainRegistryNode = namehash(domain);
 
     return this.polywrapRegistry.domainOwner(
-      domainRegistry,
+      formatBytes32String(domainRegistry),
       domainRegistryNode
     );
   }
@@ -67,30 +73,36 @@ export class PolywrapRegistry {
   transferOrganizationOwnership(
     organizationId: BytesLike,
     newOwner: string
-  ): Promise<ContractTransaction> {
-    return this.polywrapRegistry.transferOrganizationOwnership(
-      organizationId,
-      newOwner
+  ): Promise<MaybeError<ContractTransaction>> {
+    return handleContractError(
+      this.polywrapRegistry.transferOrganizationOwnership(
+        organizationId,
+        newOwner
+      )
     );
   }
 
   setOrganizationController(
     organizationId: BytesLike,
     controller: string
-  ): Promise<ContractTransaction> {
-    return this.polywrapRegistry.setOrganizationController(
-      organizationId,
-      controller
+  ): Promise<MaybeError<ContractTransaction>> {
+    return handleContractError(
+      this.polywrapRegistry.setOrganizationController(
+        organizationId,
+        controller
+      )
     );
   }
 
   transferOrganizationControl(
     organizationId: BytesLike,
     newController: string
-  ): Promise<ContractTransaction> {
-    return this.polywrapRegistry.transferOrganizationControl(
-      organizationId,
-      newController
+  ): Promise<MaybeError<ContractTransaction>> {
+    return handleContractError(
+      this.polywrapRegistry.transferOrganizationControl(
+        organizationId,
+        newController
+      )
     );
   }
 
@@ -99,43 +111,50 @@ export class PolywrapRegistry {
     packageName: string,
     packageOwner: string,
     packageController: string
-  ): Promise<ContractTransaction> {
-    return this.polywrapRegistry.registerPackage(
-      organizationId,
-      packageName,
-      packageOwner,
-      packageController
+  ): Promise<MaybeError<ContractTransaction>> {
+    return handleContractError(
+      this.polywrapRegistry.registerPackage(
+        organizationId,
+        formatBytes32String(packageName),
+        packageOwner,
+        packageController
+      )
     );
   }
 
   setPackageOwner(
     packageId: BytesLike,
     newOwner: string
-  ): Promise<ContractTransaction> {
-    return this.polywrapRegistry.setPackageOwner(packageId, newOwner);
+  ): Promise<MaybeError<ContractTransaction>> {
+    return handleContractError(
+      this.polywrapRegistry.setPackageOwner(packageId, newOwner)
+    );
   }
 
   transferPackageOwnership(
     packageId: BytesLike,
     newOwner: string
-  ): Promise<ContractTransaction> {
-    return this.polywrapRegistry.transferPackageOwnership(packageId, newOwner);
+  ): Promise<MaybeError<ContractTransaction>> {
+    return handleContractError(
+      this.polywrapRegistry.transferPackageOwnership(packageId, newOwner)
+    );
   }
 
   setPackageController(
     packageId: BytesLike,
     newController: string
-  ): Promise<ContractTransaction> {
-    return this.polywrapRegistry.setPackageController(packageId, newController);
+  ): Promise<MaybeError<ContractTransaction>> {
+    return handleContractError(
+      this.polywrapRegistry.setPackageController(packageId, newController)
+    );
   }
 
   transferPackageControl(
     packageId: BytesLike,
     newController: string
-  ): Promise<ContractTransaction> {
-    return this.polywrapRegistry.transferPackageControl(
-      packageId,
-      newController
+  ): Promise<MaybeError<ContractTransaction>> {
+    return handleContractError(
+      this.polywrapRegistry.transferPackageControl(packageId, newController)
     );
   }
 

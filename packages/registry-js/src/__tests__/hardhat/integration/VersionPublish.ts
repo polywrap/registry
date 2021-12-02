@@ -114,7 +114,7 @@ describe("Publishing versions", () => {
 
     tx = await registry.registerPackage(
       testPackage.organizationId,
-      formatBytes32String(testPackage.packageName),
+      testPackage.packageName,
       await polywrapOwner.getAddress(),
       await packageController.getAddress()
     );

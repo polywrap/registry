@@ -98,7 +98,7 @@ describe("Registering packages", () => {
 
     const tx = await registry.registerPackage(
       testDomain.organizationId,
-      formatBytes32String(testPackage.packageName),
+      testPackage.packageName,
       packageOwnerAddress,
       packageControllerAddress
     );
@@ -138,7 +138,7 @@ describe("Registering packages", () => {
 
     let tx = await registry.registerPackage(
       testDomain.organizationId,
-      formatBytes32String(testPackage1.packageName),
+      testPackage1.packageName,
       packageOwnerAddress1,
       packageControllerAddress1
     );
@@ -153,7 +153,7 @@ describe("Registering packages", () => {
 
     tx = await registry.registerPackage(
       testDomain.organizationId,
-      formatBytes32String(testPackage2.packageName),
+      testPackage2.packageName,
       packageOwnerAddress2,
       packageControllerAddress2
     );
@@ -207,7 +207,7 @@ describe("Registering packages", () => {
 
     tx = await registry.registerPackage(
       testDomain.organizationId,
-      formatBytes32String(testPackage1.packageName),
+      testPackage1.packageName,
       packageOwnerAddress1,
       packageControllerAddress1
     );
@@ -224,7 +224,7 @@ describe("Registering packages", () => {
 
     tx = await registry.registerPackage(
       testDomain2.organizationId,
-      formatBytes32String(testPackage2.packageName),
+      testPackage2.packageName,
       packageOwnerAddress2,
       packageControllerAddress2
     );
@@ -261,7 +261,7 @@ describe("Registering packages", () => {
 
     const tx = await registry.registerPackage(
       testDomain.organizationId,
-      formatBytes32String(testPackage1.packageName),
+      testPackage1.packageName,
       packageOwnerAddress1,
       packageControllerAddress1
     );
@@ -270,7 +270,7 @@ describe("Registering packages", () => {
 
     const txPromise = registry.registerPackage(
       testDomain.organizationId,
-      formatBytes32String(testPackage2.packageName),
+      testPackage2.packageName,
       packageOwnerAddress2,
       packageControllerAddress2
     );
@@ -287,7 +287,7 @@ describe("Registering packages", () => {
 
     let txPromise = registry.registerPackage(
       testDomain.organizationId,
-      formatBytes32String(testPackage.packageName),
+      testPackage.packageName,
       packageOwnerAddress,
       packageControllerAddress
     );
@@ -298,7 +298,7 @@ describe("Registering packages", () => {
 
     txPromise = registry.registerPackage(
       testDomain.organizationId,
-      formatBytes32String(testPackage.packageName),
+      testPackage.packageName,
       packageOwnerAddress,
       packageControllerAddress
     );

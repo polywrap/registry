@@ -1,0 +1,55 @@
+.App {
+  text-align: center;
+  background-color: #111620;
+  min-height: 100vh;
+  font-size: 18px;
+  color: white;
+
+  .Content {
+    margin-left: 12em;
+  }
+
+  h3 {
+    font-size: 35px;
+    margin-top: 10px;
+    margin-bottom: 30px;
+  }
+
+  h4 {
+    font-size: 25px;
+  }
+
+  .main__logo {
+    width: 150px;
+    margin-top: 20px;
+  }
+
+  .header {
+    margin: 0 0 0 0;
+    width: 100%;
+    box-shadow: none;
+    background: rgb(35, 35, 47);
+    box-shadow: #282c31 2px 2px 0px 0px;
+
+    height: 75px!important;
+    overflow: hidden;
+
+    display: flex;
+    color: #fff;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .header-title {
+    display: flex;
+    align-items: center;
+  }
+
+  .widget-container {
+    width: 100%;
+
+    .inner-container {
+      display: flex;
+      justify-content: space-evenly;
+    }
+  }
+}

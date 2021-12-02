@@ -97,7 +97,7 @@ describe("Package ownership", () => {
 
     let tx = await registry.registerPackage(
       testDomain.organizationId,
-      formatBytes32String(testPackage.packageName),
+      testPackage.packageName,
       packageOwnerAddress1,
       packageControllerAddress
     );
@@ -128,7 +128,7 @@ describe("Package ownership", () => {
 
     const tx = await registry.registerPackage(
       testDomain.organizationId,
-      formatBytes32String(testPackage.packageName),
+      testPackage.packageName,
       packageOwnerAddress1,
       packageControllerAddress
     );
@@ -180,7 +180,7 @@ describe("Package ownership", () => {
 
     let tx = await registry.registerPackage(
       testDomain.organizationId,
-      formatBytes32String(testPackage.packageName),
+      testPackage.packageName,
       packageOwnerAddress1,
       packageControllerAddress
     );
@@ -213,7 +213,7 @@ describe("Package ownership", () => {
 
     const tx = await registry.registerPackage(
       testDomain.organizationId,
-      formatBytes32String(testPackage.packageName),
+      testPackage.packageName,
       packageOwnerAddress1,
       packageControllerAddress
     );
@@ -265,7 +265,7 @@ describe("Package ownership", () => {
 
     let tx = await registry.registerPackage(
       testDomain.organizationId,
-      formatBytes32String(testPackage.packageName),
+      testPackage.packageName,
       packageOwnerAddress,
       packageControllerAddress1
     );
@@ -294,7 +294,7 @@ describe("Package ownership", () => {
 
     const tx = await registry.registerPackage(
       testDomain.organizationId,
-      formatBytes32String(testPackage.packageName),
+      testPackage.packageName,
       packageOwnerAddress1,
       packageControllerAddress
     );
@@ -346,7 +346,7 @@ describe("Package ownership", () => {
 
     let tx = await registry.registerPackage(
       testDomain.organizationId,
-      formatBytes32String(testPackage.packageName),
+      testPackage.packageName,
       packageOwnerAddress,
       packageControllerAddress
     );
@@ -373,12 +373,16 @@ describe("Package ownership", () => {
     const packageControllerAddress = await packageController.getAddress();
     const packageControllerAddress2 = await packageController2.getAddress();
 
-    const tx = await registry.registerPackage(
+    const [error, tx] = await registry.registerPackage(
       testDomain.organizationId,
-      formatBytes32String(testPackage.packageName),
+      testPackage.packageName,
       packageOwnerAddress1,
       packageControllerAddress
     );
+
+    if (error || !tx) {
+      throw error;
+    }
 
     await tx.wait();
 
