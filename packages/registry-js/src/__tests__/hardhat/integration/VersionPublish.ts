@@ -34,11 +34,15 @@ describe("Publishing versions", () => {
     version: string,
     packageLocation: string
   ): Promise<void> => {
-    const tx = await registry.publishVersion(
+    const [error, tx] = await registry.publishVersion(
       packageId,
       version,
       packageLocation
     );
+
+    if (!tx) {
+      throw error;
+    }
 
     await tx.wait();
 
@@ -93,31 +97,43 @@ describe("Publishing versions", () => {
 
     registry = connectRegistry(domainOwner);
 
-    let tx = await registry.claimOrganizationOwnership(
+    let [error, tx] = await registry.claimOrganizationOwnership(
       testDomain.registry,
       testDomain.name,
       await polywrapOwner.getAddress()
     );
 
+    if (!tx) {
+      throw error;
+    }
+
     await tx.wait();
 
     registry = connectRegistry(polywrapOwner);
 
-    tx = await registry.setOrganizationController(
+    [error, tx] = await registry.setOrganizationController(
       testDomain.organizationId,
       await organizationController.getAddress()
     );
+
+    if (!tx) {
+      throw error;
+    }
 
     await tx.wait();
 
     registry = connectRegistry(organizationController);
 
-    tx = await registry.registerPackage(
+    [error, tx] = await registry.registerPackage(
       testPackage.organizationId,
       testPackage.packageName,
       await polywrapOwner.getAddress(),
       await packageController.getAddress()
     );
+
+    if (!tx) {
+      throw error;
+    }
 
     await tx.wait();
 
@@ -203,11 +219,15 @@ describe("Publishing versions", () => {
     const packageLocation = "Qmexhq2sBHnXQbvyP2GfUdbnY7HCagH2Mw5vUNSBn2nxip";
     const version = "1.0.0";
 
-    const tx = await registry.publishVersion(
+    const [error, tx] = await registry.publishVersion(
       testPackage.packageId,
       `${version}+${buildMetadata}`,
       packageLocation
     );
+
+    if (!tx) {
+      throw error;
+    }
 
     await tx.wait();
 

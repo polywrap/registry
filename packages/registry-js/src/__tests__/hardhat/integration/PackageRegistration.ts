@@ -69,20 +69,28 @@ describe("Registering packages", () => {
 
     registry = connectRegistry(domainOwner);
 
-    let tx = await registry.claimOrganizationOwnership(
+    let [error, tx] = await registry.claimOrganizationOwnership(
       testDomain.registry,
       testDomain.name,
       await organizationOwner.getAddress()
     );
 
+    if (!tx) {
+      throw error;
+    }
+
     await tx.wait();
 
     registry = connectRegistry(organizationOwner);
 
-    tx = await registry.setOrganizationController(
+    [error, tx] = await registry.setOrganizationController(
       testDomain.organizationId,
       await organizationController.getAddress()
     );
+
+    if (!tx) {
+      throw error;
+    }
 
     await tx.wait();
 
@@ -96,12 +104,16 @@ describe("Registering packages", () => {
 
     registry = connectRegistry(organizationController);
 
-    const tx = await registry.registerPackage(
+    const [error, tx] = await registry.registerPackage(
       testDomain.organizationId,
       testPackage.packageName,
       packageOwnerAddress,
       packageControllerAddress
     );
+
+    if (!tx) {
+      throw error;
+    }
 
     await tx.wait();
 
@@ -136,12 +148,16 @@ describe("Registering packages", () => {
 
     registry = connectRegistry(organizationController);
 
-    let tx = await registry.registerPackage(
+    let [error, tx] = await registry.registerPackage(
       testDomain.organizationId,
       testPackage1.packageName,
       packageOwnerAddress1,
       packageControllerAddress1
     );
+
+    if (!tx) {
+      throw error;
+    }
 
     await tx.wait();
 
@@ -151,12 +167,16 @@ describe("Registering packages", () => {
       packageOwnerAddress1
     );
 
-    tx = await registry.registerPackage(
+    [error, tx] = await registry.registerPackage(
       testDomain.organizationId,
       testPackage2.packageName,
       packageOwnerAddress2,
       packageControllerAddress2
     );
+
+    if (!tx) {
+      throw error;
+    }
 
     await tx.wait();
 
@@ -186,31 +206,43 @@ describe("Registering packages", () => {
 
     registry = connectRegistry(domainOwner);
 
-    let tx = await registry.claimOrganizationOwnership(
+    let [error, tx] = await registry.claimOrganizationOwnership(
       testDomain2.registry,
       testDomain2.name,
       await organizationOwner2.getAddress()
     );
 
+    if (!tx) {
+      throw error;
+    }
+
     await tx.wait();
 
     registry = connectRegistry(organizationOwner2);
 
-    tx = await registry.setOrganizationController(
+    [error, tx] = await registry.setOrganizationController(
       testDomain2.organizationId,
       await organizationController2.getAddress()
     );
+
+    if (!tx) {
+      throw error;
+    }
 
     await tx.wait();
 
     registry = connectRegistry(organizationController);
 
-    tx = await registry.registerPackage(
+    [error, tx] = await registry.registerPackage(
       testDomain.organizationId,
       testPackage1.packageName,
       packageOwnerAddress1,
       packageControllerAddress1
     );
+
+    if (!tx) {
+      throw error;
+    }
 
     await tx.wait();
 
@@ -222,12 +254,16 @@ describe("Registering packages", () => {
 
     registry = connectRegistry(organizationController2);
 
-    tx = await registry.registerPackage(
+    [error, tx] = await registry.registerPackage(
       testDomain2.organizationId,
       testPackage2.packageName,
       packageOwnerAddress2,
       packageControllerAddress2
     );
+
+    if (!tx) {
+      throw error;
+    }
 
     await tx.wait();
 
@@ -259,23 +295,28 @@ describe("Registering packages", () => {
 
     registry = connectRegistry(organizationController);
 
-    const tx = await registry.registerPackage(
+    let [error, tx] = await registry.registerPackage(
       testDomain.organizationId,
       testPackage1.packageName,
       packageOwnerAddress1,
       packageControllerAddress1
     );
 
+    if (!tx) {
+      throw error;
+    }
+
     await tx.wait();
 
-    const txPromise = registry.registerPackage(
+    [error, tx] = await registry.registerPackage(
       testDomain.organizationId,
       testPackage2.packageName,
       packageOwnerAddress2,
       packageControllerAddress2
     );
 
-    await expect(txPromise).to.reverted;
+    expect(tx).to.be.undefined;
+    expect(error).to.not.be.undefined;
   });
 
   it("forbids non organization controller from registering packages", async () => {
@@ -285,24 +326,26 @@ describe("Registering packages", () => {
 
     registry = connectRegistry(organizationOwner);
 
-    let txPromise = registry.registerPackage(
+    let [error, tx] = await registry.registerPackage(
       testDomain.organizationId,
       testPackage.packageName,
       packageOwnerAddress,
       packageControllerAddress
     );
 
-    await expect(txPromise).to.reverted;
+    expect(tx).to.be.undefined;
+    expect(error).to.not.be.undefined;
 
     registry = connectRegistry(randomAcc);
 
-    txPromise = registry.registerPackage(
+    [error, tx] = await registry.registerPackage(
       testDomain.organizationId,
       testPackage.packageName,
       packageOwnerAddress,
       packageControllerAddress
     );
 
-    await expect(txPromise).to.reverted;
+    expect(tx).to.be.undefined;
+    expect(error).to.not.be.undefined;
   });
 });

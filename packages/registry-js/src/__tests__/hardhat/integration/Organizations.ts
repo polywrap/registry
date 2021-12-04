@@ -68,11 +68,15 @@ describe("Organizations", () => {
       await registry.organizationExists(testDomain.organizationId)
     ).to.equal(false);
 
-    const tx = await registry.claimOrganizationOwnership(
+    const [error, tx] = await registry.claimOrganizationOwnership(
       testDomain.registry,
       testDomain.name,
       organizationOwnerAddress
     );
+
+    if (!tx) {
+      throw error;
+    }
 
     await tx.wait();
 
@@ -110,11 +114,15 @@ describe("Organizations", () => {
 
     registry = connectRegistry(domainOwner);
 
-    let tx = await registry.claimOrganizationOwnership(
+    let [error, tx] = await registry.claimOrganizationOwnership(
       testDomain.registry,
       testDomain.name,
       organizationOwnerAddress1
     );
+
+    if (!tx) {
+      throw error;
+    }
 
     await tx.wait();
 
@@ -122,11 +130,15 @@ describe("Organizations", () => {
       await registry.organizationOwner(testDomain.organizationId)
     ).to.equal(organizationOwnerAddress1);
 
-    tx = await registry.claimOrganizationOwnership(
+    [error, tx] = await registry.claimOrganizationOwnership(
       testDomain.registry,
       testDomain.name,
       organizationOwnerAddress2
     );
+
+    if (!tx) {
+      throw error;
+    }
 
     await tx.wait();
 
@@ -144,13 +156,14 @@ describe("Organizations", () => {
 
     registry = connectRegistry(randomAcc);
 
-    const promise = registry.claimOrganizationOwnership(
+    const [error, tx] = await registry.claimOrganizationOwnership(
       testDomain.registry,
       testDomain.name,
       organizationOwnerAddress
     );
 
-    await expect(promise).to.be.reverted;
+    expect(tx).to.be.undefined;
+    expect(error).to.not.be.undefined;
   });
 
   it("can transfer organization ownership", async () => {
@@ -163,11 +176,15 @@ describe("Organizations", () => {
 
     registry = connectRegistry(domainOwner);
 
-    let tx = await registry.claimOrganizationOwnership(
+    let [error, tx] = await registry.claimOrganizationOwnership(
       testDomain.registry,
       testDomain.name,
       organizationOwnerAddress1
     );
+
+    if (!tx) {
+      throw error;
+    }
 
     await tx.wait();
 
@@ -177,10 +194,14 @@ describe("Organizations", () => {
 
     registry = connectRegistry(organizationOwner);
 
-    tx = await registry.transferOrganizationOwnership(
+    [error, tx] = await registry.transferOrganizationOwnership(
       testDomain.organizationId,
       organizationOwnerAddress2
     );
+
+    if (!tx) {
+      throw error;
+    }
 
     await tx.wait();
 
@@ -199,11 +220,15 @@ describe("Organizations", () => {
 
     registry = connectRegistry(domainOwner);
 
-    const tx = await registry.claimOrganizationOwnership(
+    let [error, tx] = await registry.claimOrganizationOwnership(
       testDomain.registry,
       testDomain.name,
       organizationOwnerAddress1
     );
+
+    if (!tx) {
+      throw error;
+    }
 
     await tx.wait();
 
@@ -213,12 +238,13 @@ describe("Organizations", () => {
 
     registry = connectRegistry(randomAcc);
 
-    const promise = registry.transferOrganizationOwnership(
+    [error, tx] = await registry.transferOrganizationOwnership(
       testDomain.organizationId,
       organizationOwnerAddress2
     );
 
-    await expect(promise).to.reverted;
+    expect(tx).to.be.undefined;
+    expect(error).to.not.be.undefined;
   });
 
   it("allows organization owner to set organization controller", async () => {
@@ -231,20 +257,28 @@ describe("Organizations", () => {
 
     registry = connectRegistry(domainOwner);
 
-    let tx = await registry.claimOrganizationOwnership(
+    let [error, tx] = await registry.claimOrganizationOwnership(
       testDomain.registry,
       testDomain.name,
       organizationOwnerAddress
     );
 
+    if (!tx) {
+      throw error;
+    }
+
     await tx.wait();
 
     registry = connectRegistry(organizationOwner);
 
-    tx = await registry.setOrganizationController(
+    [error, tx] = await registry.setOrganizationController(
       testDomain.organizationId,
       organizationControllerAddress
     );
+
+    if (!tx) {
+      throw error;
+    }
 
     await tx.wait();
 
@@ -269,29 +303,41 @@ describe("Organizations", () => {
 
     registry = connectRegistry(domainOwner);
 
-    let tx = await registry.claimOrganizationOwnership(
+    let [error, tx] = await registry.claimOrganizationOwnership(
       testDomain.registry,
       testDomain.name,
       organizationOwnerAddress
     );
 
+    if (!tx) {
+      throw error;
+    }
+
     await tx.wait();
 
     registry = connectRegistry(organizationOwner);
 
-    tx = await registry.setOrganizationController(
+    [error, tx] = await registry.setOrganizationController(
       testDomain.organizationId,
       organizationControllerAddress
     );
+
+    if (!tx) {
+      throw error;
+    }
 
     await tx.wait();
 
     registry = connectRegistry(organizationController);
 
-    tx = await registry.transferOrganizationControl(
+    [error, tx] = await registry.transferOrganizationControl(
       testDomain.organizationId,
       organizationControllerAddress2
     );
+
+    if (!tx) {
+      throw error;
+    }
 
     await tx.wait();
 
@@ -315,11 +361,15 @@ describe("Organizations", () => {
 
     registry = connectRegistry(domainOwner);
 
-    const tx = await registry.claimOrganizationOwnership(
+    let [error, tx] = await registry.claimOrganizationOwnership(
       testDomain.registry,
       testDomain.name,
       organizationOwnerAddress1
     );
+
+    if (!tx) {
+      throw error;
+    }
 
     await tx.wait();
 
@@ -329,20 +379,22 @@ describe("Organizations", () => {
 
     registry = connectRegistry(organizationOwner);
 
-    let promise = registry.transferOrganizationControl(
+    [error, tx] = await registry.transferOrganizationControl(
       testDomain.organizationId,
       organizationControllerAddress2
     );
 
-    await expect(promise).to.reverted;
+    expect(tx).to.be.undefined;
+    expect(error).to.not.be.undefined;
 
     registry = connectRegistry(randomAcc);
 
-    promise = registry.transferOrganizationControl(
+    [error, tx] = await registry.transferOrganizationControl(
       testDomain.organizationId,
       organizationControllerAddress2
     );
 
-    await expect(promise).to.reverted;
+    expect(tx).to.be.undefined;
+    expect(error).to.not.be.undefined;
   });
 });

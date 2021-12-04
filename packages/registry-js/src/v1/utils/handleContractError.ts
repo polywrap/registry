@@ -1,44 +1,60 @@
 import { Interface } from "ethers/lib/utils";
+import {
+  PolywrapRegistryV1,
+  PolywrapRegistryV1__factory,
+} from "../../typechain-types";
+import { ContractError } from "../types/ContractError";
 import { handlePromiseError } from "./handlePromiseError";
 
 export const handleContractError = async <TData>(
   promise: Promise<TData>
-): Promise<[string | undefined, TData | undefined]> => {
+): Promise<[ContractError | undefined, TData | undefined]> => {
   const [error, data] = await handlePromiseError(promise);
 
-  if (error) {
-    const strError = (error as any).toString();
-    if (!strError) {
-      throw Error("An unexpected error occurred");
-    }
-
-    const match = strError.match(/"originalError":({[^}]+})/);
-    if (!match) {
-      return ["Revert", undefined];
-    }
-
-    const parsedError = JSON.parse(match[1]);
-
-    const iface = new Interface([
-      "error OnlyDomainRegistryOwner()",
-      "error DomainRegistryNotSupported()",
-      "error OnlyOrganizationOwner()",
-      "error OnlyOrganizationController()",
-      "error PackageAlreadyExists()",
-      "error OnlyPackageOwner()",
-      "error OnlyPackageController()",
-      "error OnlyTrustedVersionPublisher()",
-      "error VersionNotFullLength()",
-      "error ReleaseIdentifierMustBeNumeric()",
-      "error VersionAlreadyPublished()",
-      "error TooManyIdentifiers()",
-      "error InvalidIdentifier()",
-      "error InvalidBuildMetadata()",
-      "error IdentifierNotReset()",
-    ]);
-
-    return [iface.getError(parsedError.data).name, undefined];
+  if (!error) {
+    return [undefined, data];
   }
 
-  return [undefined, data];
+  const strError = (error as any).toString();
+  if (!strError) {
+    throw Error("An unexpected error occurred");
+  }
+
+  const match = strError.match(/"originalError":({[^}]+})/);
+  if (!match) {
+    return [
+      {
+        originalError: strError,
+        message: "Reverted without a revert reason",
+        customError: undefined,
+      },
+      undefined,
+    ];
+  }
+
+  const parsedError = JSON.parse(match[1]);
+
+  const iface = new Interface(PolywrapRegistryV1__factory.abi);
+
+  if (!parsedError.data || !iface.getError(parsedError.data)) {
+    return [
+      {
+        originalError: strError,
+        message: "Reverted without a revert reason",
+        customError: undefined,
+      },
+      undefined,
+    ];
+  }
+
+  const customErrorName = iface.getError(parsedError.data).name;
+
+  return [
+    {
+      originalError: strError,
+      message: `Reverted with custom error: ${customErrorName}`,
+      customError: customErrorName,
+    },
+    undefined,
+  ];
 };

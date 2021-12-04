@@ -1,1 +1,3 @@
-export type MaybeError<Data> = [string | undefined, Data | undefined];
+import { ContractError } from "./ContractError";
+
+export type MaybeError<Data> = [ContractError | undefined, Data | undefined];

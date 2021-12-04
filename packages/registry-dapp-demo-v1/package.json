@@ -1,5 +1,5 @@
 {
-  "name": "@polywrap/registry-dapp-demo",
+  "name": "@polywrap/registry-dapp-demo-v1",
   "version": "0.1.0",
   "private": true,
   "scripts": {
