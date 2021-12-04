@@ -6,16 +6,6 @@ const SidebarMenuItems: React.FC = () => {
           Wrappers
         </a>
       </li>
-      <li>
-        <a href="/#/version-publish" target="_self">
-          Version publish
-        </a>
-      </li>
-      <li>
-        <a href="/#/implementation-registry" target="_self">
-          Implementations
-        </a>
-      </li>
     </ul>
   );
 };
