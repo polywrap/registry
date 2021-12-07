@@ -428,6 +428,39 @@ describe("Publishing versions", () => {
     );
   });
 
+  it("allows incrementing by more than one patch number", async () => {
+    await publishVersion(
+      registry,
+      testPackage.packageId,
+      "1.0.0",
+      "some-location"
+    );
+
+    publishVersion(registry, testPackage.packageId, "1.0.2", "some-location");
+  });
+
+  it("allows incrementing by more than one minor number", async () => {
+    await publishVersion(
+      registry,
+      testPackage.packageId,
+      "1.0.0",
+      "some-location"
+    );
+
+    publishVersion(registry, testPackage.packageId, "1.2.0", "some-location");
+  });
+
+  it("allows incrementing by more than one major number", async () => {
+    await publishVersion(
+      registry,
+      testPackage.packageId,
+      "1.0.0",
+      "some-location"
+    );
+
+    publishVersion(registry, testPackage.packageId, "3.0.0", "some-location");
+  });
+
   it("requires patch to be reset when incrementing minor for release versions", async () => {
     await publishVersion(
       registry,
