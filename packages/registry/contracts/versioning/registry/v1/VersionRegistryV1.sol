@@ -155,16 +155,19 @@ abstract contract VersionRegistryV1 is PackageRegistryV1, IVersionRegistry {
           hasMadeChange = true;
         }
 
+        //Track latest release version
         if (!isPrerelease && nodeMetadata.latestReleaseVersion < identifier) {
           nodeMetadata.latestReleaseVersion = identifier;
           hasMadeChange = true;
         }
 
+        //If a node was a leaf node, it no longer is, since we are adding child nodes
         if(nodeMetadata.leaf) {
           nodeMetadata.leaf = false;
           hasMadeChange = true;
         }
 
+        //Only update metadata if a change to it was made, to not waste gas
         if(hasMadeChange) {
           setVersionMetadata(nodeId, nodeMetadata);
 
@@ -179,7 +182,7 @@ abstract contract VersionRegistryV1 is PackageRegistryV1, IVersionRegistry {
           nodeMetadata.exists = true;
           hasMadeChange = true;
             
-          //Check whether the identifier matches [0-9A-Za-z-]+
+          //Check whether the identifier complies with SemVer specs
           if(!isSemverCompliantIdentifier(identifier)) {
             revert InvalidIdentifier();
           }
@@ -237,6 +240,7 @@ abstract contract VersionRegistryV1 is PackageRegistryV1, IVersionRegistry {
     return nodeId;
   }
 
+  //Check whether identifier is numeric of alphanumeric that matches [0-9A-Za-z-]+
   function isSemverCompliantIdentifier(uint256 identifier) private pure returns (bool) {
     //The identifier is numeric
     if(bytes32(identifier)[16] == 0) {
@@ -247,9 +251,12 @@ abstract contract VersionRegistryV1 is PackageRegistryV1, IVersionRegistry {
     return isSemverCompliantIdentifierString(identifier);
   }
 
+  //Check whether identifier matches [0-9A-Za-z-]+
+  //The identifier is 20 characters long, base64 encoded
+  //0 represents the end of the string
   function isSemverCompliantIdentifierString(uint256 identifier) private pure returns (bool) {
     //Track whether a character is found or is empty (null)
-    //If it's empty then the rest of the string should be empty too
+    //If it's null then the rest of the string should be null too
     bool foundCharacter = false;
     //20 characters, 6 bits per character
     uint256 bitOffset = 0;
@@ -258,12 +265,14 @@ abstract contract VersionRegistryV1 is PackageRegistryV1, IVersionRegistry {
     identifier = identifier & 0xffffffffffffffffffffffffffffff;
 
     //20 characters, 6 bits per character
+    //Loop character by character, going from the last to the first
     while(bitOffset < 120) {
       //0x3f = 111111
       uint256 character = (identifier >> bitOffset) & 0x3f;
       bitOffset += 6;
 
-      //If a character is 0 then the rest of the identifier should be 0
+      //If a character is not 0 then the rest of the identifier should not be 0
+      //(Since we're going in reverse)
       if(character != 0) {
         foundCharacter = true;
         continue;
