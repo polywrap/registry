@@ -31,8 +31,7 @@ const UnproposedStatusView: React.FC<{
       versionNumber.patch
     );
 
-    const { approved } = await versionVerifierService.verifyVersion(
-      domain.packageId,
+    const { approved, reason } = await versionVerifierService.verifyVersion(
       patchNodeId,
       versionNumber.major,
       versionNumber.minor,
@@ -41,14 +40,15 @@ const UnproposedStatusView: React.FC<{
       isPatch
     );
 
+    const toastMessage = reason
+      ? reason
+      : "Proposed version does not match the requirements for a valid version";
+
     if (!approved) {
-      addToast(
-        "Proposed version does not match the requirements for a valid version",
-        {
-          appearance: "error",
-          autoDismiss: true,
-        }
-      );
+      addToast(toastMessage, {
+        appearance: "error",
+        autoDismiss: true,
+      });
       return;
     }
 
