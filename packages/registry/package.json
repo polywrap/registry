@@ -25,8 +25,7 @@
     "dist/src/types",
     "dist/deploy/*.js"
   ],
-  "dependencies": {
-  },
+  "dependencies": {},
   "devDependencies": {
     "@nomiclabs/hardhat-waffle": "^2.0.1",
     "hardhat-gas-reporter": "^1.0.4",
@@ -51,8 +50,8 @@
     "eslint-plugin-prettier": "^4.0.0",
     "ethereum-waffle": "^3.4.0",
     "ethers": "^5.5.1",
-    "hardhat": "^2.7.0",
-    "hardhat-deploy": "^0.9.12",
+    "hardhat": "^2.8.0",
+    "hardhat-deploy": "^0.9.14",
     "ipfs-http-client": "^54.0.2",
     "logdown": "^3.3.1",
     "prettier": "^2.5.0",
