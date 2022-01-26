@@ -17,6 +17,18 @@
       "react"
     ]
   },
+  "resolutions": {
+    "immer": "9.0.6",
+    "axios": "0.21.2",
+    "keypair": "axios",
+    "shelljs": "0.8.5",
+    "follow-redirects": "1.14.7",
+    "underscore": "1.12.1",
+    "lodash": "4.17.21",
+    "glob-parent": "5.1.2",
+    "trim-newlines": "3.0.1",
+    "tar": "4.4.18"
+  },
   "scripts": {
     "reset": "yarn clean && yarn bootstrap && yarn build",
     "clean": "npx rimraf ./**/node_modules ./**/build ./**/cache ./**/artifacts ./**/coverage && lerna clean",
