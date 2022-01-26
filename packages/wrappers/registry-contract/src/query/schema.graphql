@@ -38,11 +38,11 @@ type Query {
     versionNodeId: String!
   ): String!
 
-  # organization(
-  #   connection: Ethereum_Connection!,
-  #   address: String!,
-  #   organizationId: String!
-  # ): Undefined!
+  organization(
+    connection: Ethereum_Connection!,
+    address: String!,
+    organizationId: String!
+  ): OrganizationInfo!
 
   organizationController(
     connection: Ethereum_Connection!,
@@ -138,11 +138,11 @@ type Query {
     nodeId: String!
   ): String!
 
-  # versionMetadata(
-  #   connection: Ethereum_Connection!,
-  #   address: String!,
-  #   versionNodeId: String!
-  # ): Undefined!
+  versionMetadata(
+    connection: Ethereum_Connection!,
+    address: String!,
+    nodeId: String!
+  ): VersionNodeMetadata!
 }
 
 type OrganizationInfo {
@@ -154,24 +154,24 @@ type OrganizationInfo {
 type ContractError {
   message: String!
   originalError: String!
-  customError: String
+  customError: String!
 }
 
 type PackageInfo {
   exists: Boolean!
-  owner: String
-  controller: String
-  organizationId: String
+  owner: String!
+  controller: String!
+  organizationId: String!
 }
 
 type VersionInfo {
-  exists: Boolean
-  leaf: Boolean
-  level: UInt8
-  latestPrereleaseVersion: BigInt
-  latestReleaseVersion: BigInt
-  buildMetadata: String
-  location: String
+  exists: Boolean!
+  leaf: Boolean!
+  level: UInt8!
+  latestPrereleaseVersion: BigInt!
+  latestReleaseVersion: BigInt!
+  buildMetadata: String!
+  location: String!
 }
 
 type PackageVersion {
@@ -182,4 +182,12 @@ type PackageVersion {
   latestReleaseVersion: BigInt!
   buildMetadata: String!
   location: String!
+}
+
+type VersionNodeMetadata {
+  exists: Boolean!
+  leaf: Boolean!
+  level: UInt8!
+  latestPrereleaseVersion: BigInt!
+  latestReleaseVersion: BigInt!
 }

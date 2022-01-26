@@ -23,7 +23,11 @@ import {
   Input_versionExists,
   Input_versionLocation,
   PackageInfo,
-  PackageVersion
+  PackageVersion,
+  OrganizationInfo,
+  Input_organization,
+  Input_versionMetadata,
+  VersionNodeMetadata
 } from "./w3";
 import { BigInt } from '@web3api/wasm-as';
 
@@ -93,7 +97,7 @@ export function latestReleaseNode(input: Input_latestReleaseNode): string {
   return result;
 }
 
-export function organization(input: Input_organization): bool {
+export function organization(input: Input_organization): OrganizationInfo {
   const result = Ethereum_Query.callContractView({
     connection: input.connection,
     address: input.address,
@@ -101,7 +105,13 @@ export function organization(input: Input_organization): bool {
     args: [input.organizationId]
   });
 
-  return !!result;
+  const results: string[] = result.split(",");
+
+  return {
+    exists: !!results[0],
+    owner: results[1],
+    controller: results[2]
+  };
 }
 
 export function organizationController(input: Input_organizationController): string {
@@ -134,7 +144,7 @@ export function organizationExists(input: Input_organizationExists): bool {
     args: [input.organizationId]
   });
 
-  return !!result;
+  return result === "true";
 }
 
 export function organizationOwner(input: Input_organizationOwner): string {
@@ -261,6 +271,25 @@ export function versionBuildMetadata(input: Input_versionBuildMetadata): string 
   });
 
   return result;
+}
+
+export function versionMetadata(input: Input_versionMetadata): VersionNodeMetadata {
+  const result = Ethereum_Query.callContractView({
+    connection: input.connection,
+    address: input.address,
+    method: "function versionMetadata(bytes32 nodeId) public view returns (bool, bool, uint8, uint256, uint256)",
+    args: [input.nodeId]
+  });
+  
+  const results = result.split(",");
+
+  return {
+    exists: !!results[0],
+    leaf: !!results[1],
+    level: parseInt(results[2]) as u8,
+    latestPrereleaseVersion: BigInt.fromString(results[3]),
+    latestReleaseVersion: BigInt.fromString(results[4]),
+  };
 }
 
 export function versionCount(input: Input_versionCount): BigInt {
