@@ -19,7 +19,7 @@
     "@types/node": "^16.6.1",
     "@web3api/client-js": "^0.0.1-prealpha.45",
     "custom-env": "^2.0.1",
-    "ethers": "^5.4.6",
+    "ethers": "^5.5.1",
     "ipfs-http-client": "^52.0.1",
     "js-yaml": "^4.1.0",
     "typechain": "^5.1.2",
