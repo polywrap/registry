@@ -108,7 +108,7 @@ export function organization(input: Input_organization): OrganizationInfo {
   const results: string[] = result.split(",");
 
   return {
-    exists: !!results[0],
+    exists: results[0] === "true",
     owner: results[1],
     controller: results[2]
   };
@@ -179,7 +179,7 @@ export function getPackage(input: Input_getPackage): PackageInfo {
   const results: string[] = result.split(",");
 
   return {
-    exists: !!results[0],
+    exists: results[0] === "true",
     owner: results[1],
     controller: results[2],
     organizationId: results[3],
@@ -216,7 +216,7 @@ export function packageExists(input: Input_packageExists): bool {
     args: [input.packageId]
   });
 
-  return !!result;
+  return result === "true";
 }
 
 export function packageOrganizationId(input: Input_packageOrganizationId): string {
@@ -252,8 +252,8 @@ export function version(input: Input_version): PackageVersion {
   const results = result.split(",");
 
   return {
-    exists: !!results[0],
-    leaf: !!results[1],
+    exists: results[0] === "true",
+    leaf: results[1] === "true",
     level: parseInt(results[2]) as u8,
     latestPrereleaseVersion: BigInt.fromString(results[3]),
     latestReleaseVersion: BigInt.fromString(results[4]),
@@ -284,8 +284,8 @@ export function versionMetadata(input: Input_versionMetadata): VersionNodeMetada
   const results = result.split(",");
 
   return {
-    exists: !!results[0],
-    leaf: !!results[1],
+    exists: results[0] === "true",
+    leaf: results[1] === "true",
     level: parseInt(results[2]) as u8,
     latestPrereleaseVersion: BigInt.fromString(results[3]),
     latestReleaseVersion: BigInt.fromString(results[4]),
