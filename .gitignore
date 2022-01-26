@@ -3,6 +3,10 @@ bin
 build
 dist
 
+#Polywrap
+w3
+.w3
+
 #Hardhat deploy
 packages/registry/deployments/localhost
 packages/e2e/src/deployments/localhost
