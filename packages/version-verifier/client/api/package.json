@@ -6,7 +6,7 @@
   "scripts": {
     "build": "tsc --project tsconfig.build.json",
     "start:local": "ENV=local yarn build && node ./bin/app.js",
-    "start:docker": "ENV=docker yarn build && node ./bin/app.js",
+    "start:docker": "yarn dev run",
     "dev": "ENV=local ts-node ./src/app.ts",
     "docker:full": "docker-compose -f docker-compose-with-client.yml up",
     "docker:base": "docker-compose -f docker-compose.yml up",
