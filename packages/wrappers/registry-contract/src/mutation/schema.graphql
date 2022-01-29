@@ -6,7 +6,7 @@ type Mutation {
     address: String!,
     domainRegistry: String!,
     domainRegistryNode: String!,
-    newOrganizationOwner: String!
+    newOwner: String!
   ): Ethereum_TxResponse!
 
   publishVersion(

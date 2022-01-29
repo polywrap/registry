@@ -20,7 +20,7 @@ export function claimOrganizationOwnership(input: Input_claimOrganizationOwnersh
     connection: input.connection,
     address: input.address,
     method: "function claimOrganizationOwnership(bytes32 domainRegistry, bytes32 domainRegistryNode, address newOrganizationOwner) public returns ()",
-    args: [input.domainRegistry, input.domainRegistryNode, input.newOrganizationOwner]
+    args: [input.domainRegistry, input.domainRegistryNode, input.newOwner]
   });
 }
 

@@ -7,19 +7,16 @@ import {
   Input_latestReleaseLocation,
   Input_latestReleaseNode,
   Input_organizationController,
-  Input_organizationCount,
   Input_organizationExists,
   Input_organizationOwner,
   Input_owner,
   Input_getPackage,
   Input_packageController,
-  Input_packageCount,
   Input_packageExists,
   Input_packageOrganizationId,
   Input_packageOwner,
   Input_version,
   Input_versionBuildMetadata,
-  Input_versionCount,
   Input_versionExists,
   Input_versionLocation,
   PackageInfo,
@@ -30,6 +27,7 @@ import {
   VersionNodeMetadata
 } from "./w3";
 import { BigInt } from '@web3api/wasm-as';
+import { Console_Query } from "./w3";
 
 export function domainOwner(input: Input_domainOwner): string {
   const result = Ethereum_Query.callContractView({
@@ -101,14 +99,14 @@ export function organization(input: Input_organization): OrganizationInfo {
   const result = Ethereum_Query.callContractView({
     connection: input.connection,
     address: input.address,
-    method: "function organization(bytes32 organizationId) public view returns (booladdressaddress)",
+    method: "function organization(bytes32 organizationId) public view returns (bool, address, address)",
     args: [input.organizationId]
   });
 
   const results: string[] = result.split(",");
 
   return {
-    exists: results[0] === "true",
+    exists: results[0] == "true",
     owner: results[1],
     controller: results[2]
   };
@@ -125,17 +123,6 @@ export function organizationController(input: Input_organizationController): str
   return result;
 }
 
-export function organizationCount(input: Input_organizationCount): BigInt {
-  const result = Ethereum_Query.callContractView({
-    connection: input.connection,
-    address: input.address,
-    method: "function organizationCount() public view returns (uint256)",
-    args: []
-  });
-
-  return BigInt.fromString(result);
-}
-
 export function organizationExists(input: Input_organizationExists): bool {
   const result = Ethereum_Query.callContractView({
     connection: input.connection,
@@ -144,7 +131,7 @@ export function organizationExists(input: Input_organizationExists): bool {
     args: [input.organizationId]
   });
 
-  return result === "true";
+  return result == "true";
 }
 
 export function organizationOwner(input: Input_organizationOwner): string {
@@ -179,7 +166,7 @@ export function getPackage(input: Input_getPackage): PackageInfo {
   const results: string[] = result.split(",");
 
   return {
-    exists: results[0] === "true",
+    exists: results[0] == "true",
     owner: results[1],
     controller: results[2],
     organizationId: results[3],
@@ -197,17 +184,6 @@ export function packageController(input: Input_packageController): string {
   return result;
 }
 
-export function packageCount(input: Input_packageCount): BigInt {
-  const result = Ethereum_Query.callContractView({
-    connection: input.connection,
-    address: input.address,
-    method: "function packageCount(bytes32 organizationId) public view returns (uint256)",
-    args: [input.organizationId]
-  });
-
-  return BigInt.fromString(result);
-}
-
 export function packageExists(input: Input_packageExists): bool {
   const result = Ethereum_Query.callContractView({
     connection: input.connection,
@@ -216,7 +192,7 @@ export function packageExists(input: Input_packageExists): bool {
     args: [input.packageId]
   });
 
-  return result === "true";
+  return result == "true";
 }
 
 export function packageOrganizationId(input: Input_packageOrganizationId): string {
@@ -252,8 +228,8 @@ export function version(input: Input_version): PackageVersion {
   const results = result.split(",");
 
   return {
-    exists: results[0] === "true",
-    leaf: results[1] === "true",
+    exists: results[0] == "true",
+    leaf: results[1] == "true",
     level: parseInt(results[2]) as u8,
     latestPrereleaseVersion: BigInt.fromString(results[3]),
     latestReleaseVersion: BigInt.fromString(results[4]),
@@ -284,23 +260,12 @@ export function versionMetadata(input: Input_versionMetadata): VersionNodeMetada
   const results = result.split(",");
 
   return {
-    exists: results[0] === "true",
-    leaf: results[1] === "true",
+    exists: results[0] == "true",
+    leaf: results[1] == "true",
     level: parseInt(results[2]) as u8,
     latestPrereleaseVersion: BigInt.fromString(results[3]),
     latestReleaseVersion: BigInt.fromString(results[4]),
   };
-}
-
-export function versionCount(input: Input_versionCount): BigInt {
-  const result = Ethereum_Query.callContractView({
-    connection: input.connection,
-    address: input.address,
-    method: "function versionCount(bytes32 packageId) public view returns (uint256)",
-    args: [input.packageId]
-  });
-
-  return BigInt.fromString(result);
 }
 
 export function versionExists(input: Input_versionExists): bool {

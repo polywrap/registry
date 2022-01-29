@@ -1,5 +1,5 @@
 {
-  "name": "@polywrap/registry-plugin",
+  "name": "@polywrap/registry-plugin-js",
   "description": "Polywrap Registry Plugin",
   "version": "0.1.0",
   "license": "MIT",
@@ -20,7 +20,7 @@
     "test:hardhat": "hardhat test --show-stack-traces"
   },
   "dependencies": {
-    "@web3api/core-js": "0.0.1-prealpha.57",
+    "@web3api/core-js": "0.0.1-prealpha.61",
     "ethers": "^5.5.1"
   },
   "devDependencies": {
@@ -41,8 +41,8 @@
     "hardhat-deploy": "^0.9.14",
     "jest": "^27.1.1",
     "ts-jest": "^27.0.5",
-    "@web3api/client-js": "0.0.1-prealpha.57",
-    "@web3api/ethereum-plugin-js": "0.0.1-prealpha.57",
+    "@web3api/client-js": "0.0.1-prealpha.61",
+    "@web3api/ethereum-plugin-js": "0.0.1-prealpha.61",
     "typechain": "^5.1.2"
   }
 }

@@ -1,5 +1,5 @@
 /* eslint-disable import/no-extraneous-dependencies */
-import { query } from "./resolvers";
+import { mutation, query } from "./resolvers";
 import {
   manifest,
   Query,
@@ -53,9 +53,11 @@ export class RegistryPlugin extends Plugin {
     client: Client
   ): {
     query: Query.Module;
+    mutation: Mutation.Module;
   } {
     return {
       query: query(this, client),
+      mutation: mutation(this, client),
     };
   }
 
@@ -68,7 +70,7 @@ export class RegistryPlugin extends Plugin {
     const { data, error } = await RegistryContract_Query.domainOwner(
       {
         connection: input.connection,
-        address: this.getRegistryAddress(),
+        address: input.address,
         domainRegistry: formatBytes32String(input.domainRegistry),
         domainRegistryNode,
       },
@@ -98,7 +100,7 @@ export class RegistryPlugin extends Plugin {
     const { data, error } = await RegistryContract_Query.latestReleaseNode(
       {
         connection: input.connection,
-        address: this.getRegistryAddress(),
+        address: input.address,
         versionNodeId: versionNodeId.toString(),
       },
       client
@@ -127,7 +129,7 @@ export class RegistryPlugin extends Plugin {
     const { data, error } = await RegistryContract_Query.latestPrereleaseNode(
       {
         connection: input.connection,
-        address: this.getRegistryAddress(),
+        address: input.address,
         versionNodeId: versionNodeId.toString(),
       },
       client
@@ -156,7 +158,7 @@ export class RegistryPlugin extends Plugin {
     const { data, error } = await RegistryContract_Query.latestReleaseLocation(
       {
         connection: input.connection,
-        address: this.getRegistryAddress(),
+        address: input.address,
         versionNodeId: versionNodeId.toString(),
       },
       client
@@ -188,7 +190,7 @@ export class RegistryPlugin extends Plugin {
     } = await RegistryContract_Query.latestPrereleaseLocation(
       {
         connection: input.connection,
-        address: this.getRegistryAddress(),
+        address: input.address,
         versionNodeId: versionNodeId.toString(),
       },
       client
@@ -212,7 +214,7 @@ export class RegistryPlugin extends Plugin {
     const { data, error } = await RegistryContract_Query.organization(
       {
         connection: input.connection,
-        address: this.getRegistryAddress(),
+        address: input.address,
         organizationId: input.organizationId,
       },
       client
@@ -236,7 +238,7 @@ export class RegistryPlugin extends Plugin {
     const { data, error } = await RegistryContract_Query.organizationExists(
       {
         connection: input.connection,
-        address: this.getRegistryAddress(),
+        address: input.address,
         organizationId: input.organizationId,
       },
       client
@@ -260,7 +262,7 @@ export class RegistryPlugin extends Plugin {
     const { data, error } = await RegistryContract_Query.organizationOwner(
       {
         connection: input.connection,
-        address: this.getRegistryAddress(),
+        address: input.address,
         organizationId: input.organizationId,
       },
       client
@@ -284,7 +286,7 @@ export class RegistryPlugin extends Plugin {
     const { data, error } = await RegistryContract_Query.organizationController(
       {
         connection: input.connection,
-        address: this.getRegistryAddress(),
+        address: input.address,
         organizationId: input.organizationId,
       },
       client
@@ -308,7 +310,7 @@ export class RegistryPlugin extends Plugin {
     const { data, error } = await RegistryContract_Query.getPackage(
       {
         connection: input.connection,
-        address: this.getRegistryAddress(),
+        address: input.address,
         packageId: input.packageId,
       },
       client
@@ -332,7 +334,7 @@ export class RegistryPlugin extends Plugin {
     const { data, error } = await RegistryContract_Query.packageExists(
       {
         connection: input.connection,
-        address: this.getRegistryAddress(),
+        address: input.address,
         packageId: input.packageId,
       },
       client
@@ -356,7 +358,7 @@ export class RegistryPlugin extends Plugin {
     const { data, error } = await RegistryContract_Query.packageOrganizationId(
       {
         connection: input.connection,
-        address: this.getRegistryAddress(),
+        address: input.address,
         packageId: input.packageId,
       },
       client
@@ -380,7 +382,7 @@ export class RegistryPlugin extends Plugin {
     const { data, error } = await RegistryContract_Query.packageOwner(
       {
         connection: input.connection,
-        address: this.getRegistryAddress(),
+        address: input.address,
         packageId: input.packageId,
       },
       client
@@ -404,7 +406,7 @@ export class RegistryPlugin extends Plugin {
     const { data, error } = await RegistryContract_Query.packageController(
       {
         connection: input.connection,
-        address: this.getRegistryAddress(),
+        address: input.address,
         packageId: input.packageId,
       },
       client
@@ -433,7 +435,7 @@ export class RegistryPlugin extends Plugin {
     const { data, error } = await RegistryContract_Query.version(
       {
         connection: input.connection,
-        address: this.getRegistryAddress(),
+        address: input.address,
         nodeId: nodeId.toString(),
       },
       client
@@ -462,7 +464,7 @@ export class RegistryPlugin extends Plugin {
     const { data, error } = await RegistryContract_Query.versionExists(
       {
         connection: input.connection,
-        address: this.getRegistryAddress(),
+        address: input.address,
         nodeId: nodeId.toString(),
       },
       client
@@ -491,7 +493,7 @@ export class RegistryPlugin extends Plugin {
     const { data, error } = await RegistryContract_Query.versionMetadata(
       {
         connection: input.connection,
-        address: this.getRegistryAddress(),
+        address: input.address,
         nodeId: nodeId.toString(),
       },
       client
@@ -520,7 +522,7 @@ export class RegistryPlugin extends Plugin {
     const { data, error } = await RegistryContract_Query.versionBuildMetadata(
       {
         connection: input.connection,
-        address: this.getRegistryAddress(),
+        address: input.address,
         nodeId: nodeId.toString(),
       },
       client
@@ -549,7 +551,7 @@ export class RegistryPlugin extends Plugin {
     const { data, error } = await RegistryContract_Query.versionLocation(
       {
         connection: input.connection,
-        address: this.getRegistryAddress(),
+        address: input.address,
         nodeId: nodeId.toString(),
       },
       client
@@ -578,10 +580,10 @@ export class RegistryPlugin extends Plugin {
     } = await RegistryContract_Mutation.claimOrganizationOwnership(
       {
         connection: input.connection,
-        address: this.getRegistryAddress(),
+        address: input.address,
         domainRegistry: formatBytes32String(input.domainRegistry),
         domainRegistryNode,
-        newOrganizationOwner: input.newOrganizationOwner,
+        newOwner: input.newOwner,
       },
       client
     );
@@ -607,7 +609,7 @@ export class RegistryPlugin extends Plugin {
     const { data, error } = await RegistryContract_Mutation.publishVersion(
       {
         connection: input.connection,
-        address: this.getRegistryAddress(),
+        address: input.address,
         packageId: input.packageId,
         versionBytes: versionBytes,
         buildMetadata: formatBytes32String(buildMetadata),
@@ -637,7 +639,7 @@ export class RegistryPlugin extends Plugin {
     } = await RegistryContract_Mutation.transferOrganizationOwnership(
       {
         connection: input.connection,
-        address: this.getRegistryAddress(),
+        address: input.address,
         organizationId: input.organizationId,
         newOwner: input.newOwner,
       },
@@ -665,7 +667,7 @@ export class RegistryPlugin extends Plugin {
     } = await RegistryContract_Mutation.setOrganizationController(
       {
         connection: input.connection,
-        address: this.getRegistryAddress(),
+        address: input.address,
         organizationId: input.organizationId,
         newController: input.newController,
       },
@@ -693,7 +695,7 @@ export class RegistryPlugin extends Plugin {
     } = await RegistryContract_Mutation.transferOrganizationControl(
       {
         connection: input.connection,
-        address: this.getRegistryAddress(),
+        address: input.address,
         organizationId: input.organizationId,
         newController: input.newController,
       },
@@ -718,7 +720,7 @@ export class RegistryPlugin extends Plugin {
     const { data, error } = await RegistryContract_Mutation.registerPackage(
       {
         connection: input.connection,
-        address: this.getRegistryAddress(),
+        address: input.address,
         organizationId: input.organizationId,
         packageName: formatBytes32String(input.packageName),
         packageOwner: input.packageOwner,
@@ -745,7 +747,7 @@ export class RegistryPlugin extends Plugin {
     const { data, error } = await RegistryContract_Mutation.setPackageOwner(
       {
         connection: input.connection,
-        address: this.getRegistryAddress(),
+        address: input.address,
         packageId: input.packageId,
         newOwner: input.newOwner,
       },
@@ -773,7 +775,7 @@ export class RegistryPlugin extends Plugin {
     } = await RegistryContract_Mutation.transferPackageOwnership(
       {
         connection: input.connection,
-        address: this.getRegistryAddress(),
+        address: input.address,
         packageId: input.packageId,
         newOwner: input.newOwner,
       },
@@ -801,7 +803,7 @@ export class RegistryPlugin extends Plugin {
     } = await RegistryContract_Mutation.setPackageController(
       {
         connection: input.connection,
-        address: this.getRegistryAddress(),
+        address: input.address,
         packageId: input.packageId,
         newController: input.newController,
       },
@@ -829,7 +831,7 @@ export class RegistryPlugin extends Plugin {
     } = await RegistryContract_Mutation.transferPackageControl(
       {
         connection: input.connection,
-        address: this.getRegistryAddress(),
+        address: input.address,
         packageId: input.packageId,
         newController: input.newController,
       },
