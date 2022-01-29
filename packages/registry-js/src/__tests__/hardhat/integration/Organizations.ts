@@ -1,15 +1,16 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import { EnsApi } from "./helpers/EnsApi";
 import { deployments } from "hardhat";
 import "hardhat-deploy";
 import "@nomiclabs/hardhat-ethers";
 import { Signer } from "ethers";
-import { EnsDomain } from "../../../v1/types/EnsDomain";
+import { EnsDomainV1 } from "@polywrap/registry-core-js";
+import { EnsApiV1 } from "@polywrap/registry-test-utils";
 import { PolywrapRegistry, RegistryContractAddresses } from "../../../v1";
+import { toUtf8Bytes } from "ethers/lib/utils";
 
 describe("Organizations", () => {
-  let ens: EnsApi;
+  let ens: EnsApiV1;
   let registry: PolywrapRegistry;
 
   let owner: Signer;
@@ -45,7 +46,7 @@ describe("Organizations", () => {
 
     const provider = ethers.getDefaultProvider();
 
-    ens = new EnsApi(
+    ens = new EnsApiV1(
       {
         ensRegistryL1: deploys["EnsRegistryL1"].address,
         testEthRegistrarL1: deploys["TestEthRegistrarL1"].address,
@@ -58,7 +59,7 @@ describe("Organizations", () => {
   it("can claim organization ownership", async () => {
     const organizationOwnerAddress = await organizationOwner.getAddress();
 
-    const testDomain = new EnsDomain("test-domain");
+    const testDomain = new EnsDomainV1("test-domain");
 
     await ens.registerDomainName(owner, domainOwner, testDomain);
 
@@ -108,7 +109,7 @@ describe("Organizations", () => {
     const organizationOwnerAddress1 = await organizationOwner.getAddress();
     const organizationOwnerAddress2 = await randomAcc.getAddress();
 
-    const testDomain = new EnsDomain("test-domain");
+    const testDomain = new EnsDomainV1("test-domain");
 
     await ens.registerDomainName(owner, domainOwner, testDomain);
 
@@ -150,7 +151,7 @@ describe("Organizations", () => {
   it("forbids non domain owners to claim organization ownership", async () => {
     const organizationOwnerAddress = await organizationOwner.getAddress();
 
-    const testDomain = new EnsDomain("test-domain");
+    const testDomain = new EnsDomainV1("test-domain");
 
     await ens.registerDomainName(owner, domainOwner, testDomain);
 
@@ -170,7 +171,7 @@ describe("Organizations", () => {
     const organizationOwnerAddress1 = await organizationOwner.getAddress();
     const organizationOwnerAddress2 = await organizationOwner2.getAddress();
 
-    const testDomain = new EnsDomain("test-domain");
+    const testDomain = new EnsDomainV1("test-domain");
 
     await ens.registerDomainName(owner, domainOwner, testDomain);
 
@@ -214,7 +215,7 @@ describe("Organizations", () => {
     const organizationOwnerAddress1 = await organizationOwner.getAddress();
     const organizationOwnerAddress2 = await organizationOwner2.getAddress();
 
-    const testDomain = new EnsDomain("test-domain");
+    const testDomain = new EnsDomainV1("test-domain");
 
     await ens.registerDomainName(owner, domainOwner, testDomain);
 
@@ -251,7 +252,7 @@ describe("Organizations", () => {
     const organizationOwnerAddress = await organizationOwner.getAddress();
     const organizationControllerAddress = await organizationController.getAddress();
 
-    const testDomain = new EnsDomain("test-domain");
+    const testDomain = new EnsDomainV1("test-domain");
 
     await ens.registerDomainName(owner, domainOwner, testDomain);
 
@@ -297,7 +298,7 @@ describe("Organizations", () => {
     const organizationControllerAddress = await organizationController.getAddress();
     const organizationControllerAddress2 = await organizationController2.getAddress();
 
-    const testDomain = new EnsDomain("test-domain");
+    const testDomain = new EnsDomainV1("test-domain");
 
     await ens.registerDomainName(owner, domainOwner, testDomain);
 
@@ -355,7 +356,7 @@ describe("Organizations", () => {
     const organizationOwnerAddress1 = await organizationOwner.getAddress();
     const organizationControllerAddress2 = await organizationController2.getAddress();
 
-    const testDomain = new EnsDomain("test-domain");
+    const testDomain = new EnsDomainV1("test-domain");
 
     await ens.registerDomainName(owner, domainOwner, testDomain);
 

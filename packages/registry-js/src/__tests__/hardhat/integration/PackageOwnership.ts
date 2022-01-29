@@ -1,17 +1,16 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import { formatBytes32String } from "ethers/lib/utils";
 import { deployments } from "hardhat";
 import { PolywrapRegistry, RegistryContractAddresses } from "../../../v1";
-import { EnsApi } from "./helpers/EnsApi";
 import { Signer } from "ethers";
-import { EnsDomain } from "../../../v1/types/EnsDomain";
+import { EnsDomainV1 } from "@polywrap/registry-core-js";
+import { EnsApiV1 } from "@polywrap/registry-test-utils";
 import { buildPolywrapPackage } from "../helpers/buildPolywrapPackage";
 
 describe("Package ownership", () => {
   let registry: PolywrapRegistry;
 
-  let ens: EnsApi;
+  let ens: EnsApiV1;
 
   let owner: Signer;
   let domainOwner: Signer;
@@ -27,7 +26,7 @@ describe("Package ownership", () => {
 
   let registryContractAddresses: RegistryContractAddresses;
 
-  const testDomain = new EnsDomain("test-domain");
+  const testDomain = new EnsDomainV1("test-domain");
 
   const connectRegistry = (signer: Signer): PolywrapRegistry => {
     return new PolywrapRegistry(signer, registryContractAddresses);
@@ -56,7 +55,7 @@ describe("Package ownership", () => {
 
     const provider = ethers.getDefaultProvider();
 
-    ens = new EnsApi(
+    ens = new EnsApiV1(
       {
         ensRegistryL1: deploys["EnsRegistryL1"].address,
         testEthRegistrarL1: deploys["TestEthRegistrarL1"].address,
