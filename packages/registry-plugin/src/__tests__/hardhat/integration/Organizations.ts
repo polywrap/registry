@@ -6,16 +6,12 @@ import "@nomiclabs/hardhat-ethers";
 import { Signer } from "ethers";
 import { EnsDomainV1 } from "@polywrap/registry-core-js";
 import { EnsApiV1 } from "@polywrap/registry-test-utils";
-import { Web3ApiClient } from "@web3api/client-js";
-import { ethereumPlugin, EthereumSigner } from "@web3api/ethereum-plugin-js";
-import { registryPlugin } from "../../../index";
 import { JsonRpcProvider } from "@ethersproject/providers";
 import { PolywrapRegistry } from "../helpers/PolywrapRegistry";
-import { formatBytes32String } from "ethers/lib/utils";
+import { RegistryContractAddresses } from "../helpers/RegistryContractAddresses";
 
 describe("Organizations", () => {
   let ens: EnsApiV1;
-  let registry: PolywrapRegistry;
 
   let owner: Signer;
   let domainOwner: Signer;
@@ -25,12 +21,11 @@ describe("Organizations", () => {
   let organizationController2: Signer;
   let randomAcc: Signer;
 
-  let registryContractAddresses: {
-    polywrapRegistry: string;
-  };
+  let registry: PolywrapRegistry;
+  let registryContractAddresses: RegistryContractAddresses;
 
   const connectRegistry = async (signer: Signer): Promise<PolywrapRegistry> => {
-    return new PolywrapRegistry(
+    return registry.connect(
       signer.provider as JsonRpcProvider,
       await signer.getAddress(),
       registryContractAddresses
@@ -46,6 +41,8 @@ describe("Organizations", () => {
     organizationController = signers[4];
     organizationController2 = signers[5];
     randomAcc = signers[6];
+
+    registry = new PolywrapRegistry();
   });
 
   beforeEach(async () => {
@@ -54,15 +51,13 @@ describe("Organizations", () => {
       polywrapRegistry: deploys["PolywrapRegistryV1"].address,
     };
 
-    const provider = ethers.getDefaultProvider();
-
     ens = new EnsApiV1(
       {
         ensRegistryL1: deploys["EnsRegistryL1"].address,
         testEthRegistrarL1: deploys["TestEthRegistrarL1"].address,
         testPublicResolverL1: deploys["TestPublicResolverL1"].address,
       },
-      provider
+      ethers.getDefaultProvider()
     );
   });
 

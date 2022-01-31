@@ -11,6 +11,7 @@ import {
   PackageInfo,
   VersionInfo,
   VersionNodeMetadata,
+  PackageMetadata,
 } from "./w3";
 
 import {
@@ -26,6 +27,7 @@ import {
 } from "./helpers";
 import { getAddress } from "@ethersproject/address";
 import { formatBytes32String, namehash } from "ethers/lib/utils";
+import { solidityKeccak256 } from "ethers/lib/utils";
 
 export type Address = string;
 
@@ -306,7 +308,7 @@ export class RegistryPlugin extends Plugin {
   async getPackage(
     input: Query.Input_getPackage,
     client: Client
-  ): Promise<PackageInfo> {
+  ): Promise<PackageMetadata> {
     const { data, error } = await RegistryContract_Query.getPackage(
       {
         connection: input.connection,
@@ -325,6 +327,28 @@ export class RegistryPlugin extends Plugin {
     }
 
     return data;
+  }
+
+  async buildPackageInfo(
+    input: Query.Input_buildPackageInfo,
+    client: Client
+  ): Promise<PackageInfo> {
+    const domainRegistryNode = namehash(input.domain);
+
+    const organizationId = solidityKeccak256(
+      ["bytes32", "bytes32"],
+      [formatBytes32String(input.domainRegistry), domainRegistryNode]
+    );
+    const packageId = solidityKeccak256(
+      ["bytes32", "bytes32"],
+      [organizationId, formatBytes32String(input.packageName)]
+    );
+
+    return {
+      organizationId,
+      packageId,
+      packageName: input.packageName,
+    } as PackageInfo;
   }
 
   async packageExists(

@@ -37,6 +37,9 @@ export const query = (
   getPackage: (input: Query.Input_getPackage) => {
     return registryPlugin.getPackage(input, client);
   },
+  buildPackageInfo: (input: Query.Input_buildPackageInfo) => {
+    return registryPlugin.buildPackageInfo(input, client);
+  },
   versionExists: (input: Query.Input_versionExists) => {
     return registryPlugin.versionExists(input, client);
   },

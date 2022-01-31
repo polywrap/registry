@@ -71,6 +71,12 @@ type Query {
     connection: Ethereum_Connection!
     address: String!
     packageId: String!
+  ): PackageMetadata!
+
+  buildPackageInfo(
+    domainRegistry: String!
+    domain: String!
+    packageName: String!
   ): PackageInfo!
 
   packageExists(
@@ -139,11 +145,17 @@ type OrganizationInfo {
   controller: String!
 }
 
-type PackageInfo {
+type PackageMetadata {
   exists: Boolean!
   owner: String
   controller: String
   organizationId: String
+}
+
+type PackageInfo {
+  packageId: String!
+  packageName: String!
+  organizationId: String!
 }
 
 type VersionInfo {
