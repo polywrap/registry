@@ -139,14 +139,27 @@ export class PolywrapRegistry {
     return [undefined, transaction];
   }
 
-  // domainOwner(domainRegistry: "ens", domain: string): Promise<string> {
-  //   const domainRegistryNode = namehash(domain);
+  async domainOwner(domainRegistry: string, domain: string): Promise<string> {
+    const result = await this.polywrapClient.invoke<string>({
+      uri: "ens/registry.web3api.eth",
+      module: "query",
+      method: "domainOwner",
+      input: {
+        connection: {
+          networkNameOrChainId: "testnet",
+        },
+        address: this.contractAddresses.polywrapRegistry,
+        domainRegistry,
+        domain,
+      },
+    });
 
-  //   return this.polywrapRegistry.domainOwner(
-  //     formatBytes32String(domainRegistry),
-  //     domainRegistryNode
-  //   );
-  // }
+    if (result.error) {
+      throw result.error;
+    }
+
+    return result.data as string;
+  }
 
   async transferOrganizationOwnership(
     organizationId: string,
