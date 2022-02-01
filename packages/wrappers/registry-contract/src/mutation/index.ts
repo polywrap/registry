@@ -25,11 +25,32 @@ export function claimOrganizationOwnership(input: Input_claimOrganizationOwnersh
 }
 
 export function publishVersion(input: Input_publishVersion): Ethereum_TxResponse {
+
+  const array = new DataView(input.versionBytes);
+
+  let versionBytesString = "";
+
+  for (let i = 0; i < array.byteLength; i++) {
+    versionBytesString += array.getUint8(i).toString();
+
+    if (i < array.byteLength - 1) {
+      versionBytesString += ",";
+    }
+  }
+
+  versionBytesString = `[${versionBytesString}]`;
+
   return Ethereum_Mutation.callContractMethod({
     connection: input.connection,
     address: input.address,
-    method: "function publishVersion(bytes32 packageId, bytes versionBytes, bytes32 buildMetadata, string location) public returns (bytes32)",
-    args: [input.packageId, input.versionBytes.toString(), input.buildMetadata, input.location]
+    method:
+      "function publishVersion(bytes32 packageId, bytes versionBytes, bytes32 buildMetadata, string location) public returns (bytes32)",
+    args: [
+      input.packageId,
+      versionBytesString,
+      input.buildMetadata,
+      input.location,
+    ],
   });
 }
 

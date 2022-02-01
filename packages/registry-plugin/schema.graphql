@@ -121,14 +121,14 @@ type Query {
     connection: Ethereum_Connection!
     address: String!
     packageId: String!
-    partialVersion: String!
+    version: String!
   ): String!
 
   versionLocation(
     connection: Ethereum_Connection!
     address: String!
     packageId: String!
-    partialVersion: String!
+    version: String!
   ): String!
 
   versionMetadata(

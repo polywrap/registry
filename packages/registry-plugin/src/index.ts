@@ -538,10 +538,7 @@ export class RegistryPlugin extends Plugin {
     input: Query.Input_versionBuildMetadata,
     client: Client
   ): Promise<string> {
-    const nodeId = calculateVersionNodeId(
-      input.packageId,
-      input.partialVersion
-    );
+    const nodeId = calculateVersionNodeId(input.packageId, input.version);
 
     const { data, error } = await RegistryContract_Query.versionBuildMetadata(
       {
@@ -567,10 +564,7 @@ export class RegistryPlugin extends Plugin {
     input: Query.Input_versionLocation,
     client: Client
   ): Promise<string> {
-    const nodeId = calculateVersionNodeId(
-      input.packageId,
-      input.partialVersion
-    );
+    const nodeId = calculateVersionNodeId(input.packageId, input.version);
 
     const { data, error } = await RegistryContract_Query.versionLocation(
       {

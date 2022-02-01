@@ -1,12 +1,12 @@
-import { BytesLike, BigNumber } from "ethers";
+import { BigNumber } from "ethers";
 import { zeroPad, solidityKeccak256 } from "ethers/lib/utils";
 import { encodeAlphanumericIdentifier } from "./encodeAlphanumericIdentifier";
 import { parseVersionString } from "./parseVersionString";
 
 export const calculateVersionNodeId = (
-  packageId: BytesLike,
+  packageId: string,
   version: string
-): BytesLike => {
+): string => {
   const versionIdentifiers = parseVersionString(version).identifiers;
 
   let nodeId = packageId;

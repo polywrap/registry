@@ -1,11 +1,17 @@
-import { Api, Web3ApiClient, Web3ApiClientConfig } from "@web3api/client-js";
+import { Api, Web3ApiClient } from "@web3api/client-js";
 import { ethereumPlugin } from "@web3api/ethereum-plugin-js";
 import { ContractTransaction } from "ethers";
 import { registryPlugin } from "../../..";
 import { JsonRpcProvider } from "@ethersproject/providers";
 import { MaybeError } from "./MaybeError";
 import { RegistryContractAddresses } from "./RegistryContractAddresses";
-import { OrganizationInfo, PackageInfo, PackageMetadata } from "../../../w3";
+import {
+  OrganizationInfo,
+  PackageInfo,
+  PackageMetadata,
+  VersionInfo,
+  VersionNodeMetadata,
+} from "../../../w3";
 
 export class PolywrapRegistry {
   constructor() {
@@ -71,23 +77,36 @@ export class PolywrapRegistry {
     return this;
   }
 
-  // publishVersion(
-  //   packageId: BytesLike,
-  //   version: string,
-  //   packageLocation: string
-  // ): Promise<MaybeError<ContractTransaction>> {
-  //   const buildMetadata = parseVersionString(version).buildMetadata;
-  //   const versionBytes = calculateVersionBytes(version);
+  async publishVersion(
+    packageId: string,
+    version: string,
+    packageLocation: string
+  ): Promise<MaybeError<ContractTransaction>> {
+    const result = await this.polywrapClient.invoke<{ hash: string }>({
+      uri: "ens/registry.web3api.eth",
+      module: "mutation",
+      method: "publishVersion",
+      input: {
+        connection: {
+          networkNameOrChainId: "testnet",
+        },
+        address: this.contractAddresses.polywrapRegistry,
+        packageId: packageId,
+        version: version,
+        location: packageLocation,
+      },
+    });
 
-  //   return handleContractError(
-  //     this.polywrapRegistry.publishVersion(
-  //       packageId,
-  //       versionBytes,
-  //       formatBytes32String(buildMetadata),
-  //       packageLocation
-  //     )
-  //   );
-  // }
+    if (result.error) {
+      return [result.error, undefined];
+    }
+
+    const transaction = await this.provider.getTransaction(
+      (result.data as { hash: string }).hash
+    );
+
+    return [undefined, transaction];
+  }
 
   async claimOrganizationOwnership(
     domainRegistry: string,
@@ -564,10 +583,6 @@ export class PolywrapRegistry {
       module: "query",
       method: "buildPackageInfo",
       input: {
-        connection: {
-          networkNameOrChainId: "testnet",
-        },
-        address: this.contractAddresses.polywrapRegistry,
         domainRegistry,
         domain,
         packageName,
@@ -581,87 +596,225 @@ export class PolywrapRegistry {
     return result.data as PackageInfo;
   }
 
-  // versionExists(
-  //   packageId: BytesLike,
-  //   partialVersion: string
-  // ): Promise<boolean> {
-  //   const nodeId = calculateVersionNodeId(packageId, partialVersion);
+  async versionExists(
+    packageId: string,
+    partialVersion: string
+  ): Promise<boolean> {
+    const result = await this.polywrapClient.invoke<boolean>({
+      uri: "ens/registry.web3api.eth",
+      module: "query",
+      method: "versionExists",
+      input: {
+        connection: {
+          networkNameOrChainId: "testnet",
+        },
+        address: this.contractAddresses.polywrapRegistry,
+        packageId,
+        partialVersion,
+      },
+    });
 
-  //   return this.polywrapRegistry.versionExists(nodeId);
-  // }
+    if (result.error) {
+      throw result.error;
+    }
 
-  // versionLocation(packageId: BytesLike, version: string): Promise<string> {
-  //   const nodeId = calculateVersionNodeId(packageId, version);
+    return result.data as boolean;
+  }
 
-  //   return this.polywrapRegistry.versionLocation(nodeId);
-  // }
+  async versionLocation(packageId: string, version: string): Promise<string> {
+    const result = await this.polywrapClient.invoke<string>({
+      uri: "ens/registry.web3api.eth",
+      module: "query",
+      method: "versionLocation",
+      input: {
+        connection: {
+          networkNameOrChainId: "testnet",
+        },
+        address: this.contractAddresses.polywrapRegistry,
+        packageId,
+        version,
+      },
+    });
 
-  // versionMetadata(
-  //   packageId: BytesLike,
-  //   version: string
-  // ): Promise<VersionNodeMetadata> {
-  //   const nodeId = calculateVersionNodeId(packageId, version);
+    if (result.error) {
+      throw result.error;
+    }
 
-  //   return this.polywrapRegistry.versionMetadata(nodeId);
-  // }
+    return result.data as string;
+  }
 
-  // versionBuildMetadata(packageId: BytesLike, version: string): Promise<string> {
-  //   const nodeId = calculateVersionNodeId(packageId, version);
+  async versionMetadata(
+    packageId: string,
+    partialVersion: string
+  ): Promise<VersionNodeMetadata> {
+    const result = await this.polywrapClient.invoke<VersionNodeMetadata>({
+      uri: "ens/registry.web3api.eth",
+      module: "query",
+      method: "versionMetadata",
+      input: {
+        connection: {
+          networkNameOrChainId: "testnet",
+        },
+        address: this.contractAddresses.polywrapRegistry,
+        packageId,
+        partialVersion,
+      },
+    });
 
-  //   return this.polywrapRegistry.versionBuildMetadata(nodeId);
-  // }
+    if (result.error) {
+      throw result.error;
+    }
 
-  // version(packageId: BytesLike, partialVersion: string): Promise<VersionInfo> {
-  //   const nodeId = calculateVersionNodeId(packageId, partialVersion);
+    return result.data as VersionNodeMetadata;
+  }
 
-  //   return this.polywrapRegistry.version(nodeId);
-  // }
+  async versionBuildMetadata(
+    packageId: string,
+    version: string
+  ): Promise<string> {
+    const result = await this.polywrapClient.invoke<string>({
+      uri: "ens/registry.web3api.eth",
+      module: "query",
+      method: "versionBuildMetadata",
+      input: {
+        connection: {
+          networkNameOrChainId: "testnet",
+        },
+        address: this.contractAddresses.polywrapRegistry,
+        packageId,
+        version,
+      },
+    });
 
-  // versionIds(
-  //   packageId: BytesLike,
-  //   start: BigNumber,
-  //   count: BigNumber
-  // ): Promise<BytesLike[]> {
-  //   return this.polywrapRegistry.versionIds(packageId, start, count);
-  // }
+    if (result.error) {
+      throw result.error;
+    }
 
-  // versionCount(packageId: BytesLike): Promise<BigNumber> {
-  //   return this.polywrapRegistry.versionCount(packageId);
-  // }
+    return result.data as string;
+  }
 
-  // latestReleaseNode(
-  //   packageId: BytesLike,
-  //   partialVersion: string
-  // ): Promise<BytesLike> {
-  //   const nodeId = calculateVersionNodeId(packageId, partialVersion);
+  async version(
+    packageId: string,
+    partialVersion: string
+  ): Promise<VersionInfo> {
+    const result = await this.polywrapClient.invoke<VersionInfo>({
+      uri: "ens/registry.web3api.eth",
+      module: "query",
+      method: "version",
+      input: {
+        connection: {
+          networkNameOrChainId: "testnet",
+        },
+        address: this.contractAddresses.polywrapRegistry,
+        packageId,
+        partialVersion,
+      },
+    });
 
-  //   return this.polywrapRegistry.latestReleaseNode(nodeId);
-  // }
+    if (result.error) {
+      throw result.error;
+    }
 
-  // latestPrereleaseNode(
-  //   packageId: BytesLike,
-  //   partialVersion: string
-  // ): Promise<BytesLike> {
-  //   const nodeId = calculateVersionNodeId(packageId, partialVersion);
+    return result.data as VersionInfo;
+  }
 
-  //   return this.polywrapRegistry.latestPrereleaseNode(nodeId);
-  // }
+  async latestReleaseNode(
+    packageId: string,
+    partialVersion: string
+  ): Promise<string> {
+    const result = await this.polywrapClient.invoke<string>({
+      uri: "ens/registry.web3api.eth",
+      module: "query",
+      method: "latestReleaseNode",
+      input: {
+        connection: {
+          networkNameOrChainId: "testnet",
+        },
+        address: this.contractAddresses.polywrapRegistry,
+        packageId,
+        partialVersion,
+      },
+    });
 
-  // latestReleaseLocation(
-  //   packageId: BytesLike,
-  //   partialVersion: string
-  // ): Promise<string> {
-  //   const nodeId = calculateVersionNodeId(packageId, partialVersion);
+    if (result.error) {
+      throw result.error;
+    }
 
-  //   return this.polywrapRegistry.latestReleaseLocation(nodeId);
-  // }
+    return result.data as string;
+  }
 
-  // latestPrereleaseLocation(
-  //   packageId: BytesLike,
-  //   partialVersion: string
-  // ): Promise<string> {
-  //   const nodeId = calculateVersionNodeId(packageId, partialVersion);
+  async latestPrereleaseNode(
+    packageId: string,
+    partialVersion: string
+  ): Promise<string> {
+    const result = await this.polywrapClient.invoke<string>({
+      uri: "ens/registry.web3api.eth",
+      module: "query",
+      method: "latestPrereleaseNode",
+      input: {
+        connection: {
+          networkNameOrChainId: "testnet",
+        },
+        address: this.contractAddresses.polywrapRegistry,
+        packageId,
+        partialVersion,
+      },
+    });
 
-  //   return this.polywrapRegistry.latestPrereleaseLocation(nodeId);
-  // }
+    if (result.error) {
+      throw result.error;
+    }
+
+    return result.data as string;
+  }
+
+  async latestReleaseLocation(
+    packageId: string,
+    partialVersion: string
+  ): Promise<string> {
+    const result = await this.polywrapClient.invoke<string>({
+      uri: "ens/registry.web3api.eth",
+      module: "query",
+      method: "latestReleaseLocation",
+      input: {
+        connection: {
+          networkNameOrChainId: "testnet",
+        },
+        address: this.contractAddresses.polywrapRegistry,
+        packageId,
+        partialVersion,
+      },
+    });
+
+    if (result.error) {
+      throw result.error;
+    }
+
+    return result.data as string;
+  }
+
+  async latestPrereleaseLocation(
+    packageId: string,
+    partialVersion: string
+  ): Promise<string> {
+    const result = await this.polywrapClient.invoke<string>({
+      uri: "ens/registry.web3api.eth",
+      module: "query",
+      method: "latestPrereleaseLocation",
+      input: {
+        connection: {
+          networkNameOrChainId: "testnet",
+        },
+        address: this.contractAddresses.polywrapRegistry,
+        packageId,
+        partialVersion,
+      },
+    });
+
+    if (result.error) {
+      throw result.error;
+    }
+
+    return result.data as string;
+  }
 }
