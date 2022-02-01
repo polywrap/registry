@@ -6,7 +6,7 @@ type Query {
     connection: Ethereum_Connection!
     address: String!
     domainRegistry: String!
-    domain: String!
+    domainName: String!
   ): String!
 
   # domainRegistryLinks(
@@ -75,7 +75,7 @@ type Query {
 
   buildPackageInfo(
     domainRegistry: String!
-    domain: String!
+    domainName: String!
     packageName: String!
   ): PackageInfo!
 
@@ -181,7 +181,7 @@ type Mutation {
     connection: Ethereum_Connection!
     address: String!
     domainRegistry: String!
-    domain: String!
+    domainName: String!
     newOwner: String!
   ): Ethereum_TxResponse!
 

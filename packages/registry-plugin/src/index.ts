@@ -67,7 +67,7 @@ export class RegistryPlugin extends Plugin {
     input: Query.Input_domainOwner,
     client: Client
   ): Promise<string> {
-    const domainRegistryNode = namehash(input.domain);
+    const domainRegistryNode = namehash(input.domainName);
 
     const { data, error } = await RegistryContract_Query.domainOwner(
       {
@@ -333,7 +333,7 @@ export class RegistryPlugin extends Plugin {
     input: Query.Input_buildPackageInfo,
     client: Client
   ): Promise<PackageInfo> {
-    const domainRegistryNode = namehash(input.domain);
+    const domainRegistryNode = namehash(input.domainName);
 
     const organizationId = solidityKeccak256(
       ["bytes32", "bytes32"],
@@ -590,7 +590,7 @@ export class RegistryPlugin extends Plugin {
     input: Mutation.Input_claimOrganizationOwnership,
     client: Client
   ): Promise<Ethereum_TxResponse> {
-    const domainRegistryNode = namehash(input.domain);
+    const domainRegistryNode = namehash(input.domainName);
 
     const {
       data,

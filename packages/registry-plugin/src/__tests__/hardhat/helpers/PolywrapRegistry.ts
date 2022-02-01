@@ -110,7 +110,7 @@ export class PolywrapRegistry {
 
   async claimOrganizationOwnership(
     domainRegistry: string,
-    domain: string,
+    domainName: string,
     newOwner: string
   ): Promise<MaybeError<ContractTransaction>> {
     const result = await this.polywrapClient.invoke<{ hash: string }>({
@@ -123,7 +123,7 @@ export class PolywrapRegistry {
         },
         address: this.contractAddresses.polywrapRegistry,
         domainRegistry: domainRegistry,
-        domain: domain,
+        domainName: domainName,
         newOwner: newOwner,
       },
     });
@@ -139,7 +139,10 @@ export class PolywrapRegistry {
     return [undefined, transaction];
   }
 
-  async domainOwner(domainRegistry: string, domain: string): Promise<string> {
+  async domainOwner(
+    domainRegistry: string,
+    domainName: string
+  ): Promise<string> {
     const result = await this.polywrapClient.invoke<string>({
       uri: "ens/registry.web3api.eth",
       module: "query",
@@ -150,7 +153,7 @@ export class PolywrapRegistry {
         },
         address: this.contractAddresses.polywrapRegistry,
         domainRegistry,
-        domain,
+        domainName,
       },
     });
 
@@ -588,7 +591,7 @@ export class PolywrapRegistry {
 
   async buildPackageInfo(
     domainRegistry: string,
-    domain: string,
+    domainName: string,
     packageName: string
   ): Promise<PackageInfo> {
     const result = await this.polywrapClient.invoke<PackageInfo>({
@@ -597,7 +600,7 @@ export class PolywrapRegistry {
       method: "buildPackageInfo",
       input: {
         domainRegistry,
-        domain,
+        domainName,
         packageName,
       },
     });
