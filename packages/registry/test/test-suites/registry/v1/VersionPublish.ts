@@ -652,8 +652,11 @@ describe("Publishing versions", () => {
     };
 
     for (const examples of preleaseTags) {
-      const [example1_versionId1, example1_versionId2, example1_patchNodeId] =
-        await publishTags(examples);
+      const [
+        example1_versionId1,
+        example1_versionId2,
+        example1_patchNodeId,
+      ] = await publishTags(examples);
 
       if (!example1_patchNodeId) {
         throw new Error("patchNodeId is undefined");
@@ -666,8 +669,11 @@ describe("Publishing versions", () => {
 
       patch++;
 
-      const [example2_versionId1, example2_versionId2, example2_patchNodeId] =
-        await publishTags([examples[1], examples[0]]);
+      const [
+        example2_versionId1,
+        example2_versionId2,
+        example2_patchNodeId,
+      ] = await publishTags([examples[1], examples[0]]);
 
       if (!example2_patchNodeId) {
         throw new Error("patchNodeId is undefined");

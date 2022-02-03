@@ -1,4 +1,3 @@
-/* eslint-disable import/no-extraneous-dependencies */
 import { mutation, query } from "./resolvers";
 import {
   manifest,

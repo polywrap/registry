@@ -15,7 +15,8 @@
   "scripts": {
     "build": "rimraf ./build && yarn codegen && tsc --project tsconfig.build.json",
     "codegen": "npx w3 plugin codegen",
-    "lint": "eslint --color -c ../../../../.eslintrc.js src/",
+    "fix": "eslint . --ext .ts --fix",
+    "lint": "eslint . --ext .ts",
     "test": "yarn test:hardhat",
     "test:hardhat": "hardhat test --show-stack-traces"
   },
