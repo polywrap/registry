@@ -33,7 +33,7 @@
     "reset": "yarn clean && yarn bootstrap && yarn build",
     "clean": "npx rimraf ./**/node_modules ./**/build ./**/cache ./**/artifacts ./**/coverage && lerna clean",
     "bootstrap": "lerna bootstrap",
-    "build": "yarn build:registry-core-js && yarn build:registry && yarn build:registry-test-utils && yarn build:registry-plugin-js && yarn build:registry-js && yarn build:version-verifier",
+    "build": "yarn build:registry-core-js && yarn build:registry && yarn build:registry-js && yarn build:registry-test-utils && yarn build:registry-plugin-js && yarn build:version-verifier",
     "build:registry-core-js": "lerna run build --scope @polywrap/registry-core-js",
     "build:registry": "lerna run build --scope @polywrap/registry",
     "build:e2e": "lerna run build --scope @polywrap/e2e",
