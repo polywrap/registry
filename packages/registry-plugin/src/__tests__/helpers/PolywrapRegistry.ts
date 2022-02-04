@@ -43,9 +43,6 @@ export class PolywrapRegistry {
                 provider: (provider as unknown) as EthereumProvider,
                 signer: signer,
               },
-              rinkeby: {
-                provider: process.env.RINKEBY_PROVIDER as string,
-              },
             },
           }),
         },

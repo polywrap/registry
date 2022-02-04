@@ -1,5 +1,5 @@
-#import { Connection, Query, TxResponse, Mutation } into Ethereum from "w3://ens/ethereum.web3api.eth"
-#import { Query, Mutation } into RegistryContract from "w3://ens/rinkeby/polywrap-registry-contract.eth"
+#import { Connection, Query, TxResponse, Mutation } into Ethereum from "/ens/ethereum.web3api.eth"
+#import { Query, Mutation } into RegistryContract from "ipfs/QmQhXyMLvxbKPmZ2RzMJMeHTx5saUfHzZmVR9LDVJaB8Zq"
 
 type Query {
   domainOwner(
@@ -138,10 +138,7 @@ type Query {
     packageName: String!
   ): PackageInfo!
 
-  calculateOrganizationId(
-    domainRegistry: String!
-    domainName: String!
-  ): String!
+  calculateOrganizationId(domainRegistry: String!, domainName: String!): String!
 
   calculatePackageId(
     domainRegistry: String!
@@ -149,15 +146,9 @@ type Query {
     packageName: String!
   ): String!
 
-  calculateVersionNodeId(
-    packageId: String!
-    partialVersion: String!
-  ): String!
+  calculateVersionNodeId(packageId: String!, partialVersion: String!): String!
 
-  calculatePatchNodeId(
-    packageId: String!
-    partialVersion: String!
-  ): String!
+  calculatePatchNodeId(packageId: String!, partialVersion: String!): String!
 }
 
 type OrganizationInfo {
