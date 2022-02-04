@@ -1,5 +1,5 @@
-import hre, { ethers, deployments } from "hardhat";
-import chai, { expect } from "chai";
+import { ethers, deployments } from "hardhat";
+import { expect } from "chai";
 import {
   PolywrapRegistryV1,
   PolywrapRegistryV1__factory,

@@ -7,8 +7,8 @@ import { Signer } from "ethers";
 import { EnsDomainV1 } from "@polywrap/registry-core-js";
 import { EnsApiV1 } from "@polywrap/registry-test-utils";
 import { JsonRpcProvider } from "@ethersproject/providers";
-import { PolywrapRegistry } from "../helpers/PolywrapRegistry";
-import { RegistryContractAddresses } from "../helpers/RegistryContractAddresses";
+import { PolywrapRegistry } from "../../helpers/PolywrapRegistry";
+import { RegistryContractAddresses } from "../../helpers/RegistryContractAddresses";
 
 describe("Organizations", () => {
   let ens: EnsApiV1;

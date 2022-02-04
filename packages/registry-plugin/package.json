@@ -17,7 +17,8 @@
     "codegen": "npx w3 plugin codegen",
     "fix": "eslint . --ext .ts --fix",
     "lint": "eslint . --ext .ts",
-    "test": "yarn test:hardhat",
+    "test": "yarn test:jest && yarn test:hardhat",
+    "test:jest": "jest test --passWithNoTests",
     "test:hardhat": "hardhat test --show-stack-traces"
   },
   "dependencies": {

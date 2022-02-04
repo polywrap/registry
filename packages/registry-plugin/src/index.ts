@@ -20,6 +20,9 @@ import {
   PluginFactory,
 } from "@web3api/core-js";
 import {
+  calculateOrganizationId,
+  calculatePackageId,
+  calculatePatchNodeId,
   calculateVersionBytes,
   calculateVersionNodeId,
   parseVersionString,
@@ -328,28 +331,6 @@ export class RegistryPlugin extends Plugin {
     return data;
   }
 
-  async buildPackageInfo(
-    input: Query.Input_buildPackageInfo,
-    client: Client
-  ): Promise<PackageInfo> {
-    const domainRegistryNode = namehash(input.domainName);
-
-    const organizationId = solidityKeccak256(
-      ["bytes32", "bytes32"],
-      [formatBytes32String(input.domainRegistry), domainRegistryNode]
-    );
-    const packageId = solidityKeccak256(
-      ["bytes32", "bytes32"],
-      [organizationId, formatBytes32String(input.packageName)]
-    );
-
-    return {
-      organizationId,
-      packageId,
-      packageName: input.packageName,
-    } as PackageInfo;
-  }
-
   async packageExists(
     input: Query.Input_packageExists,
     client: Client
@@ -583,6 +564,64 @@ export class RegistryPlugin extends Plugin {
     }
 
     return data;
+  }
+
+  async calculatePackageInfo(
+    input: Query.Input_calculatePackageInfo
+  ): Promise<PackageInfo> {
+    const domainRegistryNode = namehash(input.domainName);
+
+    const organizationId = solidityKeccak256(
+      ["bytes32", "bytes32"],
+      [formatBytes32String(input.domainRegistry), domainRegistryNode]
+    );
+    const packageId = solidityKeccak256(
+      ["bytes32", "bytes32"],
+      [organizationId, formatBytes32String(input.packageName)]
+    );
+
+    return {
+      organizationId,
+      packageId,
+      packageName: input.packageName,
+    } as PackageInfo;
+  }
+
+  async calculateOrganizationId(
+    input: Query.Input_calculateOrganizationId
+  ): Promise<string> {
+    return calculateOrganizationId(
+      input.domainRegistry,
+      input.domainName
+    ).toString();
+  }
+
+  async calculatePackageId(
+    input: Query.Input_calculatePackageId
+  ): Promise<string> {
+    return calculatePackageId(
+      input.domainRegistry,
+      input.domainName,
+      input.packageName
+    ).toString();
+  }
+
+  async calculateVersionNodeId(
+    input: Query.Input_calculateVersionNodeId
+  ): Promise<string> {
+    return calculateVersionNodeId(
+      input.packageId,
+      input.partialVersion
+    ).toString();
+  }
+
+  async calculatePatchNodeId(
+    input: Query.Input_calculatePatchNodeId
+  ): Promise<string> {
+    return calculatePatchNodeId(
+      input.packageId,
+      input.partialVersion
+    ).toString();
   }
 
   async claimOrganizationOwnership(

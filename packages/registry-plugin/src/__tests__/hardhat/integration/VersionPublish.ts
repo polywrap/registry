@@ -6,8 +6,8 @@ import { Signer } from "ethers";
 import { EnsDomainV1 } from "@polywrap/registry-core-js";
 import { EnsApiV1 } from "@polywrap/registry-test-utils";
 import { JsonRpcProvider } from "@ethersproject/providers";
-import { RegistryContractAddresses } from "../helpers/RegistryContractAddresses";
-import { PolywrapRegistry } from "../helpers/PolywrapRegistry";
+import { RegistryContractAddresses } from "../../helpers/RegistryContractAddresses";
+import { PolywrapRegistry } from "../../helpers/PolywrapRegistry";
 import { PackageInfo } from "../../../w3";
 
 describe("Publishing versions", () => {
@@ -97,7 +97,7 @@ describe("Publishing versions", () => {
     registry = await connectRegistry(owner);
 
     const testDomain = new EnsDomainV1("test-domain");
-    testPackage = await registry.buildPackageInfo(
+    testPackage = await registry.calculatePackageInfo(
       EnsDomainV1.Registry,
       testDomain.name,
       "test-package"

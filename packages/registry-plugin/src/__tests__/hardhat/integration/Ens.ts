@@ -6,9 +6,9 @@ import "@nomiclabs/hardhat-ethers";
 import { Signer } from "ethers";
 import { EnsDomainV1 } from "@polywrap/registry-core-js";
 import { EnsApiV1 } from "@polywrap/registry-test-utils";
-import { PolywrapRegistry } from "../helpers/PolywrapRegistry";
+import { PolywrapRegistry } from "../../helpers/PolywrapRegistry";
 import { JsonRpcProvider } from "@ethersproject/providers";
-import { RegistryContractAddresses } from "../helpers/RegistryContractAddresses";
+import { RegistryContractAddresses } from "../../helpers/RegistryContractAddresses";
 import { Deployment } from "hardhat-deploy/dist/types";
 
 describe("ENS", () => {

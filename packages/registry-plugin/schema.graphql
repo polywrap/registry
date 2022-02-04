@@ -73,12 +73,6 @@ type Query {
     packageId: String!
   ): PackageMetadata!
 
-  buildPackageInfo(
-    domainRegistry: String!
-    domainName: String!
-    packageName: String!
-  ): PackageInfo!
-
   packageExists(
     connection: Ethereum_Connection!
     address: String!
@@ -137,6 +131,33 @@ type Query {
     packageId: String!
     partialVersion: String!
   ): VersionNodeMetadata!
+
+  calculatePackageInfo(
+    domainRegistry: String!
+    domainName: String!
+    packageName: String!
+  ): PackageInfo!
+
+  calculateOrganizationId(
+    domainRegistry: String!
+    domainName: String!
+  ): String!
+
+  calculatePackageId(
+    domainRegistry: String!
+    domainName: String!
+    packageName: String!
+  ): String!
+
+  calculateVersionNodeId(
+    packageId: String!
+    partialVersion: String!
+  ): String!
+
+  calculatePatchNodeId(
+    packageId: String!
+    partialVersion: String!
+  ): String!
 }
 
 type OrganizationInfo {
