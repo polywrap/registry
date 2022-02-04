@@ -14,7 +14,7 @@
   ],
   "scripts": {
     "build": "rimraf ./build && yarn codegen && tsc --project tsconfig.build.json",
-    "codegen": "node ~/dev/web3api/monorepo/packages/cli/bin/w3 plugin codegen",
+    "codegen": "npx w3 plugin codegen",
     "fix": "eslint . --ext .ts --fix",
     "lint": "eslint . --ext .ts",
     "test": "yarn test:jest && yarn test:hardhat",
