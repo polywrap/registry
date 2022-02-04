@@ -4,8 +4,8 @@ import { deployments } from "hardhat";
 import { Signer } from "ethers";
 import { EnsDomainV1 } from "@polywrap/registry-core-js";
 import { EnsApiV1 } from "@polywrap/registry-test-utils";
-import { RegistryContractAddresses } from "../helpers/RegistryContractAddresses";
-import { PolywrapRegistry } from "../helpers/PolywrapRegistry";
+import { RegistryContractAddresses } from "../../helpers/RegistryContractAddresses";
+import { PolywrapRegistry } from "../../helpers/PolywrapRegistry";
 import { JsonRpcProvider } from "@ethersproject/providers";
 
 describe("Package ownership", () => {
@@ -97,7 +97,7 @@ describe("Package ownership", () => {
   });
 
   it("allows organization controller to set package owner", async () => {
-    const testPackage = await registry.buildPackageInfo(
+    const testPackage = await registry.calculatePackageInfo(
       EnsDomainV1.Registry,
       testDomain.name,
       "test-package"
@@ -140,7 +140,7 @@ describe("Package ownership", () => {
   });
 
   it("forbids non organization controller from setting package owner", async () => {
-    const testPackage = await registry.buildPackageInfo(
+    const testPackage = await registry.calculatePackageInfo(
       EnsDomainV1.Registry,
       testDomain.name,
       "test-package"
@@ -204,7 +204,7 @@ describe("Package ownership", () => {
   });
 
   it("allows package owner to transfer package ownership", async () => {
-    const testPackage = await registry.buildPackageInfo(
+    const testPackage = await registry.calculatePackageInfo(
       EnsDomainV1.Registry,
       testDomain.name,
       "test-package"
@@ -249,7 +249,7 @@ describe("Package ownership", () => {
   });
 
   it("forbids non package owner from transferring package ownership", async () => {
-    const testPackage = await registry.buildPackageInfo(
+    const testPackage = await registry.calculatePackageInfo(
       EnsDomainV1.Registry,
       testDomain.name,
       "test-package"
@@ -313,7 +313,7 @@ describe("Package ownership", () => {
   });
 
   it("allows package owner to set package controller", async () => {
-    const testPackage = await registry.buildPackageInfo(
+    const testPackage = await registry.calculatePackageInfo(
       EnsDomainV1.Registry,
       testDomain.name,
       "test-package"
@@ -354,7 +354,7 @@ describe("Package ownership", () => {
   });
 
   it("forbids non package owner from setting package controller", async () => {
-    const testPackage = await registry.buildPackageInfo(
+    const testPackage = await registry.calculatePackageInfo(
       EnsDomainV1.Registry,
       testDomain.name,
       "test-package"
@@ -418,7 +418,7 @@ describe("Package ownership", () => {
   });
 
   it("allows package controller to transfer package control", async () => {
-    const testPackage = await registry.buildPackageInfo(
+    const testPackage = await registry.calculatePackageInfo(
       EnsDomainV1.Registry,
       testDomain.name,
       "test-package"
@@ -459,7 +459,7 @@ describe("Package ownership", () => {
   });
 
   it("forbids non package controller from transferring package control", async () => {
-    const testPackage = await registry.buildPackageInfo(
+    const testPackage = await registry.calculatePackageInfo(
       EnsDomainV1.Registry,
       testDomain.name,
       "test-package"

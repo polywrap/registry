@@ -11,8 +11,12 @@ export const calculatePatchNodeId = (
 
   let nodeId = packageId;
 
-  for (let i = 1; i < versionIdentifiers.length + 1; i++) {
-    const identifier = versionIdentifiers[i - 1];
+  if (versionIdentifiers.length < 3) {
+    throw new Error("Version string is too short");
+  }
+
+  for (let i = 0; i < 3; i++) {
+    const identifier = versionIdentifiers[i];
 
     let encodedIdentifier = BigNumber.from(0);
 
@@ -26,13 +30,7 @@ export const calculatePatchNodeId = (
       ["bytes32", "bytes32"],
       [nodeId, zeroPad(encodedIdentifier.toHexString(), 32)]
     );
-
-    if (i == 2) {
-      return nodeId;
-    } else if (i > 2) {
-      throw Error("Could not calculate patch node id");
-    }
   }
 
-  throw Error("Could not calculate patch node id");
+  return nodeId;
 };

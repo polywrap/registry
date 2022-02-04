@@ -1,7 +1,7 @@
 import { Api, Web3ApiClient } from "@web3api/client-js";
 import { ethereumPlugin, EthereumProvider } from "@web3api/ethereum-plugin-js";
 import { ContractTransaction } from "ethers";
-import { registryPlugin } from "../../..";
+import { registryPlugin } from "../..";
 import { JsonRpcProvider } from "@ethersproject/providers";
 import { MaybeError } from "./MaybeError";
 import { RegistryContractAddresses } from "./RegistryContractAddresses";
@@ -11,7 +11,7 @@ import {
   PackageMetadata,
   VersionInfo,
   VersionNodeMetadata,
-} from "../../../w3";
+} from "../../w3";
 
 export class PolywrapRegistry {
   constructor() {
@@ -589,7 +589,7 @@ export class PolywrapRegistry {
     return result.data as PackageMetadata;
   }
 
-  async buildPackageInfo(
+  async calculatePackageInfo(
     domainRegistry: string,
     domainName: string,
     packageName: string
@@ -597,7 +597,7 @@ export class PolywrapRegistry {
     const result = await this.polywrapClient.invoke<PackageInfo>({
       uri: "ens/registry.web3api.eth",
       module: "query",
-      method: "buildPackageInfo",
+      method: "calculatePackageInfo",
       input: {
         domainRegistry,
         domainName,
@@ -817,6 +817,108 @@ export class PolywrapRegistry {
       uri: "ens/registry.web3api.eth",
       module: "query",
       method: "latestPrereleaseLocation",
+      input: {
+        connection: {
+          networkNameOrChainId: "testnet",
+        },
+        address: this.contractAddresses.polywrapRegistry,
+        packageId,
+        partialVersion,
+      },
+    });
+
+    if (result.error) {
+      throw result.error;
+    }
+
+    return result.data as string;
+  }
+
+  async calculateOrganizationId(
+    domainRegistry: string,
+    domainName: string
+  ): Promise<string> {
+    const result = await this.polywrapClient.invoke<string>({
+      uri: "ens/registry.web3api.eth",
+      module: "query",
+      method: "calculateOrganizationId",
+      input: {
+        connection: {
+          networkNameOrChainId: "testnet",
+        },
+        address: this.contractAddresses.polywrapRegistry,
+        domainRegistry,
+        domainName,
+      },
+    });
+
+    if (result.error) {
+      throw result.error;
+    }
+
+    return result.data as string;
+  }
+
+  async calculatePackageId(
+    domainRegistry: string,
+    domainName: string,
+    packageName: string
+  ): Promise<string> {
+    const result = await this.polywrapClient.invoke<string>({
+      uri: "ens/registry.web3api.eth",
+      module: "query",
+      method: "calculatePackageId",
+      input: {
+        connection: {
+          networkNameOrChainId: "testnet",
+        },
+        address: this.contractAddresses.polywrapRegistry,
+        domainRegistry,
+        domainName,
+        packageName,
+      },
+    });
+
+    if (result.error) {
+      throw result.error;
+    }
+
+    return result.data as string;
+  }
+
+  async calculateVersionNodeId(
+    packageId: string,
+    partialVersion: string
+  ): Promise<string> {
+    const result = await this.polywrapClient.invoke<string>({
+      uri: "ens/registry.web3api.eth",
+      module: "query",
+      method: "calculateVersionNodeId",
+      input: {
+        connection: {
+          networkNameOrChainId: "testnet",
+        },
+        address: this.contractAddresses.polywrapRegistry,
+        packageId,
+        partialVersion,
+      },
+    });
+
+    if (result.error) {
+      throw result.error;
+    }
+
+    return result.data as string;
+  }
+
+  async calculatePatchNodeId(
+    packageId: string,
+    partialVersion: string
+  ): Promise<string> {
+    const result = await this.polywrapClient.invoke<string>({
+      uri: "ens/registry.web3api.eth",
+      module: "query",
+      method: "calculatePatchNodeId",
       input: {
         connection: {
           networkNameOrChainId: "testnet",

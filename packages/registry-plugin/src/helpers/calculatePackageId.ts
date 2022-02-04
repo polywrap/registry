@@ -6,7 +6,7 @@ import {
 } from "ethers/lib/utils";
 
 export const calculatePackageId = (
-  domainRegistry: "ens",
+  domainRegistry: string,
   domain: string,
   packageName: string
 ): BytesLike => {

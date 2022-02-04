@@ -6,7 +6,7 @@ import {
 } from "ethers/lib/utils";
 
 export const calculateOrganizationId = (
-  domainRegistry: "ens",
+  domainRegistry: string,
   domain: string
 ): BytesLike => {
   const domainNode = namehash(domain);

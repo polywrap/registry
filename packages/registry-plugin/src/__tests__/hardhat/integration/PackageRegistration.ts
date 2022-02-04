@@ -4,8 +4,8 @@ import { deployments } from "hardhat";
 import { EnsDomainV1 } from "@polywrap/registry-core-js";
 import { EnsApiV1 } from "@polywrap/registry-test-utils";
 import { Signer } from "ethers";
-import { PolywrapRegistry } from "../helpers/PolywrapRegistry";
-import { RegistryContractAddresses } from "../helpers/RegistryContractAddresses";
+import { PolywrapRegistry } from "../../helpers/PolywrapRegistry";
+import { RegistryContractAddresses } from "../../helpers/RegistryContractAddresses";
 import { JsonRpcProvider } from "@ethersproject/providers";
 
 describe("Registering packages", () => {
@@ -104,7 +104,7 @@ describe("Registering packages", () => {
   });
 
   it("can register package", async () => {
-    const testPackage = await registry.buildPackageInfo(
+    const testPackage = await registry.calculatePackageInfo(
       EnsDomainV1.Registry,
       testDomain.name,
       "test-package"
@@ -145,12 +145,12 @@ describe("Registering packages", () => {
   });
 
   it("can register multiple packages for same organization", async () => {
-    const testPackage1 = await registry.buildPackageInfo(
+    const testPackage1 = await registry.calculatePackageInfo(
       EnsDomainV1.Registry,
       testDomain.name,
       "test-package1"
     );
-    const testPackage2 = await registry.buildPackageInfo(
+    const testPackage2 = await registry.calculatePackageInfo(
       EnsDomainV1.Registry,
       testDomain.name,
       "test-package2"
@@ -203,12 +203,12 @@ describe("Registering packages", () => {
 
   it("can register packages for multiple organizations", async () => {
     const testDomain2 = new EnsDomainV1("test-domain2");
-    const testPackage1 = await registry.buildPackageInfo(
+    const testPackage1 = await registry.calculatePackageInfo(
       EnsDomainV1.Registry,
       testDomain.name,
       "test-package"
     );
-    const testPackage2 = await registry.buildPackageInfo(
+    const testPackage2 = await registry.calculatePackageInfo(
       EnsDomainV1.Registry,
       testDomain2.name,
       "test-package"
@@ -291,12 +291,12 @@ describe("Registering packages", () => {
   });
 
   it("forbids registering multiple packages with the same name for the same organization", async () => {
-    const testPackage1 = await registry.buildPackageInfo(
+    const testPackage1 = await registry.calculatePackageInfo(
       EnsDomainV1.Registry,
       testDomain.name,
       "test-package"
     );
-    const testPackage2 = await registry.buildPackageInfo(
+    const testPackage2 = await registry.calculatePackageInfo(
       EnsDomainV1.Registry,
       testDomain.name,
       "test-package"
@@ -333,7 +333,7 @@ describe("Registering packages", () => {
   });
 
   it("forbids non organization controller from registering packages", async () => {
-    const testPackage = await registry.buildPackageInfo(
+    const testPackage = await registry.calculatePackageInfo(
       EnsDomainV1.Registry,
       testDomain.name,
       "test-package"
