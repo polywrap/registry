@@ -1,5 +1,5 @@
 import { Api, Web3ApiClient } from "@web3api/client-js";
-import { ethereumPlugin } from "@web3api/ethereum-plugin-js";
+import { ethereumPlugin, EthereumProvider } from "@web3api/ethereum-plugin-js";
 import { ContractTransaction } from "ethers";
 import { registryPlugin } from "../../..";
 import { JsonRpcProvider } from "@ethersproject/providers";
@@ -40,7 +40,7 @@ export class PolywrapRegistry {
           plugin: ethereumPlugin({
             networks: {
               testnet: {
-                provider: provider,
+                provider: (provider as unknown) as EthereumProvider,
                 signer: signer,
               },
               rinkeby: {
