@@ -8,6 +8,8 @@ import "@nomiclabs/hardhat-etherscan";
 import "solidity-coverage";
 import "hardhat-deploy";
 import "@nomiclabs/hardhat-ethers";
+import "hardhat-gas-reporter";
+import "@nomiclabs/hardhat-waffle";
 
 task("accounts", "Prints the list of accounts", async (args, hre) => {
   const accounts = await hre.ethers.getSigners();
@@ -19,7 +21,10 @@ task("accounts", "Prints the list of accounts", async (args, hre) => {
 
 const config: HardhatUserConfig = {
   solidity: {
-    compilers: [{ version: "0.8.4", settings: {} }],
+    compilers: [
+      { version: "0.8.4", settings: {} },
+      { version: "0.8.10", settings: {} },
+    ],
   },
   namedAccounts: {
     deployer: {
@@ -43,14 +48,7 @@ const config: HardhatUserConfig = {
       accounts: {
         mnemonic: "test test test test test test test test test test test test",
       },
-      deploy: ["./deploy/scripts/localhost"],
-
-      // live: false,
-      // forking: {
-      //   url: "https://eth-mainnet.alchemyapi.io/v2/MnO3SuHlzuCydPWE1XhsYZM_pHZP8_ix",
-      //   blockNumber: 11845661,
-      // },
-      // deploy: ["./deploy/scripts/localhosdsdst"],
+      deploy: ["./deploy/scripts/v1/localhost"],
     },
     localhost: {
       live: false,
@@ -64,9 +62,22 @@ const config: HardhatUserConfig = {
       },
       deploy: ["./deploy/scripts/localhost"],
     },
+    rinkeby: {
+      live: true,
+      gas: "auto",
+      gasPrice: "auto",
+      gasMultiplier: 1,
+      chainId: 4,
+      url: process.env.RINKEBY_URL,
+      accounts: [`${process.env.DEPLOYER_KEY_RINKEBY}`],
+      deploy: ["./deploy/scripts/v1/rinkeby"],
+    },
   },
   etherscan: {
     apiKey: "FZ1ANB251FC8ISFDXFGFCUDCANSJNWPF9Q",
+  },
+  gasReporter: {
+    enabled: false,
   },
 };
 export default config;

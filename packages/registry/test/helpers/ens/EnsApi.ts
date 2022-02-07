@@ -1,6 +1,5 @@
 import hre, { ethers } from "hardhat";
 import { Contract, Signer } from "ethers";
-import { EnsDomain } from "@polywrap/registry-core-js";
 import {
   ENSRegistry,
   ENSRegistry__factory,
@@ -8,8 +7,9 @@ import {
   TestEthRegistrar__factory,
   TestPublicResolver,
   TestPublicResolver__factory,
-} from "../../../typechain";
+} from "../../../typechain-types";
 import { BaseProvider } from "@ethersproject/providers";
+import { EnsDomain } from "../EnsDomain";
 
 export const POLYWRAP_OWNER_RECORD_NAME = "polywrap-owner";
 const rootNode = ethers.utils.zeroPad([0], 32);

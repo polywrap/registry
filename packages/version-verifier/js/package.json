@@ -1,6 +1,6 @@
 {
   "name": "@polywrap/version-verifier-js",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "main": "bin/index.js",
   "types": "bin/index.d.ts",
   "files": [
@@ -13,7 +13,7 @@
     "lint": "eslint . --ext .ts"
   },
   "dependencies": {
-    "@polywrap/registry-js": "^1.0.0",
+    "@polywrap/registry-js": "^0.1.0",
     "@typechain/ethers-v5": "^7.0.1",
     "@types/js-yaml": "^4.0.2",
     "@types/node": "^16.6.1",

@@ -1,6 +1,6 @@
 {
   "name": "@polywrap/registry-test-utils",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "license": "MIT",
   "main": "bin/index.js",
   "types": "bin/index.d.ts",

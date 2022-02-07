@@ -9,3 +9,4 @@ export * from "./types";
 export * from "./helpers/isPromise";
 export * from "./errorHandler";
 export * from "./types";
+export * from "./v1";

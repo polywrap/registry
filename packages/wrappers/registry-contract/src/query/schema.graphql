@@ -1,0 +1,185 @@
+#import { Connection, Query } into Ethereum from "w3://ens/ethereum.web3api.eth"
+
+type Query {
+  domainOwner(
+    connection: Ethereum_Connection!,
+    address: String!,
+    domainRegistry: String!,
+    domainRegistryNode: String!
+  ): String!
+
+  domainRegistryLinks(
+    connection: Ethereum_Connection!,
+    address: String!,
+    domainRegistry: String!
+  ): String!
+
+  latestPrereleaseLocation(
+    connection: Ethereum_Connection!,
+    address: String!,
+    versionNodeId: String!
+  ): String!
+
+  latestPrereleaseNode(
+    connection: Ethereum_Connection!,
+    address: String!,
+    versionNodeId: String!
+  ): String!
+
+  latestReleaseLocation(
+    connection: Ethereum_Connection!,
+    address: String!,
+    versionNodeId: String!
+  ): String!
+
+  latestReleaseNode(
+    connection: Ethereum_Connection!,
+    address: String!,
+    versionNodeId: String!
+  ): String!
+
+  # organization(
+  #   connection: Ethereum_Connection!,
+  #   address: String!,
+  #   organizationId: String!
+  # ): Undefined!
+
+  organizationController(
+    connection: Ethereum_Connection!,
+    address: String!,
+    organizationId: String!
+  ): String!
+
+  organizationCount(
+    connection: Ethereum_Connection!,
+    address: String!
+  ): BigInt!
+
+  organizationExists(
+    connection: Ethereum_Connection!,
+    address: String!,
+    organizationId: String!
+  ): Boolean!
+
+  organizationOwner(
+    connection: Ethereum_Connection!,
+    address: String!,
+    organizationId: String!
+  ): String!
+
+  owner(
+    connection: Ethereum_Connection!,
+    address: String!
+  ): String!
+
+  getPackage(
+    connection: Ethereum_Connection!,
+    address: String!,
+    packageId: String!
+  ): PackageInfo!
+
+  packageController(
+    connection: Ethereum_Connection!,
+    address: String!,
+    packageId: String!
+  ): String!
+
+  packageCount(
+    connection: Ethereum_Connection!,
+    address: String!,
+    organizationId: String!
+  ): BigInt!
+
+  packageExists(
+    connection: Ethereum_Connection!,
+    address: String!,
+    packageId: String!
+  ): Boolean!
+
+  packageOrganizationId(
+    connection: Ethereum_Connection!,
+    address: String!,
+    packageId: String!
+  ): String!
+
+  packageOwner(
+    connection: Ethereum_Connection!,
+    address: String!,
+    packageId: String!
+  ): String!
+
+  version(
+    connection: Ethereum_Connection!,
+    address: String!,
+    nodeId: String!
+  ): PackageVersion!
+
+  versionBuildMetadata(
+    connection: Ethereum_Connection!,
+    address: String!,
+    nodeId: String!
+  ): String!
+
+  versionCount(
+    connection: Ethereum_Connection!,
+    address: String!,
+    packageId: String!
+  ): BigInt!
+
+  versionExists(
+    connection: Ethereum_Connection!,
+    address: String!,
+    nodeId: String!
+  ): Boolean!
+
+  versionLocation(
+    connection: Ethereum_Connection!,
+    address: String!,
+    nodeId: String!
+  ): String!
+
+  # versionMetadata(
+  #   connection: Ethereum_Connection!,
+  #   address: String!,
+  #   versionNodeId: String!
+  # ): Undefined!
+}
+
+type OrganizationInfo {
+  exists: Boolean!
+  owner: String!
+  controller: String!
+}
+
+type ContractError {
+  message: String!
+  originalError: String!
+  customError: String
+}
+
+type PackageInfo {
+  exists: Boolean!
+  owner: String
+  controller: String
+  organizationId: String
+}
+
+type VersionInfo {
+  exists: Boolean
+  leaf: Boolean
+  level: UInt8
+  latestPrereleaseVersion: BigInt
+  latestReleaseVersion: BigInt
+  buildMetadata: String
+  location: String
+}
+
+type PackageVersion {
+  exists: Boolean!
+  leaf: Boolean!
+  level: UInt8!
+  latestPrereleaseVersion: BigInt!
+  latestReleaseVersion: BigInt!
+  buildMetadata: String!
+  location: String!
+}

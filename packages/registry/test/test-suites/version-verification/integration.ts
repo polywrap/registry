@@ -1,4 +1,4 @@
-import hre, { ethers, deployments, getNamedAccounts } from "hardhat";
+/*import hre, { ethers, deployments, getNamedAccounts } from "hardhat";
 import chai, { expect } from "chai";
 import {
   ENSRegistry__factory,
@@ -19,16 +19,16 @@ import {
   VersionVerificationManager__factory,
   VotingMachine,
   VotingMachine__factory,
-} from "../../../typechain";
+} from "../../../typechain-types";
 import { EnsApi } from "../../helpers/ens/EnsApi";
-import { PolywrapRegistrar } from "../../../typechain/PolywrapRegistrar";
+import { PolywrapRegistrar } from "../../../typechain-types/PolywrapRegistrar";
 import {
   formatBytes32String,
   keccak256,
   solidityKeccak256,
 } from "ethers/lib/utils";
-import { VerificationRootBridgeLinkMock } from "../../../typechain/VerificationRootBridgeLinkMock";
-import { OwnershipBridgeLinkMock } from "../../../typechain/OwnershipBridgeLinkMock";
+import { VerificationRootBridgeLinkMock } from "../../../typechain-types/VerificationRootBridgeLinkMock";
+import { OwnershipBridgeLinkMock } from "../../../typechain-types/OwnershipBridgeLinkMock";
 import { expectEvent } from "../../helpers";
 import { Signer } from "ethers";
 import { computeMerkleProof, EnsDomain } from "@polywrap/registry-core-js";
@@ -295,3 +295,4 @@ describe("Voting", () => {
     }
   });
 });
+*/

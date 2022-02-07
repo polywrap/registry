@@ -1,7 +1,7 @@
 /*import { ethers } from "hardhat";
 import chai, { expect } from "chai";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { VotingMachineBridgeLink } from "../typechain";
+import { VotingMachineBridgeLink } from "../typechain-types";
 
 
 describe("Bridge Info", () => {

@@ -1,7 +1,7 @@
 /*
 import { ethers } from "hardhat";
 import chai, { expect } from "chai";
-import { PolywrapRegistry } from "../../../typechain";
+import { PolywrapRegistry } from "../../../typechain-types";
 import { expectEvent, getEventArgs } from "../../helpers";
 import { BigNumber, BigNumberish, BytesLike } from "ethers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
@@ -9,8 +9,8 @@ import { EnsDomain } from "../../helpers/ens/EnsDomain";
 import { EnsApi } from "../../helpers/ens/EnsApi";
 import { getPackageLocation } from "../../helpers/getPackageLocation";
 import { toUtf8Bytes, toUtf8String } from "ethers/lib/utils";
-import { EnsLink } from "../../../typechain/EnsLink";
-import { TestLink } from "../../../typechain/TestLink";
+import { EnsLink } from "../../../typechain-types/EnsLink";
+import { TestLink } from "../../../typechain-types/TestLink";
 import { CustomDomain } from "../../helpers/ens/CustomDomain";
 
 

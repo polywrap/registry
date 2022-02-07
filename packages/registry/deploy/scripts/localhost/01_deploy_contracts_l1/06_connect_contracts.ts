@@ -9,7 +9,7 @@ import {
   PolywrapRegistry__factory,
   VerificationRootBridgeLink__factory,
   VersionVerificationManager__factory,
-} from "../../../../typechain";
+} from "../../../../typechain-types";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deployer } = await hre.getNamedAccounts();

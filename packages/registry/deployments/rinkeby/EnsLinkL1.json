@@ -1,0 +1,87 @@
+{
+  "address": "0x86Fc08B4e06d99D70Ff98b5592E4A3bC2d8e8128",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "contract ENS",
+          "name": "_ens",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "domainRegistryNode",
+          "type": "bytes32"
+        }
+      ],
+      "name": "getDomainOwner",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "transactionHash": "0x87a93289a50f041c613acefcccf01ab2d3ac1897800e76be3f92e2b90e98ae91",
+  "receipt": {
+    "to": null,
+    "from": "0xE9FFd2d4c1e3eAF13f6e17DfDCD615a66f357dF4",
+    "contractAddress": "0x86Fc08B4e06d99D70Ff98b5592E4A3bC2d8e8128",
+    "transactionIndex": 4,
+    "gasUsed": "218503",
+    "logsBloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "blockHash": "0xa9630815dc73d44769e6ae2abbe94d02d1f1ebd86a1954e05e44f7fea574d876",
+    "transactionHash": "0x87a93289a50f041c613acefcccf01ab2d3ac1897800e76be3f92e2b90e98ae91",
+    "logs": [],
+    "blockNumber": 9739603,
+    "cumulativeGasUsed": "568846",
+    "status": 1,
+    "byzantium": true
+  },
+  "args": [
+    "0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e"
+  ],
+  "solcInputHash": "b88e060abe69238041f6e18b2c73297e",
+  "metadata": "{\"compiler\":{\"version\":\"0.8.10+commit.fc410830\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"contract ENS\",\"name\":\"_ens\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"domainRegistryNode\",\"type\":\"bytes32\"}],\"name\":\"getDomainOwner\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"contracts/versioning/domain-registries/links/EnsLinkV1.sol\":\"EnsLinkV1\"},\"evmVersion\":\"london\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\",\"useLiteralContent\":true},\"optimizer\":{\"enabled\":false,\"runs\":200},\"remappings\":[]},\"sources\":{\"@ensdomains/ens-contracts/contracts/registry/ENS.sol\":{\"content\":\"pragma solidity >=0.8.4;\\n\\ninterface ENS {\\n\\n    // Logged when the owner of a node assigns a new owner to a subnode.\\n    event NewOwner(bytes32 indexed node, bytes32 indexed label, address owner);\\n\\n    // Logged when the owner of a node transfers ownership to a new account.\\n    event Transfer(bytes32 indexed node, address owner);\\n\\n    // Logged when the resolver for a node changes.\\n    event NewResolver(bytes32 indexed node, address resolver);\\n\\n    // Logged when the TTL of a node changes\\n    event NewTTL(bytes32 indexed node, uint64 ttl);\\n\\n    // Logged when an operator is added or removed.\\n    event ApprovalForAll(address indexed owner, address indexed operator, bool approved);\\n\\n    function setRecord(bytes32 node, address owner, address resolver, uint64 ttl) external virtual;\\n    function setSubnodeRecord(bytes32 node, bytes32 label, address owner, address resolver, uint64 ttl) external virtual;\\n    function setSubnodeOwner(bytes32 node, bytes32 label, address owner) external virtual returns(bytes32);\\n    function setResolver(bytes32 node, address resolver) external virtual;\\n    function setOwner(bytes32 node, address owner) external virtual;\\n    function setTTL(bytes32 node, uint64 ttl) external virtual;\\n    function setApprovalForAll(address operator, bool approved) external virtual;\\n    function owner(bytes32 node) external virtual view returns (address);\\n    function resolver(bytes32 node) external virtual view returns (address);\\n    function ttl(bytes32 node) external virtual view returns (uint64);\\n    function recordExists(bytes32 node) external virtual view returns (bool);\\n    function isApprovedForAll(address owner, address operator) external virtual view returns (bool);\\n}\\n\",\"keccak256\":\"0x942ef29bd7c0f62228aeb91879ddd1ba101f52a2162970d3e48adffa498f4483\"},\"contracts/versioning/domain-registries/interfaces/IDomainRegistryLinkV1.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity ^0.8.10;\\n\\ninterface IDomainRegistryLinkV1 {\\n  function getDomainOwner(bytes32 domainRegistryNode)\\n    external\\n    view\\n    returns (address);\\n}\\n\",\"keccak256\":\"0x7778a10558164bc975a78ba6effada36677bd4929d88d526c7f7b39f10e913db\",\"license\":\"MIT\"},\"contracts/versioning/domain-registries/links/EnsLinkV1.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity ^0.8.10;\\n\\nimport \\\"@ensdomains/ens-contracts/contracts/registry/ENS.sol\\\";\\nimport \\\"../interfaces/IDomainRegistryLinkV1.sol\\\";\\n\\ncontract EnsLinkV1 is IDomainRegistryLinkV1 {\\n\\n  ENS internal ens;\\n\\n  constructor(ENS _ens) {\\n    ens = _ens;\\n  }\\n\\n  function getDomainOwner(bytes32 domainRegistryNode)\\n    public\\n    view\\n    override\\n    returns (address)\\n  {\\n    return ens.owner(domainRegistryNode);\\n  }\\n}\\n\",\"keccak256\":\"0xe8c1f262100bcaf1321cf9a868d5ee10abc4b80e00b0d16a5cd0e1ccb825d8cd\",\"license\":\"MIT\"}},\"version\":1}",
+  "bytecode": "0x608060405234801561001057600080fd5b506040516103aa3803806103aa833981810160405281019061003291906100ed565b806000806101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff1602179055505061011a565b600080fd5b600073ffffffffffffffffffffffffffffffffffffffff82169050919050565b60006100a88261007d565b9050919050565b60006100ba8261009d565b9050919050565b6100ca816100af565b81146100d557600080fd5b50565b6000815190506100e7816100c1565b92915050565b60006020828403121561010357610102610078565b5b6000610111848285016100d8565b91505092915050565b610281806101296000396000f3fe608060405234801561001057600080fd5b506004361061002b5760003560e01c806311d4c3a214610030575b600080fd5b61004a6004803603810190610045919061013f565b610060565b60405161005791906101ad565b60405180910390f35b60008060009054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff166302571be3836040518263ffffffff1660e01b81526004016100bc91906101d7565b602060405180830381865afa1580156100d9573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906100fd919061021e565b9050919050565b600080fd5b6000819050919050565b61011c81610109565b811461012757600080fd5b50565b60008135905061013981610113565b92915050565b60006020828403121561015557610154610104565b5b60006101638482850161012a565b91505092915050565b600073ffffffffffffffffffffffffffffffffffffffff82169050919050565b60006101978261016c565b9050919050565b6101a78161018c565b82525050565b60006020820190506101c2600083018461019e565b92915050565b6101d181610109565b82525050565b60006020820190506101ec60008301846101c8565b92915050565b6101fb8161018c565b811461020657600080fd5b50565b600081519050610218816101f2565b92915050565b60006020828403121561023457610233610104565b5b600061024284828501610209565b9150509291505056fea2646970667358221220d6062a5bb484524017f654d5ce9b9fc6ad6c05b63af8431bcbca904be71825b664736f6c634300080a0033",
+  "deployedBytecode": "0x608060405234801561001057600080fd5b506004361061002b5760003560e01c806311d4c3a214610030575b600080fd5b61004a6004803603810190610045919061013f565b610060565b60405161005791906101ad565b60405180910390f35b60008060009054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff166302571be3836040518263ffffffff1660e01b81526004016100bc91906101d7565b602060405180830381865afa1580156100d9573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906100fd919061021e565b9050919050565b600080fd5b6000819050919050565b61011c81610109565b811461012757600080fd5b50565b60008135905061013981610113565b92915050565b60006020828403121561015557610154610104565b5b60006101638482850161012a565b91505092915050565b600073ffffffffffffffffffffffffffffffffffffffff82169050919050565b60006101978261016c565b9050919050565b6101a78161018c565b82525050565b60006020820190506101c2600083018461019e565b92915050565b6101d181610109565b82525050565b60006020820190506101ec60008301846101c8565b92915050565b6101fb8161018c565b811461020657600080fd5b50565b600081519050610218816101f2565b92915050565b60006020828403121561023457610233610104565b5b600061024284828501610209565b9150509291505056fea2646970667358221220d6062a5bb484524017f654d5ce9b9fc6ad6c05b63af8431bcbca904be71825b664736f6c634300080a0033",
+  "devdoc": {
+    "kind": "dev",
+    "methods": {},
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {},
+    "version": 1
+  },
+  "storageLayout": {
+    "storage": [
+      {
+        "astId": 10533,
+        "contract": "contracts/versioning/domain-registries/links/EnsLinkV1.sol:EnsLinkV1",
+        "label": "ens",
+        "offset": 0,
+        "slot": "0",
+        "type": "t_contract(ENS)3164"
+      }
+    ],
+    "types": {
+      "t_contract(ENS)3164": {
+        "encoding": "inplace",
+        "label": "contract ENS",
+        "numberOfBytes": "20"
+      }
+    }
+  }
+}
