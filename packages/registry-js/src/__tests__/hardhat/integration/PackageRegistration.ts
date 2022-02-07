@@ -64,7 +64,7 @@ describe("Registering packages", () => {
       provider
     );
 
-    await ens.registerDomainName(owner, domainOwner, testDomain);
+    await ens.registerDomainName(owner, domainOwner, testDomain.name);
 
     registry = connectRegistry(domainOwner);
 
@@ -201,7 +201,7 @@ describe("Registering packages", () => {
     const packageControllerAddress1 = await packageController.getAddress();
     const packageControllerAddress2 = await packageController2.getAddress();
 
-    await ens.registerDomainName(owner, domainOwner, testDomain2);
+    await ens.registerDomainName(owner, domainOwner, testDomain2.name);
 
     registry = connectRegistry(domainOwner);
 

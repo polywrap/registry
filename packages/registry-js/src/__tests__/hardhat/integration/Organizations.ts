@@ -61,7 +61,7 @@ describe("Organizations", () => {
 
     const testDomain = new EnsDomainV1("test-domain");
 
-    await ens.registerDomainName(owner, domainOwner, testDomain);
+    await ens.registerDomainName(owner, domainOwner, testDomain.name);
 
     registry = connectRegistry(domainOwner);
 
@@ -111,7 +111,7 @@ describe("Organizations", () => {
 
     const testDomain = new EnsDomainV1("test-domain");
 
-    await ens.registerDomainName(owner, domainOwner, testDomain);
+    await ens.registerDomainName(owner, domainOwner, testDomain.name);
 
     registry = connectRegistry(domainOwner);
 
@@ -153,7 +153,7 @@ describe("Organizations", () => {
 
     const testDomain = new EnsDomainV1("test-domain");
 
-    await ens.registerDomainName(owner, domainOwner, testDomain);
+    await ens.registerDomainName(owner, domainOwner, testDomain.name);
 
     registry = connectRegistry(randomAcc);
 
@@ -173,7 +173,7 @@ describe("Organizations", () => {
 
     const testDomain = new EnsDomainV1("test-domain");
 
-    await ens.registerDomainName(owner, domainOwner, testDomain);
+    await ens.registerDomainName(owner, domainOwner, testDomain.name);
 
     registry = connectRegistry(domainOwner);
 
@@ -217,7 +217,7 @@ describe("Organizations", () => {
 
     const testDomain = new EnsDomainV1("test-domain");
 
-    await ens.registerDomainName(owner, domainOwner, testDomain);
+    await ens.registerDomainName(owner, domainOwner, testDomain.name);
 
     registry = connectRegistry(domainOwner);
 
@@ -254,7 +254,7 @@ describe("Organizations", () => {
 
     const testDomain = new EnsDomainV1("test-domain");
 
-    await ens.registerDomainName(owner, domainOwner, testDomain);
+    await ens.registerDomainName(owner, domainOwner, testDomain.name);
 
     registry = connectRegistry(domainOwner);
 
@@ -300,7 +300,7 @@ describe("Organizations", () => {
 
     const testDomain = new EnsDomainV1("test-domain");
 
-    await ens.registerDomainName(owner, domainOwner, testDomain);
+    await ens.registerDomainName(owner, domainOwner, testDomain.name);
 
     registry = connectRegistry(domainOwner);
 
@@ -358,7 +358,7 @@ describe("Organizations", () => {
 
     const testDomain = new EnsDomainV1("test-domain");
 
-    await ens.registerDomainName(owner, domainOwner, testDomain);
+    await ens.registerDomainName(owner, domainOwner, testDomain.name);
 
     registry = connectRegistry(domainOwner);
 

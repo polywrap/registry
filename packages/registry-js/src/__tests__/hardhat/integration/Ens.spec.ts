@@ -4,7 +4,6 @@ import { deployments } from "hardhat";
 import "hardhat-deploy";
 import "@nomiclabs/hardhat-ethers";
 import { Signer } from "ethers";
-import { EnsDomainV1 } from "@polywrap/registry-core-js";
 import { EnsApiV1 } from "@polywrap/registry-test-utils";
 
 describe("ENS", () => {
@@ -28,7 +27,7 @@ describe("ENS", () => {
       provider
     );
 
-    const testDomain = new EnsDomainV1("test-domain");
+    const testDomain = "test-domain.eth";
 
     await ens.registerDomainName(owner, polywrapOwner, testDomain);
 

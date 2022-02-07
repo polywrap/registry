@@ -93,7 +93,7 @@ describe("Publishing versions", () => {
     const testDomain = new EnsDomainV1("test-domain");
     testPackage = buildPolywrapPackage(testDomain, "test-package");
 
-    await ens.registerDomainName(owner, domainOwner, testDomain);
+    await ens.registerDomainName(owner, domainOwner, testDomain.name);
 
     registry = connectRegistry(domainOwner);
 

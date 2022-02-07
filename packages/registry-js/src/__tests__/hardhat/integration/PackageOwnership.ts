@@ -64,7 +64,7 @@ describe("Package ownership", () => {
       provider
     );
 
-    await ens.registerDomainName(owner, domainOwner, testDomain);
+    await ens.registerDomainName(owner, domainOwner, testDomain.name);
 
     registry = connectRegistry(domainOwner);
 
