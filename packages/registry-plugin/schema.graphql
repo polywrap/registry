@@ -1,4 +1,4 @@
-#import { Connection, Query, TxResponse, Mutation } into Ethereum from "/ens/ethereum.web3api.eth"
+#import { Connection, Query, TxResponse, Mutation } into Ethereum from "ens/ethereum.web3api.eth"
 #import { Query, Mutation } into RegistryContract from "ipfs/QmQhXyMLvxbKPmZ2RzMJMeHTx5saUfHzZmVR9LDVJaB8Zq"
 
 type Query {
