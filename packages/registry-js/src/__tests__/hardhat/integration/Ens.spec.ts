@@ -1,11 +1,10 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import { EnsApi } from "./helpers/EnsApi";
 import { deployments } from "hardhat";
 import "hardhat-deploy";
 import "@nomiclabs/hardhat-ethers";
 import { Signer } from "ethers";
-import { EnsDomain } from "../../../v1/types/EnsDomain";
+import { EnsApiV1 } from "@polywrap/registry-test-utils";
 
 describe("ENS", () => {
   let owner: Signer;
@@ -19,7 +18,7 @@ describe("ENS", () => {
     const deploys = await deployments.fixture(["ens"]);
     const provider = ethers.getDefaultProvider();
 
-    const ens = new EnsApi(
+    const ens = new EnsApiV1(
       {
         ensRegistryL1: deploys["EnsRegistryL1"].address,
         testEthRegistrarL1: deploys["TestEthRegistrarL1"].address,
@@ -28,7 +27,7 @@ describe("ENS", () => {
       provider
     );
 
-    const testDomain = new EnsDomain("test-domain");
+    const testDomain = "test-domain.eth";
 
     await ens.registerDomainName(owner, polywrapOwner, testDomain);
 

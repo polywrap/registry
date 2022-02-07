@@ -1,15 +1,11 @@
-import hre, { ethers, deployments } from "hardhat";
-import chai, { expect } from "chai";
+import { ethers, deployments } from "hardhat";
+import { expect } from "chai";
 import {
   PolywrapRegistryV1,
   PolywrapRegistryV1__factory,
 } from "../../../../typechain-types";
-import {
-  formatBytes32String,
-} from "ethers/lib/utils";
-import {
-  expectEvent,
-} from "../../../helpers";
+import { formatBytes32String } from "ethers/lib/utils";
+import { expectEvent } from "../../../helpers";
 import { Signer } from "ethers";
 import { EnsApi } from "../../../helpers/ens/EnsApi";
 import { buildPolywrapPackage } from "../../../helpers/buildPolywrapPackage";

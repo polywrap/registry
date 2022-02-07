@@ -1,17 +1,16 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import { formatBytes32String } from "ethers/lib/utils";
 import { deployments } from "hardhat";
 import { PolywrapRegistry, RegistryContractAddresses } from "../../../v1";
-import { EnsApi } from "./helpers/EnsApi";
+import { EnsDomainV1 } from "@polywrap/registry-core-js";
+import { EnsApiV1 } from "@polywrap/registry-test-utils";
 import { Signer } from "ethers";
-import { EnsDomain } from "../../../v1/types/EnsDomain";
 import { buildPolywrapPackage } from "../helpers/buildPolywrapPackage";
 
 describe("Registering packages", () => {
   let registry: PolywrapRegistry;
 
-  let ens: EnsApi;
+  let ens: EnsApiV1;
 
   let owner: Signer;
   let domainOwner: Signer;
@@ -27,7 +26,7 @@ describe("Registering packages", () => {
 
   let registryContractAddresses: RegistryContractAddresses;
 
-  const testDomain = new EnsDomain("test-domain");
+  const testDomain = new EnsDomainV1("test-domain");
 
   const connectRegistry = (signer: Signer): PolywrapRegistry => {
     return new PolywrapRegistry(signer, registryContractAddresses);
@@ -56,7 +55,7 @@ describe("Registering packages", () => {
 
     const provider = ethers.getDefaultProvider();
 
-    ens = new EnsApi(
+    ens = new EnsApiV1(
       {
         ensRegistryL1: deploys["EnsRegistryL1"].address,
         testEthRegistrarL1: deploys["TestEthRegistrarL1"].address,
@@ -65,7 +64,7 @@ describe("Registering packages", () => {
       provider
     );
 
-    await ens.registerDomainName(owner, domainOwner, testDomain);
+    await ens.registerDomainName(owner, domainOwner, testDomain.name);
 
     registry = connectRegistry(domainOwner);
 
@@ -194,7 +193,7 @@ describe("Registering packages", () => {
   });
 
   it("can register packages for multiple organizations", async () => {
-    const testDomain2 = new EnsDomain("test-domain2");
+    const testDomain2 = new EnsDomainV1("test-domain2");
     const testPackage1 = buildPolywrapPackage(testDomain, "test-package");
     const testPackage2 = buildPolywrapPackage(testDomain2, "test-package");
     const packageOwnerAddress1 = await packageOwner.getAddress();
@@ -202,7 +201,7 @@ describe("Registering packages", () => {
     const packageControllerAddress1 = await packageController.getAddress();
     const packageControllerAddress2 = await packageController2.getAddress();
 
-    await ens.registerDomainName(owner, domainOwner, testDomain2);
+    await ens.registerDomainName(owner, domainOwner, testDomain2.name);
 
     registry = connectRegistry(domainOwner);
 

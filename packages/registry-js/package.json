@@ -16,27 +16,27 @@
     "test:hardhat": "hardhat test --show-stack-traces"
   },
   "dependencies": {
-    "@polywrap/registry-core-js": "^0.1.0",
-    "@typechain/ethers-v5": "^7.0.1",
-    "ethers": "^5.4.6",
-    "typechain": "^5.1.2",
-    "typescript": "^4.4.2",
-    "winston": "^3.3.3"
+    "@polywrap/registry-core-js": "0.1.0",
+    "@typechain/ethers-v5": "7.0.1",
+    "ethers": "5.5.1",
+    "typechain": "5.1.2",
+    "typescript": "4.4.2",
+    "winston": "3.3.3"
   },
   "devDependencies": {
-    "@nomiclabs/hardhat-ethers": "npm:hardhat-deploy-ethers@0.3.0-beta.10",
-    "@nomiclabs/hardhat-etherscan": "^2.1.2",
-    "@nomiclabs/hardhat-waffle": "^2.0.1",
-    "@openzeppelin/hardhat-upgrades": "^1.12.0",
-    "@typechain/hardhat": "^2.0.0",
-    "@types/chai": "^4.2.18",
-    "@types/jest": "^27.0.1",
-    "@types/mocha": "^8.2.2",
-    "chai": "^4.3.4",
-    "eslint": "^7.32.0",
-    "hardhat": "^2.6.4",
-    "hardhat-deploy": "^0.9.1",
-    "jest": "^27.1.1",
-    "ts-jest": "^27.0.5"
+    "@nomiclabs/hardhat-ethers": "npm:hardhat-deploy-ethers@^0.3.0-beta.13",
+    "@nomiclabs/hardhat-etherscan": "2.1.2",
+    "@nomiclabs/hardhat-waffle": "2.0.1",
+    "@openzeppelin/hardhat-upgrades": "1.12.0",
+    "@typechain/hardhat": "2.0.0",
+    "@types/chai": "4.2.18",
+    "@types/jest": "27.0.1",
+    "@types/mocha": "8.2.2",
+    "chai": "4.3.4",
+    "eslint": "7.32.0",
+    "hardhat": "2.8.3",
+    "hardhat-deploy": "0.9.1",
+    "jest": "27.1.1",
+    "ts-jest": "27.0.5"
   }
 }
