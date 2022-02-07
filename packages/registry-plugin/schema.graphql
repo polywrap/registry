@@ -9,12 +9,6 @@ type Query {
     domainName: String!
   ): String!
 
-  # domainRegistryLinks(
-  #   connection: Ethereum_Connection!
-  #   address: String!
-  #   domainRegistry: String!
-  # ): String!
-
   latestPrereleaseLocation(
     connection: Ethereum_Connection!
     address: String!

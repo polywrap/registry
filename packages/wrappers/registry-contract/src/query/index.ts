@@ -27,7 +27,6 @@ import {
   VersionNodeMetadata,
 } from "./w3";
 import { BigInt } from "@web3api/wasm-as";
-import { Console_Query } from "./w3";
 
 export function domainOwner(input: Input_domainOwner): string {
   const result = Ethereum_Query.callContractView({
