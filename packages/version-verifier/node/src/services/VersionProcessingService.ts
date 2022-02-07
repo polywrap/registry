@@ -146,7 +146,6 @@ export class VersionProcessingService {
     );
 
     const verifyVersion = await this.versionVerifierService.verifyVersion(
-      packageId,
       patchNodeId,
       majorVersion.toNumber(),
       minorVersion.toNumber(),

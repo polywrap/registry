@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "start": "react-scripts start",
+    "start": "ENV=local react-scripts start",
     "build": "react-scripts build",
     "eject": "react-scripts eject",
     "fix": "eslint . --ext .ts --ext .tsx --fix",
