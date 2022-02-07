@@ -38,8 +38,10 @@ export class EnsApiV1 {
   async registerDomainName(
     owner: Signer,
     domainOwner: Signer,
-    domain: EnsDomainV1
+    domain: string
   ): Promise<void> {
+    const labelHash = new EnsDomainV1(domain).labelHash;
+
     let tx = await this.testEthRegistrarL1
       .connect(owner)
       .addController(await domainOwner.getAddress());
@@ -48,12 +50,14 @@ export class EnsApiV1 {
 
     tx = await this.testEthRegistrarL1
       .connect(domainOwner)
-      .register(domain.labelHash, await domainOwner.getAddress(), 10 * 60);
+      .register(labelHash, await domainOwner.getAddress(), 10 * 60);
 
     await tx.wait();
   }
 
-  async owner(domain: EnsDomainV1): Promise<string> {
-    return this.ensRegistryL1.owner(domain.node);
+  async owner(domain: string): Promise<string> {
+    const node = new EnsDomainV1(domain).node;
+
+    return this.ensRegistryL1.owner(node);
   }
 }

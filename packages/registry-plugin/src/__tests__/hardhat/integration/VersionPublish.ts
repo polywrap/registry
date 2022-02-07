@@ -3,7 +3,6 @@ import { ethers } from "hardhat";
 import { formatBytes32String } from "ethers/lib/utils";
 import { deployments } from "hardhat";
 import { Signer } from "ethers";
-import { EnsDomainV1 } from "@polywrap/registry-core-js";
 import { EnsApiV1 } from "@polywrap/registry-test-utils";
 import { JsonRpcProvider } from "@ethersproject/providers";
 import { RegistryContractAddresses } from "../../helpers/RegistryContractAddresses";
@@ -96,10 +95,17 @@ describe("Publishing versions", () => {
 
     registry = await connectRegistry(owner);
 
-    const testDomain = new EnsDomainV1("test-domain");
+    const testDomain = "test-domain.eth";
+    const domainRegistry = "ens";
+
+    const organizationId = await registry.calculateOrganizationId(
+      domainRegistry,
+      testDomain
+    );
+
     testPackage = await registry.calculatePackageInfo(
-      EnsDomainV1.Registry,
-      testDomain.name,
+      domainRegistry,
+      testDomain,
       "test-package"
     );
 
@@ -108,8 +114,8 @@ describe("Publishing versions", () => {
     registry = await connectRegistry(domainOwner);
 
     let [error, tx] = await registry.claimOrganizationOwnership(
-      testDomain.registry,
-      testDomain.name,
+      domainRegistry,
+      testDomain,
       await polywrapOwner.getAddress()
     );
 
@@ -122,7 +128,7 @@ describe("Publishing versions", () => {
     registry = await connectRegistry(polywrapOwner);
 
     [error, tx] = await registry.setOrganizationController(
-      testDomain.organizationId,
+      organizationId,
       await organizationController.getAddress()
     );
 

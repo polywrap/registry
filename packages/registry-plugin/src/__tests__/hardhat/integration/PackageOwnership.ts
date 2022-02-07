@@ -2,7 +2,6 @@ import { expect } from "chai";
 import { ethers } from "hardhat";
 import { deployments } from "hardhat";
 import { Signer } from "ethers";
-import { EnsDomainV1 } from "@polywrap/registry-core-js";
 import { EnsApiV1 } from "@polywrap/registry-test-utils";
 import { RegistryContractAddresses } from "../../helpers/RegistryContractAddresses";
 import { PolywrapRegistry } from "../../helpers/PolywrapRegistry";
@@ -24,7 +23,8 @@ describe("Package ownership", () => {
   let registry: PolywrapRegistry;
   let registryContractAddresses: RegistryContractAddresses;
 
-  const testDomain = new EnsDomainV1("test-domain");
+  const testDomain = "test-domain.eth";
+  const domainRegistry = "ens";
 
   const connectRegistry = async (signer: Signer): Promise<PolywrapRegistry> => {
     return registry.connect(
@@ -64,13 +64,18 @@ describe("Package ownership", () => {
       ethers.getDefaultProvider()
     );
 
-    await ens.registerDomainName(owner, domainOwner, testDomain);
-
     registry = await connectRegistry(domainOwner);
 
+    const organizationId = await registry.calculateOrganizationId(
+      domainRegistry,
+      testDomain
+    );
+
+    await ens.registerDomainName(owner, domainOwner, testDomain);
+
     let [error, tx] = await registry.claimOrganizationOwnership(
-      testDomain.registry,
-      testDomain.name,
+      domainRegistry,
+      testDomain,
       await organizationOwner.getAddress()
     );
 
@@ -83,7 +88,7 @@ describe("Package ownership", () => {
     registry = await connectRegistry(organizationOwner);
 
     [error, tx] = await registry.setOrganizationController(
-      testDomain.organizationId,
+      organizationId,
       await organizationController.getAddress()
     );
 
@@ -97,9 +102,14 @@ describe("Package ownership", () => {
   });
 
   it("allows organization controller to set package owner", async () => {
+    const organizationId = await registry.calculateOrganizationId(
+      domainRegistry,
+      testDomain
+    );
+
     const testPackage = await registry.calculatePackageInfo(
-      EnsDomainV1.Registry,
-      testDomain.name,
+      domainRegistry,
+      testDomain,
       "test-package"
     );
     const packageOwnerAddress1 = await packageOwner.getAddress();
@@ -107,7 +117,7 @@ describe("Package ownership", () => {
     const packageControllerAddress = await packageController.getAddress();
 
     let [error, tx] = await registry.registerPackage(
-      testDomain.organizationId,
+      organizationId,
       testPackage.packageName,
       packageOwnerAddress1,
       packageControllerAddress
@@ -140,9 +150,14 @@ describe("Package ownership", () => {
   });
 
   it("forbids non organization controller from setting package owner", async () => {
+    const organizationId = await registry.calculateOrganizationId(
+      domainRegistry,
+      testDomain
+    );
+
     const testPackage = await registry.calculatePackageInfo(
-      EnsDomainV1.Registry,
-      testDomain.name,
+      domainRegistry,
+      testDomain,
       "test-package"
     );
     const packageOwnerAddress1 = await packageOwner.getAddress();
@@ -150,7 +165,7 @@ describe("Package ownership", () => {
     const packageControllerAddress = await packageController.getAddress();
 
     let [error, tx] = await registry.registerPackage(
-      testDomain.organizationId,
+      organizationId,
       testPackage.packageName,
       packageOwnerAddress1,
       packageControllerAddress
@@ -204,9 +219,14 @@ describe("Package ownership", () => {
   });
 
   it("allows package owner to transfer package ownership", async () => {
+    const organizationId = await registry.calculateOrganizationId(
+      domainRegistry,
+      testDomain
+    );
+
     const testPackage = await registry.calculatePackageInfo(
-      EnsDomainV1.Registry,
-      testDomain.name,
+      domainRegistry,
+      testDomain,
       "test-package"
     );
     const packageOwnerAddress1 = await packageOwner.getAddress();
@@ -214,7 +234,7 @@ describe("Package ownership", () => {
     const packageControllerAddress = await packageController.getAddress();
 
     let [error, tx] = await registry.registerPackage(
-      testDomain.organizationId,
+      organizationId,
       testPackage.packageName,
       packageOwnerAddress1,
       packageControllerAddress
@@ -249,9 +269,14 @@ describe("Package ownership", () => {
   });
 
   it("forbids non package owner from transferring package ownership", async () => {
+    const organizationId = await registry.calculateOrganizationId(
+      domainRegistry,
+      testDomain
+    );
+
     const testPackage = await registry.calculatePackageInfo(
-      EnsDomainV1.Registry,
-      testDomain.name,
+      domainRegistry,
+      testDomain,
       "test-package"
     );
     const packageOwnerAddress1 = await packageOwner.getAddress();
@@ -259,7 +284,7 @@ describe("Package ownership", () => {
     const packageControllerAddress = await packageController.getAddress();
 
     let [error, tx] = await registry.registerPackage(
-      testDomain.organizationId,
+      organizationId,
       testPackage.packageName,
       packageOwnerAddress1,
       packageControllerAddress
@@ -313,9 +338,14 @@ describe("Package ownership", () => {
   });
 
   it("allows package owner to set package controller", async () => {
+    const organizationId = await registry.calculateOrganizationId(
+      domainRegistry,
+      testDomain
+    );
+
     const testPackage = await registry.calculatePackageInfo(
-      EnsDomainV1.Registry,
-      testDomain.name,
+      domainRegistry,
+      testDomain,
       "test-package"
     );
     const packageOwnerAddress = await packageOwner.getAddress();
@@ -323,7 +353,7 @@ describe("Package ownership", () => {
     const packageControllerAddress2 = await packageController2.getAddress();
 
     let [error, tx] = await registry.registerPackage(
-      testDomain.organizationId,
+      organizationId,
       testPackage.packageName,
       packageOwnerAddress,
       packageControllerAddress1
@@ -354,9 +384,14 @@ describe("Package ownership", () => {
   });
 
   it("forbids non package owner from setting package controller", async () => {
+    const organizationId = await registry.calculateOrganizationId(
+      domainRegistry,
+      testDomain
+    );
+
     const testPackage = await registry.calculatePackageInfo(
-      EnsDomainV1.Registry,
-      testDomain.name,
+      domainRegistry,
+      testDomain,
       "test-package"
     );
     const packageOwnerAddress1 = await packageOwner.getAddress();
@@ -364,7 +399,7 @@ describe("Package ownership", () => {
     const packageControllerAddress2 = await packageController2.getAddress();
 
     let [error, tx] = await registry.registerPackage(
-      testDomain.organizationId,
+      organizationId,
       testPackage.packageName,
       packageOwnerAddress1,
       packageControllerAddress
@@ -418,9 +453,14 @@ describe("Package ownership", () => {
   });
 
   it("allows package controller to transfer package control", async () => {
+    const organizationId = await registry.calculateOrganizationId(
+      domainRegistry,
+      testDomain
+    );
+
     const testPackage = await registry.calculatePackageInfo(
-      EnsDomainV1.Registry,
-      testDomain.name,
+      domainRegistry,
+      testDomain,
       "test-package"
     );
     const packageOwnerAddress = await packageOwner.getAddress();
@@ -428,7 +468,7 @@ describe("Package ownership", () => {
     const packageControllerAddress2 = await packageController2.getAddress();
 
     let [error, tx] = await registry.registerPackage(
-      testDomain.organizationId,
+      organizationId,
       testPackage.packageName,
       packageOwnerAddress,
       packageControllerAddress
@@ -459,9 +499,14 @@ describe("Package ownership", () => {
   });
 
   it("forbids non package controller from transferring package control", async () => {
+    const organizationId = await registry.calculateOrganizationId(
+      domainRegistry,
+      testDomain
+    );
+
     const testPackage = await registry.calculatePackageInfo(
-      EnsDomainV1.Registry,
-      testDomain.name,
+      domainRegistry,
+      testDomain,
       "test-package"
     );
     const packageOwnerAddress1 = await packageOwner.getAddress();
@@ -469,7 +514,7 @@ describe("Package ownership", () => {
     const packageControllerAddress2 = await packageController2.getAddress();
 
     let [error, tx] = await registry.registerPackage(
-      testDomain.organizationId,
+      organizationId,
       testPackage.packageName,
       packageOwnerAddress1,
       packageControllerAddress

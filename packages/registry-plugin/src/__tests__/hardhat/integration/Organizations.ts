@@ -4,7 +4,6 @@ import { deployments } from "hardhat";
 import "hardhat-deploy";
 import "@nomiclabs/hardhat-ethers";
 import { Signer } from "ethers";
-import { EnsDomainV1 } from "@polywrap/registry-core-js";
 import { EnsApiV1 } from "@polywrap/registry-test-utils";
 import { JsonRpcProvider } from "@ethersproject/providers";
 import { PolywrapRegistry } from "../../helpers/PolywrapRegistry";
@@ -23,6 +22,9 @@ describe("Organizations", () => {
 
   let registry: PolywrapRegistry;
   let registryContractAddresses: RegistryContractAddresses;
+
+  const testDomain = "test-domain.eth";
+  const domainRegistry = "ens";
 
   const connectRegistry = async (signer: Signer): Promise<PolywrapRegistry> => {
     return registry.connect(
@@ -59,24 +61,27 @@ describe("Organizations", () => {
       },
       ethers.getDefaultProvider()
     );
+
+    registry = await connectRegistry(domainOwner);
   });
 
   it("can claim organization ownership", async () => {
     const organizationOwnerAddress = await organizationOwner.getAddress();
 
-    const testDomain = new EnsDomainV1("test-domain");
+    const organizationId = await registry.calculateOrganizationId(
+      domainRegistry,
+      testDomain
+    );
 
     await ens.registerDomainName(owner, domainOwner, testDomain);
 
     registry = await connectRegistry(domainOwner);
 
-    expect(
-      await registry.organizationExists(testDomain.organizationId)
-    ).to.equal(false);
+    expect(await registry.organizationExists(organizationId)).to.equal(false);
 
     const [error, tx] = await registry.claimOrganizationOwnership(
-      testDomain.registry,
-      testDomain.name,
+      domainRegistry,
+      testDomain,
       organizationOwnerAddress
     );
 
@@ -86,38 +91,39 @@ describe("Organizations", () => {
 
     await tx.wait();
 
-    const organization = await registry.organization(testDomain.organizationId);
+    const organization = await registry.organization(organizationId);
 
     expect(organization.exists).to.be.true;
     expect(organization.owner).to.equal(organizationOwnerAddress);
     expect(organization.controller).to.equal(ethers.constants.AddressZero);
 
-    expect(
-      await registry.organizationExists(testDomain.organizationId)
-    ).to.equal(true);
+    expect(await registry.organizationExists(organizationId)).to.equal(true);
 
-    expect(
-      await registry.organizationOwner(testDomain.organizationId)
-    ).to.equal(organizationOwnerAddress);
+    expect(await registry.organizationOwner(organizationId)).to.equal(
+      organizationOwnerAddress
+    );
 
-    expect(
-      await registry.organizationController(testDomain.organizationId)
-    ).to.equal(ethers.constants.AddressZero);
+    expect(await registry.organizationController(organizationId)).to.equal(
+      ethers.constants.AddressZero
+    );
   });
 
   it("can claim organization ownership multiple times", async () => {
     const organizationOwnerAddress1 = await organizationOwner.getAddress();
     const organizationOwnerAddress2 = await randomAcc.getAddress();
 
-    const testDomain = new EnsDomainV1("test-domain");
+    const organizationId = await registry.calculateOrganizationId(
+      domainRegistry,
+      testDomain
+    );
 
     await ens.registerDomainName(owner, domainOwner, testDomain);
 
     registry = await connectRegistry(domainOwner);
 
     let [error, tx] = await registry.claimOrganizationOwnership(
-      testDomain.registry,
-      testDomain.name,
+      domainRegistry,
+      testDomain,
       organizationOwnerAddress1
     );
 
@@ -127,13 +133,13 @@ describe("Organizations", () => {
 
     await tx.wait();
 
-    expect(
-      await registry.organizationOwner(testDomain.organizationId)
-    ).to.equal(organizationOwnerAddress1);
+    expect(await registry.organizationOwner(organizationId)).to.equal(
+      organizationOwnerAddress1
+    );
 
     [error, tx] = await registry.claimOrganizationOwnership(
-      testDomain.registry,
-      testDomain.name,
+      domainRegistry,
+      testDomain,
       organizationOwnerAddress2
     );
 
@@ -143,23 +149,26 @@ describe("Organizations", () => {
 
     await tx.wait();
 
-    expect(
-      await registry.organizationOwner(testDomain.organizationId)
-    ).to.equal(organizationOwnerAddress2);
+    expect(await registry.organizationOwner(organizationId)).to.equal(
+      organizationOwnerAddress2
+    );
   });
 
   it("forbids non domain owners to claim organization ownership", async () => {
     const organizationOwnerAddress = await organizationOwner.getAddress();
 
-    const testDomain = new EnsDomainV1("test-domain");
+    const organizationId = await registry.calculateOrganizationId(
+      domainRegistry,
+      testDomain
+    );
 
     await ens.registerDomainName(owner, domainOwner, testDomain);
 
     registry = await connectRegistry(randomAcc);
 
     const [error, tx] = await registry.claimOrganizationOwnership(
-      testDomain.registry,
-      testDomain.name,
+      domainRegistry,
+      testDomain,
       organizationOwnerAddress
     );
 
@@ -171,15 +180,18 @@ describe("Organizations", () => {
     const organizationOwnerAddress1 = await organizationOwner.getAddress();
     const organizationOwnerAddress2 = await organizationOwner2.getAddress();
 
-    const testDomain = new EnsDomainV1("test-domain");
+    const organizationId = await registry.calculateOrganizationId(
+      domainRegistry,
+      testDomain
+    );
 
     await ens.registerDomainName(owner, domainOwner, testDomain);
 
     registry = await connectRegistry(domainOwner);
 
     let [error, tx] = await registry.claimOrganizationOwnership(
-      testDomain.registry,
-      testDomain.name,
+      domainRegistry,
+      testDomain,
       organizationOwnerAddress1
     );
 
@@ -189,14 +201,14 @@ describe("Organizations", () => {
 
     await tx.wait();
 
-    expect(
-      await registry.organizationOwner(testDomain.organizationId)
-    ).to.equal(organizationOwnerAddress1);
+    expect(await registry.organizationOwner(organizationId)).to.equal(
+      organizationOwnerAddress1
+    );
 
     registry = await connectRegistry(organizationOwner);
 
     [error, tx] = await registry.transferOrganizationOwnership(
-      testDomain.organizationId,
+      organizationId,
       organizationOwnerAddress2
     );
 
@@ -206,24 +218,27 @@ describe("Organizations", () => {
 
     await tx.wait();
 
-    expect(
-      await registry.organizationOwner(testDomain.organizationId)
-    ).to.equal(organizationOwnerAddress2);
+    expect(await registry.organizationOwner(organizationId)).to.equal(
+      organizationOwnerAddress2
+    );
   });
 
   it("forbids non owner to transfer organization ownership", async () => {
     const organizationOwnerAddress1 = await organizationOwner.getAddress();
     const organizationOwnerAddress2 = await organizationOwner2.getAddress();
 
-    const testDomain = new EnsDomainV1("test-domain");
+    const organizationId = await registry.calculateOrganizationId(
+      domainRegistry,
+      testDomain
+    );
 
     await ens.registerDomainName(owner, domainOwner, testDomain);
 
     registry = await connectRegistry(domainOwner);
 
     let [error, tx] = await registry.claimOrganizationOwnership(
-      testDomain.registry,
-      testDomain.name,
+      domainRegistry,
+      testDomain,
       organizationOwnerAddress1
     );
 
@@ -233,14 +248,14 @@ describe("Organizations", () => {
 
     await tx.wait();
 
-    expect(
-      await registry.organizationOwner(testDomain.organizationId)
-    ).to.equal(organizationOwnerAddress1);
+    expect(await registry.organizationOwner(organizationId)).to.equal(
+      organizationOwnerAddress1
+    );
 
     registry = await connectRegistry(randomAcc);
 
     [error, tx] = await registry.transferOrganizationOwnership(
-      testDomain.organizationId,
+      organizationId,
       organizationOwnerAddress2
     );
 
@@ -252,15 +267,18 @@ describe("Organizations", () => {
     const organizationOwnerAddress = await organizationOwner.getAddress();
     const organizationControllerAddress = await organizationController.getAddress();
 
-    const testDomain = new EnsDomainV1("test-domain");
+    const organizationId = await registry.calculateOrganizationId(
+      domainRegistry,
+      testDomain
+    );
 
     await ens.registerDomainName(owner, domainOwner, testDomain);
 
     registry = await connectRegistry(domainOwner);
 
     let [error, tx] = await registry.claimOrganizationOwnership(
-      testDomain.registry,
-      testDomain.name,
+      domainRegistry,
+      testDomain,
       organizationOwnerAddress
     );
 
@@ -273,7 +291,7 @@ describe("Organizations", () => {
     registry = await connectRegistry(organizationOwner);
 
     [error, tx] = await registry.setOrganizationController(
-      testDomain.organizationId,
+      organizationId,
       organizationControllerAddress
     );
 
@@ -283,14 +301,14 @@ describe("Organizations", () => {
 
     await tx.wait();
 
-    const organization = await registry.organization(testDomain.organizationId);
+    const organization = await registry.organization(organizationId);
     expect(organization.exists).to.be.true;
     expect(organization.owner).to.equal(organizationOwnerAddress);
     expect(organization.controller).to.equal(organizationControllerAddress);
 
-    expect(
-      await registry.organizationController(testDomain.organizationId)
-    ).to.equal(organizationControllerAddress);
+    expect(await registry.organizationController(organizationId)).to.equal(
+      organizationControllerAddress
+    );
   });
 
   it("allows organization controller to transfer organization control", async () => {
@@ -298,15 +316,18 @@ describe("Organizations", () => {
     const organizationControllerAddress = await organizationController.getAddress();
     const organizationControllerAddress2 = await organizationController2.getAddress();
 
-    const testDomain = new EnsDomainV1("test-domain");
+    const organizationId = await registry.calculateOrganizationId(
+      domainRegistry,
+      testDomain
+    );
 
     await ens.registerDomainName(owner, domainOwner, testDomain);
 
     registry = await connectRegistry(domainOwner);
 
     let [error, tx] = await registry.claimOrganizationOwnership(
-      testDomain.registry,
-      testDomain.name,
+      domainRegistry,
+      testDomain,
       organizationOwnerAddress
     );
 
@@ -319,7 +340,7 @@ describe("Organizations", () => {
     registry = await connectRegistry(organizationOwner);
 
     [error, tx] = await registry.setOrganizationController(
-      testDomain.organizationId,
+      organizationId,
       organizationControllerAddress
     );
 
@@ -332,7 +353,7 @@ describe("Organizations", () => {
     registry = await connectRegistry(organizationController);
 
     [error, tx] = await registry.transferOrganizationControl(
-      testDomain.organizationId,
+      organizationId,
       organizationControllerAddress2
     );
 
@@ -342,29 +363,32 @@ describe("Organizations", () => {
 
     await tx.wait();
 
-    const organization = await registry.organization(testDomain.organizationId);
+    const organization = await registry.organization(organizationId);
     expect(organization.exists).to.be.true;
     expect(organization.owner).to.equal(organizationOwnerAddress);
     expect(organization.controller).to.equal(organizationControllerAddress2);
 
-    expect(
-      await registry.organizationController(testDomain.organizationId)
-    ).to.equal(organizationControllerAddress2);
+    expect(await registry.organizationController(organizationId)).to.equal(
+      organizationControllerAddress2
+    );
   });
 
   it("forbids non organization owner from setting organization owner", async () => {
     const organizationOwnerAddress1 = await organizationOwner.getAddress();
     const organizationControllerAddress2 = await organizationController2.getAddress();
 
-    const testDomain = new EnsDomainV1("test-domain");
+    const organizationId = await registry.calculateOrganizationId(
+      domainRegistry,
+      testDomain
+    );
 
     await ens.registerDomainName(owner, domainOwner, testDomain);
 
     registry = await connectRegistry(domainOwner);
 
     let [error, tx] = await registry.claimOrganizationOwnership(
-      testDomain.registry,
-      testDomain.name,
+      domainRegistry,
+      testDomain,
       organizationOwnerAddress1
     );
 
@@ -374,14 +398,14 @@ describe("Organizations", () => {
 
     await tx.wait();
 
-    expect(
-      await registry.organizationOwner(testDomain.organizationId)
-    ).to.equal(organizationOwnerAddress1);
+    expect(await registry.organizationOwner(organizationId)).to.equal(
+      organizationOwnerAddress1
+    );
 
     registry = await connectRegistry(organizationOwner);
 
     [error, tx] = await registry.transferOrganizationControl(
-      testDomain.organizationId,
+      organizationId,
       organizationControllerAddress2
     );
 
@@ -391,7 +415,7 @@ describe("Organizations", () => {
     registry = await connectRegistry(randomAcc);
 
     [error, tx] = await registry.transferOrganizationControl(
-      testDomain.organizationId,
+      organizationId,
       organizationControllerAddress2
     );
 

@@ -1,7 +1,6 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
 import { deployments } from "hardhat";
-import { EnsDomainV1 } from "@polywrap/registry-core-js";
 import { EnsApiV1 } from "@polywrap/registry-test-utils";
 import { Signer } from "ethers";
 import { PolywrapRegistry } from "../../helpers/PolywrapRegistry";
@@ -27,7 +26,8 @@ describe("Registering packages", () => {
 
   let registryContractAddresses: RegistryContractAddresses;
 
-  const testDomain = new EnsDomainV1("test-domain");
+  const testDomain = "test-domain.eth";
+  const domainRegistry = "ens";
 
   const connectRegistry = async (signer: Signer): Promise<PolywrapRegistry> => {
     return registry.connect(
@@ -71,13 +71,18 @@ describe("Registering packages", () => {
       provider
     );
 
-    await ens.registerDomainName(owner, domainOwner, testDomain);
-
     registry = await connectRegistry(domainOwner);
 
+    const organizationId = await registry.calculateOrganizationId(
+      domainRegistry,
+      testDomain
+    );
+
+    await ens.registerDomainName(owner, domainOwner, testDomain);
+
     let [error, tx] = await registry.claimOrganizationOwnership(
-      testDomain.registry,
-      testDomain.name,
+      domainRegistry,
+      testDomain,
       await organizationOwner.getAddress()
     );
 
@@ -90,7 +95,7 @@ describe("Registering packages", () => {
     registry = await connectRegistry(organizationOwner);
 
     [error, tx] = await registry.setOrganizationController(
-      testDomain.organizationId,
+      organizationId,
       await organizationController.getAddress()
     );
 
@@ -104,9 +109,14 @@ describe("Registering packages", () => {
   });
 
   it("can register package", async () => {
+    const organizationId = await registry.calculateOrganizationId(
+      domainRegistry,
+      testDomain
+    );
+
     const testPackage = await registry.calculatePackageInfo(
-      EnsDomainV1.Registry,
-      testDomain.name,
+      domainRegistry,
+      testDomain,
       "test-package"
     );
     const packageOwnerAddress = await packageOwner.getAddress();
@@ -115,7 +125,7 @@ describe("Registering packages", () => {
     registry = await connectRegistry(organizationController);
 
     const [error, tx] = await registry.registerPackage(
-      testDomain.organizationId,
+      organizationId,
       testPackage.packageName,
       packageOwnerAddress,
       packageControllerAddress
@@ -145,14 +155,19 @@ describe("Registering packages", () => {
   });
 
   it("can register multiple packages for same organization", async () => {
+    const organizationId = await registry.calculateOrganizationId(
+      domainRegistry,
+      testDomain
+    );
+
     const testPackage1 = await registry.calculatePackageInfo(
-      EnsDomainV1.Registry,
-      testDomain.name,
+      domainRegistry,
+      testDomain,
       "test-package1"
     );
     const testPackage2 = await registry.calculatePackageInfo(
-      EnsDomainV1.Registry,
-      testDomain.name,
+      domainRegistry,
+      testDomain,
       "test-package2"
     );
     const packageOwnerAddress1 = await packageOwner.getAddress();
@@ -163,7 +178,7 @@ describe("Registering packages", () => {
     registry = await connectRegistry(organizationController);
 
     let [error, tx] = await registry.registerPackage(
-      testDomain.organizationId,
+      organizationId,
       testPackage1.packageName,
       packageOwnerAddress1,
       packageControllerAddress1
@@ -182,7 +197,7 @@ describe("Registering packages", () => {
     );
 
     [error, tx] = await registry.registerPackage(
-      testDomain.organizationId,
+      organizationId,
       testPackage2.packageName,
       packageOwnerAddress2,
       packageControllerAddress2
@@ -202,17 +217,29 @@ describe("Registering packages", () => {
   });
 
   it("can register packages for multiple organizations", async () => {
-    const testDomain2 = new EnsDomainV1("test-domain2");
+    const organizationId = await registry.calculateOrganizationId(
+      domainRegistry,
+      testDomain
+    );
+
+    const testDomain2 = "test-domain2.eth";
+
+    const organizationId2 = await registry.calculateOrganizationId(
+      domainRegistry,
+      testDomain2
+    );
+
     const testPackage1 = await registry.calculatePackageInfo(
-      EnsDomainV1.Registry,
-      testDomain.name,
+      domainRegistry,
+      testDomain,
       "test-package"
     );
     const testPackage2 = await registry.calculatePackageInfo(
-      EnsDomainV1.Registry,
-      testDomain2.name,
+      domainRegistry,
+      testDomain2,
       "test-package"
     );
+
     const packageOwnerAddress1 = await packageOwner.getAddress();
     const packageOwnerAddress2 = await packageOwner2.getAddress();
     const packageControllerAddress1 = await packageController.getAddress();
@@ -223,8 +250,8 @@ describe("Registering packages", () => {
     registry = await connectRegistry(domainOwner);
 
     let [error, tx] = await registry.claimOrganizationOwnership(
-      testDomain2.registry,
-      testDomain2.name,
+      domainRegistry,
+      testDomain2,
       await organizationOwner2.getAddress()
     );
 
@@ -237,7 +264,7 @@ describe("Registering packages", () => {
     registry = await connectRegistry(organizationOwner2);
 
     [error, tx] = await registry.setOrganizationController(
-      testDomain2.organizationId,
+      organizationId2,
       await organizationController2.getAddress()
     );
 
@@ -250,7 +277,7 @@ describe("Registering packages", () => {
     registry = await connectRegistry(organizationController);
 
     [error, tx] = await registry.registerPackage(
-      testDomain.organizationId,
+      organizationId,
       testPackage1.packageName,
       packageOwnerAddress1,
       packageControllerAddress1
@@ -271,7 +298,7 @@ describe("Registering packages", () => {
     registry = await connectRegistry(organizationController2);
 
     [error, tx] = await registry.registerPackage(
-      testDomain2.organizationId,
+      organizationId2,
       testPackage2.packageName,
       packageOwnerAddress2,
       packageControllerAddress2
@@ -291,14 +318,19 @@ describe("Registering packages", () => {
   });
 
   it("forbids registering multiple packages with the same name for the same organization", async () => {
+    const organizationId = await registry.calculateOrganizationId(
+      domainRegistry,
+      testDomain
+    );
+
     const testPackage1 = await registry.calculatePackageInfo(
-      EnsDomainV1.Registry,
-      testDomain.name,
+      domainRegistry,
+      testDomain,
       "test-package"
     );
     const testPackage2 = await registry.calculatePackageInfo(
-      EnsDomainV1.Registry,
-      testDomain.name,
+      domainRegistry,
+      testDomain,
       "test-package"
     );
     const packageOwnerAddress1 = await packageOwner.getAddress();
@@ -309,7 +341,7 @@ describe("Registering packages", () => {
     registry = await connectRegistry(organizationController);
 
     let [error, tx] = await registry.registerPackage(
-      testDomain.organizationId,
+      organizationId,
       testPackage1.packageName,
       packageOwnerAddress1,
       packageControllerAddress1
@@ -322,7 +354,7 @@ describe("Registering packages", () => {
     await tx.wait();
 
     [error, tx] = await registry.registerPackage(
-      testDomain.organizationId,
+      organizationId,
       testPackage2.packageName,
       packageOwnerAddress2,
       packageControllerAddress2
@@ -333,9 +365,14 @@ describe("Registering packages", () => {
   });
 
   it("forbids non organization controller from registering packages", async () => {
+    const organizationId = await registry.calculateOrganizationId(
+      domainRegistry,
+      testDomain
+    );
+
     const testPackage = await registry.calculatePackageInfo(
-      EnsDomainV1.Registry,
-      testDomain.name,
+      domainRegistry,
+      testDomain,
       "test-package"
     );
     const packageOwnerAddress = await packageOwner.getAddress();
@@ -344,7 +381,7 @@ describe("Registering packages", () => {
     registry = await connectRegistry(organizationOwner);
 
     let [error, tx] = await registry.registerPackage(
-      testDomain.organizationId,
+      organizationId,
       testPackage.packageName,
       packageOwnerAddress,
       packageControllerAddress
@@ -356,7 +393,7 @@ describe("Registering packages", () => {
     registry = await connectRegistry(randomAcc);
 
     [error, tx] = await registry.registerPackage(
-      testDomain.organizationId,
+      organizationId,
       testPackage.packageName,
       packageOwnerAddress,
       packageControllerAddress

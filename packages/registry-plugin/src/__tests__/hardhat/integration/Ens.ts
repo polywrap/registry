@@ -4,7 +4,6 @@ import { deployments } from "hardhat";
 import "hardhat-deploy";
 import "@nomiclabs/hardhat-ethers";
 import { Signer } from "ethers";
-import { EnsDomainV1 } from "@polywrap/registry-core-js";
 import { EnsApiV1 } from "@polywrap/registry-test-utils";
 import { PolywrapRegistry } from "../../helpers/PolywrapRegistry";
 import { JsonRpcProvider } from "@ethersproject/providers";
@@ -54,7 +53,8 @@ describe("ENS", () => {
       provider
     );
 
-    const testDomain = new EnsDomainV1("test-domain");
+    const testDomain = "test-domain.eth";
+    const domainRegistry = "ens";
 
     await ens.registerDomainName(owner, domainOwner, testDomain);
 
@@ -66,8 +66,8 @@ describe("ENS", () => {
 
     registry = await connectRegistry(owner);
 
-    expect(
-      await registry.domainOwner(testDomain.registry, testDomain.name)
-    ).to.equal(await domainOwner.getAddress());
+    expect(await registry.domainOwner(domainRegistry, testDomain)).to.equal(
+      await domainOwner.getAddress()
+    );
   });
 });
