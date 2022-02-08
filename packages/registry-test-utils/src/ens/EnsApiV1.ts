@@ -4,11 +4,11 @@ import {
   ENSRegistry__factory,
   TestEthRegistrar,
   TestEthRegistrar__factory,
-} from "../../../../typechain-types";
+} from "../typechain";
 import { BaseProvider } from "@ethersproject/providers";
-import { EnsDomain } from "../../../../v1/types/EnsDomain";
+import { EnsDomainV1 } from "@polywrap/registry-core-js";
 
-export class EnsApi {
+export class EnsApiV1 {
   private ensRegistryL1: ENSRegistry;
   private testEthRegistrarL1: TestEthRegistrar;
 
@@ -38,8 +38,10 @@ export class EnsApi {
   async registerDomainName(
     owner: Signer,
     domainOwner: Signer,
-    domain: EnsDomain
+    domain: string
   ): Promise<void> {
+    const labelHash = new EnsDomainV1(domain).labelHash;
+
     let tx = await this.testEthRegistrarL1
       .connect(owner)
       .addController(await domainOwner.getAddress());
@@ -48,12 +50,14 @@ export class EnsApi {
 
     tx = await this.testEthRegistrarL1
       .connect(domainOwner)
-      .register(domain.labelHash, await domainOwner.getAddress(), 10 * 60);
+      .register(labelHash, await domainOwner.getAddress(), 10 * 60);
 
     await tx.wait();
   }
 
-  async owner(domain: EnsDomain): Promise<string> {
-    return this.ensRegistryL1.owner(domain.node);
+  async owner(domain: string): Promise<string> {
+    const node = new EnsDomainV1(domain).node;
+
+    return this.ensRegistryL1.owner(node);
   }
 }

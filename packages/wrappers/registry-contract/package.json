@@ -1,0 +1,20 @@
+{
+  "name": "@polywrap/registry-contract-wrapper",
+  "description": "Contract wrapper for Polywrap registry",
+  "private": true,
+  "version": "0.0.1-prealpha.62",
+  "scripts": {
+    "build": "yarn build:web3api",
+    "build:web3api": "npx w3 build",
+    "test:env:up": "npx w3 test-env up",
+    "test:env:down": "npx w3 test-env down"
+  },
+  "devDependencies": {
+    "@web3api/cli": "0.0.1-prealpha.62",
+    "@web3api/ethereum-plugin-js": "0.0.1-prealpha.62",
+    "@web3api/wasm-as": "0.0.1-prealpha.62",
+    "assemblyscript": "0.19.1",
+    "ethers": "5.5.1",
+    "solc": "0.8.3"
+  }
+}

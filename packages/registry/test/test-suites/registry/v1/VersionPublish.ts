@@ -1,5 +1,5 @@
-import hre, { ethers, deployments } from "hardhat";
-import chai, { expect } from "chai";
+import { ethers, deployments } from "hardhat";
+import { expect } from "chai";
 import {
   PolywrapRegistryV1,
   PolywrapRegistryV1__factory,
@@ -30,7 +30,6 @@ describe("Publishing versions", () => {
   let polywrapOwner: Signer;
   let organizationController: Signer;
   let packageController: Signer;
-  let randomAcc: Signer;
 
   before(async () => {
     const signers = await ethers.getSigners();
@@ -39,7 +38,6 @@ describe("Publishing versions", () => {
     polywrapOwner = signers[2];
     organizationController = signers[3];
     packageController = signers[4];
-    randomAcc = signers[5];
   });
 
   beforeEach(async () => {
@@ -436,7 +434,12 @@ describe("Publishing versions", () => {
       "some-location"
     );
 
-    publishVersion(registry, testPackage.packageId, "1.0.2", "some-location");
+    await publishVersion(
+      registry,
+      testPackage.packageId,
+      "1.0.2",
+      "some-location"
+    );
   });
 
   it("allows incrementing by more than one minor number", async () => {
@@ -447,7 +450,12 @@ describe("Publishing versions", () => {
       "some-location"
     );
 
-    publishVersion(registry, testPackage.packageId, "1.2.0", "some-location");
+    await publishVersion(
+      registry,
+      testPackage.packageId,
+      "1.2.0",
+      "some-location"
+    );
   });
 
   it("allows incrementing by more than one major number", async () => {
@@ -458,7 +466,12 @@ describe("Publishing versions", () => {
       "some-location"
     );
 
-    publishVersion(registry, testPackage.packageId, "3.0.0", "some-location");
+    await publishVersion(
+      registry,
+      testPackage.packageId,
+      "3.0.0",
+      "some-location"
+    );
   });
 
   it("requires patch to be reset when incrementing minor for release versions", async () => {
@@ -639,8 +652,11 @@ describe("Publishing versions", () => {
     };
 
     for (const examples of preleaseTags) {
-      const [example1_versionId1, example1_versionId2, example1_patchNodeId] =
-        await publishTags(examples);
+      const [
+        example1_versionId1,
+        example1_versionId2,
+        example1_patchNodeId,
+      ] = await publishTags(examples);
 
       if (!example1_patchNodeId) {
         throw new Error("patchNodeId is undefined");
@@ -653,8 +669,11 @@ describe("Publishing versions", () => {
 
       patch++;
 
-      const [example2_versionId1, example2_versionId2, example2_patchNodeId] =
-        await publishTags([examples[1], examples[0]]);
+      const [
+        example2_versionId1,
+        example2_versionId2,
+        example2_patchNodeId,
+      ] = await publishTags([examples[1], examples[0]]);
 
       if (!example2_patchNodeId) {
         throw new Error("patchNodeId is undefined");

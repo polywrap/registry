@@ -3,18 +3,18 @@ import { ethers } from "hardhat";
 import { BytesLike, formatBytes32String } from "ethers/lib/utils";
 import { deployments } from "hardhat";
 import { PolywrapRegistry, RegistryContractAddresses } from "../../../v1";
-import { EnsApi } from "./helpers/EnsApi";
 import { Signer } from "ethers";
-import { EnsDomain } from "../../../v1/types/EnsDomain";
 import { PolywrapPackage } from "../helpers/PolywrapPackage";
 import { buildPolywrapPackage } from "../helpers/buildPolywrapPackage";
+import { EnsDomainV1 } from "@polywrap/registry-core-js";
+import { EnsApiV1 } from "@polywrap/registry-test-utils";
 
 describe("Publishing versions", () => {
   let testPackage: PolywrapPackage;
 
   let registry: PolywrapRegistry;
 
-  let ens: EnsApi;
+  let ens: EnsApiV1;
 
   let owner: Signer;
   let domainOwner: Signer;
@@ -81,7 +81,7 @@ describe("Publishing versions", () => {
 
     const provider = ethers.getDefaultProvider();
 
-    ens = new EnsApi(
+    ens = new EnsApiV1(
       {
         ensRegistryL1: deploys["EnsRegistryL1"].address,
         testEthRegistrarL1: deploys["TestEthRegistrarL1"].address,
@@ -90,10 +90,10 @@ describe("Publishing versions", () => {
       provider
     );
 
-    const testDomain = new EnsDomain("test-domain");
+    const testDomain = new EnsDomainV1("test-domain");
     testPackage = buildPolywrapPackage(testDomain, "test-package");
 
-    await ens.registerDomainName(owner, domainOwner, testDomain);
+    await ens.registerDomainName(owner, domainOwner, testDomain.name);
 
     registry = connectRegistry(domainOwner);
 

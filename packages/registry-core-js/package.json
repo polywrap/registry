@@ -14,19 +14,19 @@
     "lint": "eslint . --ext .ts"
   },
   "dependencies": {
-    "@opentelemetry/instrumentation-winston": "^0.25.0",
-    "@opentelemetry/sdk-trace-node": "^0.24.1-alpha.4",
-    "@typechain/ethers-v5": "^7.0.1",
-    "@web3api/tracing-js": "^0.0.1-prealpha.44",
-    "ethers": "^5.5.1",
-    "typechain": "^5.1.2",
-    "typescript": "^4.4.2",
-    "winston": "^3.3.3"
+    "@opentelemetry/instrumentation-winston": "0.25.0",
+    "@opentelemetry/sdk-trace-node": "0.24.1-alpha.4",
+    "@typechain/ethers-v5": "7.0.1",
+    "@web3api/tracing-js": "0.0.1-prealpha.62",
+    "ethers": "5.5.1",
+    "typechain": "5.1.2",
+    "typescript": "4.4.2",
+    "winston": "3.3.3"
   },
   "devDependencies": {
-    "@types/jest": "^27.0.1",
-    "eslint": "^7.32.0",
-    "jest": "^27.1.1",
-    "ts-jest": "^27.0.5"
+    "@types/jest": "27.0.1",
+    "eslint": "7.32.0",
+    "jest": "27.1.1",
+    "ts-jest": "27.0.5"
   }
 }

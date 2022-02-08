@@ -1,12 +1,10 @@
-import hre, { ethers, deployments } from "hardhat";
-import chai, { expect } from "chai";
+import { ethers, deployments } from "hardhat";
+import { expect } from "chai";
 import {
   PolywrapRegistryV1,
   PolywrapRegistryV1__factory,
 } from "../../../../typechain-types";
-import {
-  expectEvent,
-} from "../../../helpers";
+import { expectEvent } from "../../../helpers";
 import { Signer } from "ethers";
 import { EnsApi } from "../../../helpers/ens/EnsApi";
 import { EnsDomain } from "../../../helpers/EnsDomain";
@@ -246,8 +244,7 @@ describe("Organization ownership", () => {
 
   it("allows organization owner to set organization controller", async () => {
     const organizationOwnerAddress = await organizationOwner.getAddress();
-    const organizationControllerAddress =
-      await organizationController.getAddress();
+    const organizationControllerAddress = await organizationController.getAddress();
 
     const testDomain = new EnsDomain("test-domain");
 
@@ -286,10 +283,8 @@ describe("Organization ownership", () => {
 
   it("allows organization controller to transfer organization control", async () => {
     const organizationOwnerAddress = await organizationOwner.getAddress();
-    const organizationControllerAddress =
-      await organizationController.getAddress();
-    const organizationControllerAddress2 =
-      await organizationController2.getAddress();
+    const organizationControllerAddress = await organizationController.getAddress();
+    const organizationControllerAddress2 = await organizationController2.getAddress();
 
     const testDomain = new EnsDomain("test-domain");
 

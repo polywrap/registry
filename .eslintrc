@@ -1,5 +1,17 @@
 {
   "root": true,
+  ignorePatterns: [
+    "**/node_modules/**/*.*",
+    "**/bin/**/*.*",
+    "**/build/**/*.*",
+    "**/dist/**/*.*",
+    "**/coverage/**/*.*",
+    "**/w3/**/*.*",
+    "**/node_modules/**/*.*",
+    "**/archive/**/*.*",
+    "**/typechain/**/*.*",
+    "**/typechain-types/**/*.*"
+  ],
   "parser": "@typescript-eslint/parser",
   "plugins": ["@typescript-eslint", "prettier"],
   "extends": [

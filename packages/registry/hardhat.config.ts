@@ -10,6 +10,7 @@ import "hardhat-deploy";
 import "@nomiclabs/hardhat-ethers";
 import "hardhat-gas-reporter";
 import "@nomiclabs/hardhat-waffle";
+import { NetworkUserConfig } from "hardhat/types";
 
 task("accounts", "Prints the list of accounts", async (args, hre) => {
   const accounts = await hre.ethers.getSigners();
@@ -18,6 +19,23 @@ task("accounts", "Prints the list of accounts", async (args, hre) => {
     console.log(account.address);
   }
 });
+
+const liveNetworks: {
+  [networkName: string]: NetworkUserConfig | undefined;
+} = {};
+
+if (process.env.RINKEBY_URL) {
+  liveNetworks.rinkeby = {
+    live: true,
+    gas: "auto",
+    gasPrice: "auto",
+    gasMultiplier: 1,
+    chainId: 4,
+    url: process.env.RINKEBY_URL,
+    accounts: [`${process.env.DEPLOYER_KEY_RINKEBY}`],
+    deploy: ["./deploy/scripts/v1/rinkeby"],
+  };
+}
 
 const config: HardhatUserConfig = {
   solidity: {
@@ -62,16 +80,7 @@ const config: HardhatUserConfig = {
       },
       deploy: ["./deploy/scripts/localhost"],
     },
-    rinkeby: {
-      live: true,
-      gas: "auto",
-      gasPrice: "auto",
-      gasMultiplier: 1,
-      chainId: 4,
-      url: process.env.RINKEBY_URL,
-      accounts: [`${process.env.DEPLOYER_KEY_RINKEBY}`],
-      deploy: ["./deploy/scripts/v1/rinkeby"],
-    },
+    ...liveNetworks,
   },
   etherscan: {
     apiKey: "FZ1ANB251FC8ISFDXFGFCUDCANSJNWPF9Q",
@@ -80,4 +89,5 @@ const config: HardhatUserConfig = {
     enabled: false,
   },
 };
+
 export default config;

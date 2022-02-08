@@ -17,14 +17,26 @@
       "react"
     ]
   },
+  "resolutions": {
+    "immer": "9.0.6",
+    "axios": "0.21.2",
+    "keypair": "axios",
+    "shelljs": "0.8.5",
+    "follow-redirects": "1.14.7",
+    "underscore": "1.12.1",
+    "lodash": "4.17.21",
+    "glob-parent": "5.1.2",
+    "trim-newlines": "3.0.1",
+    "tar": "4.4.18"
+  },
   "scripts": {
-    "reset": "yarn clean && yarn bootstrap && yarn build",
-    "clean": "npx rimraf ./**/node_modules ./**/build ./**/cache ./**/artifacts ./**/coverage && lerna clean",
-    "bootstrap": "lerna bootstrap",
-    "build": "yarn build:registry-core-js && yarn build:registry && yarn build:registry-js && yarn build:registry-test-utils && yarn build:version-verifier && yarn build:registry-uri-resolver",
+    "reset": "yarn clean && yarn && yarn build",
+    "clean": "npx rimraf ./**/node_modules ./**/build ./**/cache ./**/artifacts ./**/coverage",
+    "build": "yarn build:registry-core-js && yarn build:registry && yarn build:registry-js && yarn build:registry-test-utils && yarn build:registry-plugin-js && yarn build:version-verifier && yarn build:registry-uri-resolver",
     "build:registry-core-js": "lerna run build --scope @polywrap/registry-core-js",
     "build:registry": "lerna run build --scope @polywrap/registry",
     "build:e2e": "lerna run build --scope @polywrap/e2e",
+    "build:registry-plugin-js": "lerna run build --scope @polywrap/registry-plugin-js",
     "build:registry-js": "lerna run build --scope @polywrap/registry-js",
     "build:registry-test-utils": "lerna run build --scope @polywrap/registry-test-utils",
     "build:version-verifier": "lerna run build --scope @polywrap/version-verifier",
@@ -42,7 +54,7 @@
     "eslint-config-prettier": "7.1.0",
     "eslint-plugin-import": "2.22.1",
     "eslint-plugin-prettier": "3.3.0",
-    "lerna": "^3.22.1",
+    "lerna": "3.22.1",
     "prettier": "2.2.1",
     "rimraf": "3.0.2"
   }

@@ -4,4 +4,6 @@ dist
 build
 archive
 typechain
+typechain-types
 public
+w3

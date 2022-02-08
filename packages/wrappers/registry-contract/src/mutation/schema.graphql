@@ -1,0 +1,89 @@
+#import { Connection, TxResponse, Mutation } into Ethereum from "w3://ens/ethereum.web3api.eth"
+
+type Mutation {
+  claimOrganizationOwnership(
+    connection: Ethereum_Connection!,
+    address: String!,
+    domainRegistry: String!,
+    domainRegistryNode: String!,
+    newOwner: String!
+  ): Ethereum_TxResponse!
+
+  publishVersion(
+    connection: Ethereum_Connection!,
+    address: String!,
+    packageId: String!,
+    versionBytes: Bytes!,
+    buildMetadata: String!,
+    location: String!
+  ): Ethereum_TxResponse!
+
+  registerPackage(
+    connection: Ethereum_Connection!,
+    address: String!,
+    organizationId: String!,
+    packageName: String!,
+    packageOwner: String!,
+    packageController: String!
+  ): Ethereum_TxResponse!
+
+  renounceOwnership(
+    connection: Ethereum_Connection!,
+    address: String!
+  ): Ethereum_TxResponse!
+
+  setOrganizationController(
+    connection: Ethereum_Connection!,
+    address: String!,
+    organizationId: String!,
+    newController: String!
+  ): Ethereum_TxResponse!
+
+  setPackageController(
+    connection: Ethereum_Connection!,
+    address: String!,
+    packageId: String!,
+    newController: String!
+  ): Ethereum_TxResponse!
+
+  setPackageOwner(
+    connection: Ethereum_Connection!,
+    address: String!,
+    packageId: String!,
+    newOwner: String!
+  ): Ethereum_TxResponse!
+
+  transferOrganizationControl(
+    connection: Ethereum_Connection!,
+    address: String!,
+    organizationId: String!,
+    newController: String!
+  ): Ethereum_TxResponse!
+
+  transferOrganizationOwnership(
+    connection: Ethereum_Connection!,
+    address: String!,
+    organizationId: String!,
+    newOwner: String!
+  ): Ethereum_TxResponse!
+
+  transferOwnership(
+    connection: Ethereum_Connection!,
+    address: String!,
+    newOwner: String!
+  ): Ethereum_TxResponse!
+
+  transferPackageControl(
+    connection: Ethereum_Connection!,
+    address: String!,
+    packageId: String!,
+    newController: String!
+  ): Ethereum_TxResponse!
+
+  transferPackageOwnership(
+    connection: Ethereum_Connection!,
+    address: String!,
+    packageId: String!,
+    newOwner: String!
+  ): Ethereum_TxResponse!
+}

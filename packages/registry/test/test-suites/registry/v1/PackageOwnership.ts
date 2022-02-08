@@ -1,12 +1,10 @@
-import hre, { ethers, deployments, getNamedAccounts } from "hardhat";
-import chai, { expect } from "chai";
+import { ethers, deployments } from "hardhat";
+import { expect } from "chai";
 import {
   PolywrapRegistryV1,
   PolywrapRegistryV1__factory,
 } from "../../../../typechain-types";
-import {
-  formatBytes32String,
-} from "ethers/lib/utils";
+import { formatBytes32String } from "ethers/lib/utils";
 import { Signer } from "ethers";
 import { EnsApi } from "../../../helpers/ens/EnsApi";
 import { buildPolywrapPackage } from "../../../helpers/buildPolywrapPackage";
@@ -145,7 +143,7 @@ describe("Package ownership", () => {
     await expect(txPromise).to.revertedWith(
       "reverted with custom error 'OnlyOrganizationController()'"
     );
-    
+
     registry = registry.connect(packageOwner);
 
     txPromise = registry.setPackageOwner(
@@ -238,7 +236,7 @@ describe("Package ownership", () => {
     await expect(txPromise).to.revertedWith(
       "reverted with custom error 'OnlyPackageOwner()'"
     );
-    
+
     registry = registry.connect(organizationController);
 
     txPromise = registry.transferPackageOwnership(
@@ -327,7 +325,7 @@ describe("Package ownership", () => {
     await expect(txPromise).to.revertedWith(
       "reverted with custom error 'OnlyPackageOwner()'"
     );
-    
+
     registry = registry.connect(organizationController);
 
     txPromise = registry.setPackageController(
@@ -416,7 +414,7 @@ describe("Package ownership", () => {
     await expect(txPromise).to.revertedWith(
       "reverted with custom error 'OnlyPackageController()'"
     );
-    
+
     registry = registry.connect(organizationController);
 
     txPromise = registry.transferPackageControl(

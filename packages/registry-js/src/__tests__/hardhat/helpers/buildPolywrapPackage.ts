@@ -1,10 +1,10 @@
 import { ethers } from "ethers";
 import { solidityKeccak256 } from "ethers/lib/utils";
-import { EnsDomain } from "../../../v1/types/EnsDomain";
+import { EnsDomainV1 } from "@polywrap/registry-core-js";
 import { PolywrapPackage } from "./PolywrapPackage";
 
 export const buildPolywrapPackage = (
-  domain: EnsDomain,
+  domain: EnsDomainV1,
   packageName: string
 ): PolywrapPackage => {
   const organizationId = solidityKeccak256(
